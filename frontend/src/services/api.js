@@ -10,10 +10,26 @@ const api = axios.create({
 
 // Interceptor to attach token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
+  let token = localStorage.getItem('token');
+  
+  // If no token, or token is string 'null', try to get from Zustand auth-storage
+  if (!token || token === 'null' || token === 'undefined') {
+    try {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage);
+        token = parsed?.state?.token;
+      }
+    } catch (e) {
+      console.error('Error parsing auth-storage', e);
+    }
+  }
+
+  // Double check if token is valid string
+  if (token && token !== 'null' && token !== 'undefined') {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -24,8 +40,14 @@ api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
   if (error.response && error.response.status === 401) {
-    // Optionally handle unauthorized errors (e.g., redirect to login or clear store)
+    // Handle unauthorized errors by clearing all auth state
     localStorage.removeItem('token');
+    localStorage.removeItem('auth-storage');
+    
+    // Only redirect if we are not already on the login page
+    if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
   }
   return Promise.reject(error);
 });

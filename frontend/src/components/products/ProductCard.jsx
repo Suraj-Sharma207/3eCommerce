@@ -1,0 +1,107 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Heart, Eye, ShoppingCart } from 'lucide-react';
+import RatingDisplay from '../ecommerce/RatingDisplay';
+import ImageFallback from '../ui/ImageFallback';
+import useCartStore from '../../store/cartStore';
+import useWishlistStore from '../../store/wishlistStore';
+import useAuthStore from '../../store/authStore';
+
+const ProductCard = ({ product }) => {
+  if (!product) return null;
+
+  const { addToCart } = useCartStore();
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
+  const { isAuthenticated } = useAuthStore();
+  
+  const isWishlisted = isInWishlist(product.id);
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return alert('Please login first');
+    addToCart(product.id, 1);
+  };
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return alert('Please login first');
+    toggleWishlist(product.id);
+  };
+
+  // Mocking rating and reviews for now since schema doesn't have it yet
+  const rating = 4.5 + (Math.random() * 0.5);
+  const reviewsCount = Math.floor(Math.random() * 200) + 10;
+
+  return (
+    <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-secondary-100">
+      
+      {/* Image Area with Actions */}
+      <div className="relative aspect-[4/3] bg-secondary-50 overflow-hidden">
+        <Link to={`/products/${product.id}`} className="block w-full h-full">
+          <ImageFallback 
+            src={product.imageUrl} 
+            alt={product.name} 
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" 
+          />
+        </Link>
+        
+        {/* Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {product.stock < 10 && product.stock > 0 && (
+            <span className="bg-warning text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Low Stock</span>
+          )}
+          {product.stock === 0 && (
+            <span className="bg-secondary-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Sold Out</span>
+          )}
+        </div>
+
+        {/* Hover Actions */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+          <button 
+            onClick={handleToggleWishlist}
+            className={`w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-colors ${
+              isWishlisted ? 'text-danger hover:bg-danger-light' : 'text-text-secondary hover:text-danger hover:bg-danger-light'
+            }`} 
+            aria-label="Add to wishlist"
+          >
+            <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+          </button>
+          <button className="w-10 h-10 rounded-full bg-white text-text-secondary hover:text-primary-600 hover:bg-primary-50 shadow-md flex items-center justify-center transition-colors" aria-label="Quick view">
+            <Eye className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex flex-col flex-1 p-5">
+        <div className="mb-1 text-xs font-semibold text-text-muted uppercase tracking-wider">
+          {product.category || 'Furniture'}
+        </div>
+        
+        <Link to={`/products/${product.id}`} className="block mb-2 group-hover:text-primary-600 transition-colors">
+          <h3 className="text-lg font-bold text-text-primary line-clamp-1">{product.name}</h3>
+        </Link>
+        
+        <RatingDisplay rating={rating} count={reviewsCount} className="mb-4" />
+        
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-secondary-100">
+          <span className="text-xl font-extrabold text-text-primary">
+            ${product.price.toFixed(2)}
+          </span>
+          <button 
+            onClick={handleAddToCart}
+            className="w-10 h-10 rounded-full bg-primary-600 text-white hover:bg-primary-700 shadow-sm flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={product.stock === 0}
+            aria-label="Add to cart"
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProductCard;

@@ -18,6 +18,7 @@ model User {
   
   cart      Cart?
   orders    Order[]
+  wishlist  Wishlist?
 }
 
 enum Role {
@@ -30,6 +31,7 @@ model Product {
   name        String
   description String
   price       Float
+  category    String      @default("Living Room")
   stock       Int         @default(0)
   imageUrl    String?
   createdAt   DateTime    @default(now())
@@ -37,6 +39,7 @@ model Product {
   
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  wishlistItems WishlistItem[]
 }
 
 model Cart {
@@ -95,4 +98,24 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+model Wishlist {
+  id        String         @id @default(uuid())
+  userId    String         @unique
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model WishlistItem {
+  id         String   @id @default(uuid())
+  wishlistId String
+  productId  String
+  
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
 }

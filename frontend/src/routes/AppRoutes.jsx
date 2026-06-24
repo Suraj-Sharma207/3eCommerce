@@ -1,45 +1,68 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import PublicLayout from '../components/layout/PublicLayout';
+import AuthLayout from '../components/layout/AuthLayout';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
-// Placeholder components
-const Home = () => <div className="p-8 text-center text-2xl font-bold text-primary-600">Welcome to eCommerce App</div>;
-const Login = () => <div className="p-8">Login Page</div>;
-const Register = () => <div className="p-8">Register Page</div>;
-const Dashboard = () => <div className="p-8">Admin Dashboard</div>;
+const HomePage = lazy(() => import('../pages/home/HomePage'));
+const ProductList = lazy(() => import('../pages/products/ProductList'));
+const ProductDetail = lazy(() => import('../pages/products/ProductDetail'));
+const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'));
+const CartPage = lazy(() => import('../pages/cart/CartPage'));
+const CheckoutPage = lazy(() => import('../pages/checkout/CheckoutPage'));
+const OrderSuccessPage = lazy(() => import('../pages/checkout/OrderSuccessPage'));
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
+const OrdersPage = lazy(() => import('../pages/orders/OrdersPage'));
+const OrderDetailPage = lazy(() => import('../pages/orders/OrderDetailPage'));
+const WishlistPage = lazy(() => import('../pages/wishlist/WishlistPage'));
+
+const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
+const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
+const AdminProducts = lazy(() => import('../pages/admin/AdminProducts'));
+const AdminOrders = lazy(() => import('../pages/admin/AdminOrders'));
 
 const AppRoutes = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Navbar Placeholder */}
-      <nav className="bg-white shadow-sm p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">eCommerce</h1>
-          <div className="space-x-4">
-            <a href="/" className="text-secondary-600 hover:text-primary-600">Home</a>
-            <a href="/login" className="text-secondary-600 hover:text-primary-600">Login</a>
-          </div>
+    <div className="min-h-screen bg-background-default font-sans flex flex-col">
+      <Suspense fallback={
+        <div className="flex-1 flex justify-center items-center h-[50vh]">
+          <LoadingSpinner size="lg" />
         </div>
-      </nav>
-
-      <main className="flex-grow max-w-7xl mx-auto w-full">
+      }>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Admin routes - protected placeholders */}
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
+          {/* Public Storefront Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-success/:id" element={<OrderSuccessPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="*" element={<HomePage />} />
+          </Route>
 
-      {/* Footer Placeholder */}
-      <footer className="bg-secondary-800 text-white p-6 mt-auto">
-        <div className="max-w-7xl mx-auto text-center">
-          <p>&copy; {new Date().getFullYear()} eCommerce App. All rights reserved.</p>
-        </div>
-      </footer>
+          {/* Authentication Routes */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="customers" element={<div className="p-8">Customers feature coming soon.</div>} />
+            <Route path="settings" element={<div className="p-8">Settings feature coming soon.</div>} />
+          </Route>
+
+        </Routes>
+      </Suspense>
     </div>
   );
 };
