@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import PublicLayout from '../components/layout/PublicLayout';
 import AuthLayout from '../components/layout/AuthLayout';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -22,6 +22,10 @@ const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('../pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('../pages/admin/AdminOrders'));
 
+const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
+const AddressBook = lazy(() => import('../pages/addresses/AddressBook'));
+const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
+
 const AppRoutes = () => {
   return (
     <div className="min-h-screen bg-background-default font-sans flex flex-col">
@@ -39,25 +43,36 @@ const AppRoutes = () => {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/orders/:id" element={<OrderDetailPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            
+            {/* Customer Protected Routes */}
+            <Route element={<CustomerProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/addresses" element={<AddressBook />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+
             <Route path="*" element={<HomePage />} />
           </Route>
 
           {/* Authentication Routes */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="customers" element={<div className="p-8">Customers feature coming soon.</div>} />
+            <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
+            <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
             <Route path="settings" element={<div className="p-8">Settings feature coming soon.</div>} />
           </Route>
 

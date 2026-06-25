@@ -19,6 +19,12 @@ const useAuthStore = create(
           
           localStorage.setItem('token', token);
           set({ user, token, isAuthenticated: true, isLoading: false });
+          
+          // Fetch profile after login
+          import('./userStore').then(module => {
+            module.default.getState().fetchProfile();
+          });
+          
           return true;
         } catch (error) {
           set({ 
@@ -37,6 +43,12 @@ const useAuthStore = create(
           
           localStorage.setItem('token', token);
           set({ user, token, isAuthenticated: true, isLoading: false });
+
+          // Fetch profile after register
+          import('./userStore').then(module => {
+            module.default.getState().fetchProfile();
+          });
+          
           return true;
         } catch (error) {
           set({ 
@@ -48,8 +60,14 @@ const useAuthStore = create(
       },
 
       logout: () => {
-        localStorage.removeItem('token');
+        localStorage.clear();
+        sessionStorage.clear();
         set({ user: null, token: null, isAuthenticated: false });
+        
+        // Clear all other stores using dynamic imports to avoid circular deps
+        import('./userStore').then(module => module.default.getState().clearProfile());
+        import('./cartStore').then(module => module.default.getState().clearCart());
+        import('./wishlistStore').then(module => module.default.getState().clearWishlist());
       },
     }),
     {

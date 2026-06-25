@@ -1,94 +1,563 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageContainer from '../../components/layout/PageContainer';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
-import { User, LogOut } from 'lucide-react';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import PageContainer from '../../components/layout/PageContainer';
+import { User, Mail, Phone, Calendar, Edit2, Shield, CheckCircle2, AlertCircle, Save, X, MapPin, Package, Heart } from 'lucide-react';
 
-const ProfilePage = () => {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+const PasswordStrengthMeter = ({ password }) => {
+  const getStrength = (pass) => {
+    let strength = 0;
+    if (pass.length >= 8) strength += 1;
+    if (pass.match(/[A-Z]/)) strength += 1;
+    if (pass.match(/[a-z]/)) strength += 1;
+    if (pass.match(/[0-9]/)) strength += 1;
+    if (pass.match(/[^A-Za-z0-9]/)) strength += 1;
+    return strength;
   };
 
-  if (!user) {
-    return <div className="h-[60vh] flex items-center justify-center">Loading...</div>;
+  const strength = getStrength(password);
+  
+  const getColor = (s) => {
+    if (s <= 1) return 'bg-red-500';
+    if (s <= 3) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getLabel = (s) => {
+    if (!password) return '';
+    if (s <= 1) return 'Weak';
+    if (s <= 3) return 'Fair';
+    return 'Strong';
+  };
+
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex h-1.5 w-full gap-1">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div 
+            key={i} 
+            className={`flex-1 rounded-full ${i <= strength ? getColor(strength) : 'bg-neutral-200'} transition-colors duration-300`} 
+          />
+        ))}
+      </div>
+      <p className="text-xs text-neutral-500 text-right h-4">{getLabel(strength)}</p>
+    </div>
+  );
+};
+
+const ProfilePage = () => {
+  const { profile, fetchProfile, updateProfile, changePassword, isLoading, error: backendError, hasLoadedInitial } = useUserStore();
+  
+  const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'edit' | 'security'
+  
+  const [formData, setFormData] = useState({});
+  const [initialData, setInitialData] = useState({});
+  const [formErrors, setFormErrors] = useState({});
+  
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passError, setPassError] = useState('');
+  const [passSuccess, setPassSuccess] = useState('');
+
+  const [globalMessage, setGlobalMessage] = useState('');
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (profile) {
+      const data = {
+        name: profile.name,
+        phone: profile.phone,
+        birthday: profile.birthday ? new Date(profile.birthday).toISOString().split('T')[0] : undefined,
+        gender: profile.gender,
+        avatarUrl: profile.avatarUrl
+      };
+      setFormData(data);
+      setInitialData(data);
+    }
+  }, [profile]);
+
+  const isProfileDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProfileDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isProfileDirty]);
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    // Intercept phone input to prevent alphabets
+    if (name === 'phone') {
+      if (/[a-zA-Z]/.test(value)) return;
+      if (value.length > 15) return;
+    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    setPassError('');
+  };
+
+  const validateProfile = () => {
+    const errs = {};
+    if (!formData.name || formData.name.trim().length < 2 || formData.name.trim().length > 100) {
+      errs.name = 'Name must be between 2 and 100 characters';
+    }
+    if (formData.phone && !/^[+\-\s0-9]{7,15}$/.test(formData.phone)) {
+      errs.phone = 'Please enter a valid phone number (7-15 digits)';
+    }
+    if (formData.birthday) {
+      const bday = new Date(formData.birthday);
+      const today = new Date();
+      if (bday > today) errs.birthday = 'Birthday cannot be in the future';
+      
+      const minAgeDate = new Date();
+      minAgeDate.setFullYear(today.getFullYear() - 13);
+      if (bday > minAgeDate) errs.birthday = 'You must be at least 13 years old';
+    }
+    if (formData.avatarUrl && !/^https?:\/\/.+/.test(formData.avatarUrl)) {
+      errs.avatarUrl = 'Please enter a valid URL';
+    }
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const submitProfile = async (e) => {
+    e.preventDefault();
+    if (!validateProfile()) return;
+    
+    setGlobalMessage('');
+    // Trim strings
+    const trimmedData = {
+      ...formData,
+      name: formData.name.trim()
+    };
+    
+    const success = await updateProfile(trimmedData);
+    if (success) {
+      setInitialData(trimmedData);
+      setCurrentView('overview');
+      setGlobalMessage('Profile updated successfully.');
+      setTimeout(() => setGlobalMessage(''), 3000);
+    }
+  };
+
+  const cancelProfileEdit = () => {
+    setFormData(initialData);
+    setFormErrors({});
+    setCurrentView('overview');
+  };
+
+  const submitPassword = async (e) => {
+    e.preventDefault();
+    setPassError('');
+    setPassSuccess('');
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPassError('New passwords do not match.');
+      return;
+    }
+    
+    const pass = passwordData.newPassword;
+    if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[a-z]/.test(pass) || !/[0-9]/.test(pass) || !/[^A-Za-z0-9]/.test(pass)) {
+      setPassError('Password must be at least 8 chars, with uppercase, lowercase, number, and special character.');
+      return;
+    }
+
+    const success = await changePassword(passwordData.currentPassword, passwordData.newPassword);
+    if (success) {
+      setGlobalMessage('Password changed successfully.');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setCurrentView('overview');
+      setTimeout(() => setGlobalMessage(''), 3000);
+    }
+  };
+
+  const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  
+  const maxBirthday = new Date().toISOString().split('T')[0];
+  
+  const getMemberSince = () => {
+    if (!profile?.createdAt) return 'Unknown';
+    return new Date(profile.createdAt).getFullYear();
+  };
+
+  const [defaultAddress, setDefaultAddress] = useState(null);
+  useEffect(() => {
+    import('../../store/addressStore').then((module) => {
+      const fetchAddresses = module.default.getState().fetchAddresses;
+      fetchAddresses().then(() => {
+        const addresses = module.default.getState().addresses;
+        const defaultShipping = addresses.find(a => a.isDefaultShipping) || addresses[0];
+        setDefaultAddress(defaultShipping);
+      });
+    });
+  }, []);
+
+  if (!hasLoadedInitial) {
+    return (
+      <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden p-8 animate-pulse">
+              <div className="flex flex-col sm:flex-row gap-8">
+                <div className="w-32 h-32 rounded-full bg-neutral-200"></div>
+                <div className="space-y-4 flex-1 py-4">
+                  <div className="h-8 bg-neutral-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-1/3"></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                    <div className="h-4 bg-neutral-200 rounded w-full"></div>
+                    <div className="h-4 bg-neutral-200 rounded w-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // If initial load finished but profile is still completely missing, show error screen
+  if (!profile) {
+    return (
+      <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
+        <div className="bg-red-50 text-red-700 p-8 rounded-2xl border border-red-200 text-center">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Could not load profile</h2>
+          <p>{backendError || 'An unexpected error occurred while fetching your profile.'}</p>
+        </div>
+      </PageContainer>
+    );
   }
 
   return (
-    <PageContainer className="py-8 lg:py-12 max-w-4xl">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">My Profile</h1>
-        <Button variant="outline" onClick={handleLogout} className="group">
-          <LogOut className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Logout
-        </Button>
-      </div>
+    <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
+      
+      {globalMessage && (
+        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl font-medium border border-green-200">
+          <CheckCircle2 className="w-5 h-5" />
+          {globalMessage}
+        </div>
+      )}
+      {backendError && profile && (
+        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl font-medium border border-red-200">
+          <AlertCircle className="w-5 h-5" />
+          {backendError}
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Left Column: Avatar & Basic Info */}
-        <div className="md:col-span-1">
-          <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-6 flex flex-col items-center text-center">
-            <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-              <User className="w-12 h-12 text-primary-600" />
+      {currentView === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden p-8">
+              <div className="flex flex-col sm:flex-row gap-8">
+                <div className="flex-shrink-0">
+                  {profile.avatarUrl ? (
+                    <img src={profile.avatarUrl} alt={profile.name} className="w-32 h-32 rounded-full object-cover border border-neutral-200 shadow-sm" />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center text-4xl font-bold border border-primary-100 shadow-sm">
+                      {getInitials(profile.name)}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-4 flex-1">
+                  <div>
+                    <h3 className="text-3xl font-semibold text-neutral-900 tracking-tight">{profile.name}</h3>
+                    <p className="text-neutral-500 mt-1">Customer Account • Member since {getMemberSince()}</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm pt-2">
+                    <div className="flex items-center gap-3 text-neutral-600">
+                      <Mail className="w-4 h-4 text-neutral-400" />
+                      {profile.email}
+                    </div>
+                    <div className="flex items-center gap-3 text-neutral-600">
+                      <Phone className="w-4 h-4 text-neutral-400" />
+                      {profile.phone || 'No phone number'}
+                    </div>
+                    {profile?.birthday && (
+                      <div className="flex items-center gap-3 text-neutral-600">
+                        <Calendar className="w-4 h-4 text-neutral-400" />
+                        {new Date(profile.birthday).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-text-primary">{user.name}</h2>
-            <p className="text-sm text-text-secondary mb-4">{user.email}</p>
-            <span className="bg-secondary-100 text-secondary-700 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-              {user.role}
-            </span>
+
+            {defaultAddress && (
+              <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden mt-8">
+                <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
+                  <h2 className="text-xl font-medium text-neutral-900 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-neutral-400" /> Default Shipping Address
+                  </h2>
+                </div>
+                <div className="p-6 text-sm text-neutral-600 space-y-1">
+                  <p className="font-medium text-neutral-900 text-base">{defaultAddress.recipientName}</p>
+                  <p>{defaultAddress.street}</p>
+                  {defaultAddress.addressLine2 && <p>{defaultAddress.addressLine2}</p>}
+                  <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}</p>
+                  <p>{defaultAddress.country}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden mt-8">
+              <div className="p-6 border-b border-neutral-100">
+                <h2 className="text-xl font-medium text-neutral-900">Quick Actions</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button 
+                  onClick={() => setCurrentView('edit')}
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <Edit2 className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm">Edit Profile</span>
+                </button>
+                <Link 
+                  to="/addresses"
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm">Manage Addresses</span>
+                </Link>
+                <button 
+                  onClick={() => setCurrentView('security')}
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm">Change Password</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
+              <div className="p-6 border-b border-neutral-100">
+                <h2 className="text-lg font-medium text-neutral-900">Recent Activity</h2>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-900">{profile?.stats?.totalOrders || 0} Total Orders</p>
+                    <Link to="/orders" className="text-xs text-primary-600 hover:text-primary-700 font-medium">View order history</Link>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-900">{profile?.stats?.wishlistCount || 0} Wishlist Items</p>
+                    <Link to="/wishlist" className="text-xs text-primary-600 hover:text-primary-700 font-medium">View wishlist</Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Right Column: Settings Form */}
-        <div className="md:col-span-2">
-          <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-6 sm:p-8">
-            <h3 className="text-lg font-bold text-text-primary mb-6 pb-4 border-b border-secondary-100">Personal Information</h3>
-            
-            <form className="space-y-6" onSubmit={e => e.preventDefault()}>
-              <Input 
-                label="Full Name" 
-                defaultValue={user.name} 
-              />
-              <Input 
-                label="Email Address" 
-                type="email" 
-                defaultValue={user.email} 
-                disabled 
-              />
-              
-              <h3 className="text-lg font-bold text-text-primary mt-8 mb-6 pb-4 border-b border-secondary-100">Change Password</h3>
-              
-              <Input 
-                label="Current Password" 
-                type="password" 
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {currentView === 'edit' && (
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div className="p-6 sm:p-8 border-b border-neutral-100 flex items-center justify-between">
+              <h2 className="text-2xl font-medium text-neutral-900">Edit Profile</h2>
+              <button onClick={cancelProfileEdit} className="p-2 text-neutral-400 hover:bg-neutral-100 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 sm:p-8">
+              <form onSubmit={submitProfile} className="space-y-8">
+                {isProfileDirty && (
+                  <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl font-medium border border-amber-200">
+                    <AlertCircle className="w-5 h-5" />
+                    You have unsaved changes.
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-8 items-start">
+                  <div className="flex-shrink-0">
+                    {formData.avatarUrl && !formErrors.avatarUrl ? (
+                      <img src={formData.avatarUrl} alt="Preview" className="w-24 h-24 rounded-full object-cover border border-neutral-200" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center border border-neutral-200">
+                        <User className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 w-full">
+                      <Input 
+                      label="Avatar URL" 
+                      name="avatarUrl" 
+                      value={formData.avatarUrl || ''} 
+                      onChange={handleProfileChange} 
+                      error={formErrors.avatarUrl}
+                      placeholder="https://example.com/avatar.jpg" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input 
+                    label="Full Name" 
+                    name="name" 
+                    value={formData.name || ''} 
+                    onChange={handleProfileChange} 
+                    error={formErrors.name}
+                    required 
+                  />
+                  <Input 
+                    label="Email Address" 
+                    value={profile.email} 
+                    disabled 
+                    readOnly
+                    className="bg-neutral-50 opacity-70 cursor-not-allowed"
+                  />
+                  <Input 
+                    label="Phone Number" 
+                    name="phone" 
+                    value={formData.phone || ''} 
+                    onChange={handleProfileChange} 
+                    error={formErrors.phone}
+                    placeholder="+1 234 567 8900"
+                  />
+                  <Input 
+                    label="Birthday" 
+                    type="date" 
+                    name="birthday" 
+                    value={formData.birthday || ''} 
+                    onChange={handleProfileChange} 
+                    max={maxBirthday}
+                    error={formErrors.birthday}
+                  />
+                  <div className="space-y-1">
+                    <label className="block text-sm font-semibold text-text-primary">Gender</label>
+                    <select 
+                      name="gender" 
+                      value={formData.gender || ''} 
+                      onChange={handleProfileChange} 
+                      className="w-full px-4 py-3 bg-surface border border-secondary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 pt-6 justify-end">
+                  <Button type="button" variant="outline" onClick={cancelProfileEdit}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={!isProfileDirty} isLoading={isLoading} className="min-w-[140px]">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentView === 'security' && (
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div className="p-6 sm:p-8 border-b border-neutral-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <h2 className="text-2xl font-medium text-neutral-900">Change Password</h2>
+              </div>
+              <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-neutral-400 hover:bg-neutral-100 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 sm:p-8">
+              <form onSubmit={submitPassword} className="space-y-6">
+                {passError && (
+                  <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200 mb-6">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> 
+                    <span>{passError}</span>
+                  </div>
+                )}
+                
                 <Input 
-                  label="New Password" 
+                  label="Current Password" 
                   type="password" 
+                  name="currentPassword" 
+                  value={passwordData.currentPassword} 
+                  onChange={handlePasswordChange} 
+                  required 
                 />
+                
+                <div className="space-y-1">
+                  <Input 
+                    label="New Password" 
+                    type="password" 
+                    name="newPassword" 
+                    value={passwordData.newPassword} 
+                    onChange={handlePasswordChange} 
+                    required 
+                    minLength="8" 
+                  />
+                  <PasswordStrengthMeter password={passwordData.newPassword} />
+                </div>
+
                 <Input 
                   label="Confirm New Password" 
                   type="password" 
+                  name="confirmPassword" 
+                  value={passwordData.confirmPassword} 
+                  onChange={handlePasswordChange} 
+                  required 
+                  minLength="8" 
                 />
-              </div>
-
-              <div className="pt-6 flex justify-end">
-                <Button type="submit" size="lg" className="px-8 shadow-md">
-                  Save Changes
-                </Button>
-              </div>
-            </form>
+                
+                <div className="flex items-center gap-4 pt-6 justify-end">
+                  <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={!passwordData.newPassword} isLoading={isLoading} className="min-w-[160px]">
+                    Update Password
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
+      )}
 
-      </div>
     </PageContainer>
   );
 };

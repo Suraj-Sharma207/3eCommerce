@@ -7,10 +7,10 @@ const useOrderStore = create((set) => ({
   isLoading: false,
   error: null,
 
-  checkout: async () => {
+  checkout: async (checkoutData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/orders/checkout');
+      const response = await api.post('/orders/checkout', checkoutData);
       set({ currentOrder: response.data.data, isLoading: false });
       return response.data.data;
     } catch (error) {

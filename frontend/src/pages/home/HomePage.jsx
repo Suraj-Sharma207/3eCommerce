@@ -6,39 +6,67 @@ import CategoryCard from '../../components/ecommerce/CategoryCard';
 import ProductCard from '../../components/products/ProductCard';
 import Button from '../../components/ui/Button';
 import { ProductCardSkeleton } from '../../components/ui/SkeletonLoader';
-import useProductStore from '../../store/productStore';
 
 const HomePage = () => {
-  const { products, isLoading, fetchProducts } = useProductStore();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [saleProducts, setSaleProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [categories, setCategories] = useState([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   useEffect(() => {
-    // We would normally have distinct API endpoints for these, but for now we simulate
-    // different sections using the main products query by just fetching a batch and slicing it.
-    const loadHomeData = async () => {
-      await fetchProducts(1);
+    const fetchHomeData = async () => {
+      setIsLoading(true);
+      try {
+        const { default: api } = await import('../../services/api');
+        const response = await api.get('/products/home');
+        const data = response.data.data;
+        
+        setFeaturedProducts(data.featured || []);
+        setTrendingProducts(data.trending || []);
+        setNewArrivals(data.newArrivals || []);
+        setBestSellers(data.bestSellers || []);
+        setSaleProducts(data.sale || []);
+      } catch (error) {
+        console.error('Failed to fetch home products:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadHomeData();
-  }, [fetchProducts]);
+    fetchHomeData();
+  }, []);
 
   useEffect(() => {
-    if (products.length > 0) {
-      setFeaturedProducts(products.slice(0, 4));
-      setTrendingProducts(products.slice(2, 6)); // Simulate different list
-      setNewArrivals(products.slice(0, 4).reverse()); // Simulate different list
-    }
-  }, [products]);
+    const fetchCategories = async () => {
+      try {
+        const { default: api } = await import('../../services/api');
+        const response = await api.get('/products/categories');
+        setCategories(response.data.data.categories || []);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
-  const categories = [
-    { title: 'Living Room', count: 124, image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&q=80', to: '/products?category=Living+Room' },
-    { title: 'Bedroom', count: 86, image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&q=80', to: '/products?category=Bedroom' },
-    { title: 'Dining Room', count: 64, image: 'https://images.unsplash.com/photo-1604578762246-41134e37f9cc?w=500&q=80', to: '/products?category=Dining+Room' },
-    { title: 'Office', count: 48, image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=500&q=80', to: '/products?category=Office' },
-    { title: 'Lighting', count: 72, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80', to: '/products?category=Lighting' },
-    { title: 'Decor', count: 96, image: 'https://images.unsplash.com/photo-1613203009765-a8c4ce8c7f96?w=500&q=80', to: '/products?category=Decor' },
-  ];
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Living Room': 'Sofa',
+      'Bedroom': 'Bed',
+      'Dining': 'Utensils',
+      'Office': 'Monitor',
+      'Lighting': 'Lightbulb',
+      'Decor': 'Star',
+      'Outdoor': 'Sun'
+    };
+    return iconMap[categoryName] || 'Package';
+  };
 
   const renderProductGrid = (items) => {
     if (isLoading) {
@@ -47,6 +75,9 @@ const HomePage = () => {
           {[...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       );
+    }
+    if (!items || items.length === 0) {
+      return <div className="text-center text-text-muted py-8">No products found in this section.</div>;
     }
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -67,18 +98,28 @@ const HomePage = () => {
           title="Shop by Category" 
           subtitle="Explore our wide range of furniture categories"
           actionLabel="View all"
-          actionLink="/categories"
+          actionLink="/products"
         />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {categories.map((cat, idx) => (
-            <CategoryCard 
-              key={idx}
-              title={cat.title}
-              count={cat.count}
-              imageUrl={cat.image}
-              to={cat.to}
-            />
-          ))}
+          {isCategoriesLoading ? (
+            [...Array(6)].map((_, i) => (
+               <div key={i} className="bg-white border border-neutral-200 rounded-2xl p-6 flex flex-col items-center justify-center animate-pulse">
+                 <div className="w-16 h-16 bg-neutral-100 rounded-full mb-4"></div>
+                 <div className="h-5 bg-neutral-100 rounded w-24 mb-2"></div>
+                 <div className="h-4 bg-neutral-100 rounded w-16"></div>
+               </div>
+            ))
+          ) : (
+            categories.map((cat, idx) => (
+              <CategoryCard 
+                key={idx}
+                title={cat.name}
+                count={cat.count}
+                iconName={getCategoryIcon(cat.name)}
+                to={`/products?category=${encodeURIComponent(cat.name)}`}
+              />
+            ))
+          )}
         </div>
       </PageContainer>
 
@@ -103,16 +144,38 @@ const HomePage = () => {
         />
         {renderProductGrid(trendingProducts)}
       </PageContainer>
+      
+      {/* Sale / Special Offers */}
+      <PageContainer className="bg-danger/5 py-16 rounded-3xl">
+        <SectionHeader 
+          title="Special Offers" 
+          subtitle="Grab them before they're gone"
+          actionLabel="View Sale"
+          actionLink="/products?sale=true"
+        />
+        {renderProductGrid(saleProducts)}
+      </PageContainer>
 
       {/* New Arrivals */}
-      <PageContainer className="bg-secondary-50/50 py-16 rounded-3xl">
+      <PageContainer>
         <SectionHeader 
           title="New Arrivals" 
           subtitle="The latest additions to our catalog"
           actionLabel="Shop new"
-          actionLink="/products?sort=newest"
+          actionLink="/products?newArrival=true"
         />
         {renderProductGrid(newArrivals)}
+      </PageContainer>
+
+      {/* Best Sellers */}
+      <PageContainer className="bg-secondary-50/50 py-16 rounded-3xl">
+        <SectionHeader 
+          title="Best Sellers" 
+          subtitle="Our most loved furniture"
+          actionLabel="View all"
+          actionLink="/products?bestSeller=true"
+        />
+        {renderProductGrid(bestSellers)}
       </PageContainer>
 
       {/* Newsletter Section */}

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import useAdminStore from '../../store/adminStore';
 import { Search, ChevronDown, Inbox } from 'lucide-react';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import { formatPrice } from '../../utils/currency';
 
 const AdminOrders = () => {
   const { orders, isLoading, fetchOrders, updateOrderStatus } = useAdminStore();
@@ -92,7 +93,7 @@ const AdminOrders = () => {
                       {order.user.name}
                     </td>
                     <td className="p-4 font-bold text-text-primary">
-                      ${order.totalAmount.toFixed(2)}
+                      {formatPrice(order.totalAmount)}
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${

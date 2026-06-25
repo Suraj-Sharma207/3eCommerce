@@ -17,7 +17,16 @@ const LoginPage = () => {
     e.preventDefault();
     const success = await login(email, password);
     if (success) {
-      navigate(from, { replace: true });
+      const { user } = useAuthStore.getState();
+      if (user?.role === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        if (from.startsWith('/admin')) {
+          navigate('/', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      }
     }
   };
 
@@ -73,9 +82,9 @@ const LoginPage = () => {
                     type="submit"
                     fullWidth
                     size="lg"
-                    disabled={isLoading}
+                    isLoading={isLoading}
                   >
-                    {isLoading ? 'Signing in...' : 'Sign in'}
+                    Sign in
                   </Button>
                 </div>
               </form>

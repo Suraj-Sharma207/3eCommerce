@@ -1,30 +1,30 @@
 import orderRepository from '../repositories/orderRepository.js';
-import cartRepository from '../repositories/cartRepository.js';
+import emailService from './emailService.js';
 
 class OrderService {
-  async checkout(userId) {
-    const cart = await cartRepository.getCartByUserId(userId);
-    if (!cart || cart.items.length === 0) {
-      throw new Error('Cart is empty');
-    }
+  async checkout(userId, { shippingAddressId, billingAddressId, paymentMethod, paymentMetadata }) {
+    // Entire checkout logic has been moved to a single ACID transaction in the repository
+    const order = await orderRepository.executeCheckoutTransaction(
+      userId, 
+      shippingAddressId, 
+      billingAddressId, 
+      paymentMethod,
+      paymentMetadata
+    );
 
-    // Calculate total and prepare items
-    let totalAmount = 0;
-    const orderItems = cart.items.map(item => {
-      const price = item.product.price;
-      totalAmount += price * item.quantity;
-      return {
-        productId: item.productId,
-        quantity: item.quantity,
-        price
-      };
+    // Execute background tasks asynchronously so they don't block the API response
+    setImmediate(async () => {
+      try {
+        console.log(`[BACKGROUND] Starting payment simulation for ${order.orderNumber}...`);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate payment processing delay
+        console.log(`[BACKGROUND] Payment simulation completed successfully.`);
+
+        emailService.sendOrderConfirmation(order.user.email, order);
+        emailService.sendNewOrderNotification('admin@ecommerce.com', order);
+      } catch (error) {
+        console.error('Failed to execute background tasks for order:', error);
+      }
     });
-
-    // Create order
-    const order = await orderRepository.createOrder(userId, orderItems, totalAmount);
-
-    // Clear cart after successful order
-    await cartRepository.clearCart(cart.id);
 
     return order;
   }

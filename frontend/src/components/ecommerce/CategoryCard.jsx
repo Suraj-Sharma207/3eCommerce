@@ -1,21 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
 
-const CategoryCard = ({ title, count, imageUrl, to }) => {
+const CategoryCard = ({ title, count, iconName = 'Package', to }) => {
+  const IconComponent = LucideIcons[iconName] || LucideIcons.Package;
+
   return (
     <Link to={to} className="group block">
-      <div className="relative rounded-2xl overflow-hidden bg-secondary-100 aspect-square mb-4">
-        <img 
-          src={imageUrl} 
-          alt={title}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-        />
-        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-300" />
-      </div>
-      <div>
-        <h3 className="text-lg font-bold text-text-primary group-hover:text-primary-600 transition-colors">{title}</h3>
+      <div className="bg-white border border-neutral-200 rounded-2xl p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:border-primary-200">
+        <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors duration-300 text-neutral-500">
+          <IconComponent className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-medium text-neutral-900 group-hover:text-primary-600 transition-colors">{title}</h3>
         {count !== undefined && (
-          <p className="text-sm text-text-secondary mt-1">{count} items</p>
+          <p className="text-sm text-neutral-500 mt-1">{count} items</p>
         )}
       </div>
     </Link>

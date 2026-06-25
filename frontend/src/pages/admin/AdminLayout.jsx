@@ -6,8 +6,12 @@ import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut } from '
 const AdminLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
 
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
   }
 
   const navItems = [

@@ -78,6 +78,23 @@ class AuthService {
       role: user.role
     };
   }
+
+  async changePassword(userId, currentPassword, newPassword) {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isMatch = await comparePassword(currentPassword, user.password);
+    if (!isMatch) {
+      throw new Error('Invalid current password');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    await userRepository.update(userId, { password: hashedPassword });
+    
+    return { success: true };
+  }
 }
 
 export default new AuthService();

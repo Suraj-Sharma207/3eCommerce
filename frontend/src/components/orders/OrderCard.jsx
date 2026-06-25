@@ -3,16 +3,10 @@ import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { Package, ChevronRight } from 'lucide-react';
+import { formatPrice } from '../../utils/currency';
 
 const OrderCard = ({ order }) => {
-  // Placeholder order data if none provided
-  const data = order || {
-    id: 'ORD-847291',
-    date: 'Oct 24, 2026',
-    totalAmount: 344.99,
-    status: 'SHIPPED',
-    itemCount: 3,
-  };
+  if (!order) return null;
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {
@@ -33,11 +27,11 @@ const OrderCard = ({ order }) => {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h4 className="text-base font-bold text-secondary-900">{data.id}</h4>
-              <Badge variant={getStatusBadgeVariant(data.status)}>{data.status}</Badge>
+              <h4 className="text-base font-bold text-secondary-900">{order.id}</h4>
+              <Badge variant={getStatusBadgeVariant(order.status)}>{order.status}</Badge>
             </div>
             <p className="text-sm text-secondary-500">
-              Placed on {data.date} • {data.itemCount} items
+              Placed on {new Date(order.createdAt).toLocaleDateString()} • {order.items?.length || 0} items
             </p>
           </div>
         </div>
@@ -45,7 +39,7 @@ const OrderCard = ({ order }) => {
         <div className="flex items-center gap-6">
           <div className="text-right">
             <p className="text-xs text-secondary-500 font-medium mb-1 uppercase tracking-wider">Total Amount</p>
-            <p className="text-lg font-bold text-secondary-900">${data.totalAmount.toFixed(2)}</p>
+            <p className="text-lg font-bold text-secondary-900">{formatPrice(order.totalAmount)}</p>
           </div>
           <Button variant="ghost" className="!p-2 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-full">
             <ChevronRight className="w-5 h-5" />

@@ -154,9 +154,9 @@ const RegisterPage = () => {
                   type="submit"
                   fullWidth
                   size="lg"
-                  disabled={isLoading}
+                  isLoading={isLoading}
                 >
-                  {isLoading ? 'Creating account...' : 'Create Account'}
+                  Create Account
                 </Button>
               </div>
             </form>

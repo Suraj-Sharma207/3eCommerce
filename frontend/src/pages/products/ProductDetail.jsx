@@ -12,17 +12,22 @@ import useCartStore from '../../store/cartStore';
 import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
 import ImageFallback from '../../components/ui/ImageFallback';
-import { Heart, Truck, RotateCcw, ShieldCheck, ChevronRight } from 'lucide-react';
+import ProductCard from '../../components/products/ProductCard';
+import NotifyMeModal from '../../components/products/NotifyMeModal';
+import { Heart, Truck, RotateCcw, ShieldCheck, ChevronRight, AlertTriangle } from 'lucide-react';
+import { formatPrice } from '../../utils/currency';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { product, isLoading, error, fetchProductById } = useProductStore();
-  const { addToCart } = useCartStore();
+  const { addToCart, isLoading: isCartLoading } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
   
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   
   const isWishlisted = product ? isInWishlist(product.id) : false;
 
@@ -42,6 +47,21 @@ const ProductDetail = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [id, fetchProductById]);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (isAuthenticated && product && (!product.active || product.stock === 0)) {
+        try {
+          const { default: api } = await import('../../services/api');
+          const res = await api.get(`/products/${product.id}/notify/status`);
+          setIsSubscribed(res.data.data.isSubscribed);
+        } catch (err) {
+          // Silent fail for non-critical status check
+        }
+      }
+    };
+    checkSubscription();
+  }, [product, isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -64,14 +84,12 @@ const ProductDetail = () => {
     );
   }
 
-  // Mocking rating for now
-  const rating = 4.8;
-  const reviewsCount = 120;
+  const rating = product.rating || 0;
+  const reviewsCount = product.reviewCount || 0;
   
-  // Create an array of mock images since the DB only has one imageUrl right now
-  const images = product.imageUrl 
-    ? [product.imageUrl, 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=800&q=80', 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80']
-    : [];
+  const images = product.galleryImages?.length > 0
+    ? [product.thumbnail, ...product.galleryImages].filter(Boolean)
+    : [product.thumbnail].filter(Boolean);
 
   return (
     <PageContainer className="py-8 lg:py-12">
@@ -99,7 +117,7 @@ const ProductDetail = () => {
           </h1>
           
           <div className="flex items-center gap-4 mb-6">
-            <span className="text-2xl font-extrabold text-text-primary">${product.price.toFixed(2)}</span>
+            <span className="text-2xl font-extrabold text-text-primary">{formatPrice(product.finalPrice || product.price)}</span>
             <div className="w-1 h-1 rounded-full bg-secondary-300"></div>
             <RatingDisplay rating={rating} count={reviewsCount} />
           </div>
@@ -108,54 +126,100 @@ const ProductDetail = () => {
             {product.description}
           </p>
 
-          <div className="space-y-6 mb-10">
-            {/* Color Selector (Mock) */}
-            <div>
-              <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Color</h3>
-              <div className="flex gap-3">
-                <button className="w-8 h-8 rounded-full bg-secondary-200 ring-2 ring-offset-2 ring-primary-600 focus:outline-none" aria-label="Light Grey"></button>
-                <button className="w-8 h-8 rounded-full bg-text-primary ring-2 ring-offset-2 ring-transparent hover:ring-secondary-300 focus:outline-none" aria-label="Charcoal"></button>
-                <button className="w-8 h-8 rounded-full bg-accent-500 ring-2 ring-offset-2 ring-transparent hover:ring-secondary-300 focus:outline-none" aria-label="Wood"></button>
+          {(!product.active || product.stock === 0) ? (
+            <div className="space-y-6 mb-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-danger-light text-danger-dark rounded-full mb-2">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm font-bold uppercase tracking-wider">Out of Stock</span>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-end gap-4">
-              <div className="w-full sm:w-auto">
-                <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Quantity</h3>
-                <QuantitySelector 
-                  quantity={quantity} 
-                  setQuantity={setQuantity} 
-                  max={product.stock}
-                  className="w-full sm:w-auto"
-                />
-              </div>
-              
-              <div className="flex-1 w-full flex gap-4">
-                <Button 
-                  size="lg" 
-                  className="flex-1 shadow-lg hover:shadow-xl hover:-translate-y-0.5" 
-                  disabled={product.stock === 0}
-                  onClick={handleAddToCart}
-                >
-                  Add to Cart
-                </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {isSubscribed ? (
+                  <div className="flex-1 w-full">
+                    <Button 
+                      size="lg" 
+                      className="w-full shadow-md bg-success-600 hover:bg-success-700 text-white border-none cursor-default opacity-90"
+                      disabled
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        You're Notified
+                      </span>
+                    </Button>
+                    <p className="text-sm text-text-secondary text-center mt-3">
+                      We'll notify you by email when this product is back in stock.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex-1 w-full">
+                    <Button 
+                      size="lg" 
+                      className="w-full shadow-md"
+                      onClick={() => setIsNotifyModalOpen(true)}
+                    >
+                      Notify Me When Available
+                    </Button>
+                  </div>
+                )}
                 <button 
                   onClick={handleToggleWishlist}
                   className={`w-14 h-14 shrink-0 rounded-lg border border-secondary-200 flex items-center justify-center transition-colors shadow-sm bg-surface ${
                     isWishlisted ? 'text-danger border-danger bg-danger-light' : 'text-text-secondary hover:text-danger hover:border-danger hover:bg-danger-light'
                   }`}
+                  aria-label="Add to wishlist"
                 >
                   <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
                 </button>
               </div>
+              <NotifyMeModal 
+                isOpen={isNotifyModalOpen}
+                onClose={() => setIsNotifyModalOpen(false)}
+                productId={product.id}
+                productName={product.name}
+                onSuccess={() => setIsSubscribed(true)}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6 mb-10">
+              <div className="flex flex-col sm:flex-row items-end gap-4">
+                <div className="w-full sm:w-auto">
+                  <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Quantity</h3>
+                  <QuantitySelector 
+                    quantity={quantity} 
+                    setQuantity={setQuantity} 
+                    max={product.stock}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
+                
+                <div className="flex-1 w-full flex gap-4">
+                  <Button 
+                    size="lg" 
+                    className="flex-1 shadow-lg hover:shadow-xl hover:-translate-y-0.5" 
+                    onClick={handleAddToCart}
+                    isLoading={isCartLoading}
+                  >
+                    Add to Cart
+                  </Button>
+                  <button 
+                    onClick={handleToggleWishlist}
+                    className={`w-14 h-14 shrink-0 rounded-lg border border-secondary-200 flex items-center justify-center transition-colors shadow-sm bg-surface ${
+                      isWishlisted ? 'text-danger border-danger bg-danger-light' : 'text-text-secondary hover:text-danger hover:border-danger hover:bg-danger-light'
+                    }`}
+                  >
+                    <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Trust Badges */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 border-t border-secondary-200">
             <div className="flex items-center gap-3 text-text-secondary">
               <Truck className="w-5 h-5 text-primary-600" />
-              <span className="text-sm font-medium">Free Delivery over $299</span>
+              <span className="text-sm font-medium">Free Delivery over {formatPrice(4999)}</span>
             </div>
             <div className="flex items-center gap-3 text-text-secondary">
               <RotateCcw className="w-5 h-5 text-primary-600" />
@@ -172,12 +236,12 @@ const ProductDetail = () => {
 
       {/* Product Details Tabs */}
       <div className="mb-20">
-        <div className="flex border-b border-secondary-200 gap-8">
-          {['description', 'specifications', 'shipping'].map((tab) => (
+        <div className="flex border-b border-secondary-200 gap-8 overflow-x-auto hide-scrollbar whitespace-nowrap">
+          {['description', 'specifications', 'shipping', 'returns', 'warranty', 'care instructions'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-base font-bold capitalize transition-colors relative ${
+              className={`pb-4 text-base font-bold capitalize transition-colors relative flex-shrink-0 ${
                 activeTab === tab ? 'text-primary-600' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -202,12 +266,12 @@ const ProductDetail = () => {
                 <span>Premium Fabric, Solid Wood Frame</span>
               </div>
               <div className="flex justify-between py-3 border-b border-secondary-100">
-                <span className="font-medium text-text-primary">Dimensions</span>
-                <span>84" W x 38" D x 34" H</span>
+                <span className="font-medium text-text-primary">Brand</span>
+                <span>{product.brand || 'LuxeHome'}</span>
               </div>
               <div className="flex justify-between py-3 border-b border-secondary-100">
-                <span className="font-medium text-text-primary">Weight</span>
-                <span>120 lbs</span>
+                <span className="font-medium text-text-primary">SKU</span>
+                <span>{product.sku}</span>
               </div>
               <div className="flex justify-between py-3 border-b border-secondary-100">
                 <span className="font-medium text-text-primary">Assembly</span>
@@ -218,14 +282,69 @@ const ProductDetail = () => {
           {activeTab === 'shipping' && (
             <div className="space-y-4 text-text-secondary">
               <p className="text-lg leading-relaxed"><strong className="text-text-primary">Free Standard Delivery:</strong> 5-7 business days.</p>
-              <p className="text-lg leading-relaxed"><strong className="text-text-primary">White Glove Delivery ($149):</strong> Room of choice placement, assembly, and packaging removal.</p>
-              <p className="text-lg leading-relaxed mt-6"><strong className="text-text-primary">Return Policy:</strong> You can return most items for a refund or store credit within 30 days of delivery. Return shipping costs apply, and the item must be in its original condition and packaging to be accepted.</p>
+              <p className="text-lg leading-relaxed"><strong className="text-text-primary">White Glove Delivery ({formatPrice(1499)}):</strong> Room of choice placement, assembly, and packaging removal.</p>
+            </div>
+          )}
+          {activeTab === 'returns' && (
+            <div className="space-y-4 text-text-secondary">
+              <p className="text-lg leading-relaxed"><strong className="text-text-primary">Return Policy:</strong> You can return most items for a refund or store credit within 30 days of delivery. Return shipping costs apply, and the item must be in its original condition and packaging to be accepted.</p>
+            </div>
+          )}
+          {activeTab === 'warranty' && (
+            <div className="space-y-4 text-text-secondary">
+              <p className="text-lg leading-relaxed"><strong className="text-text-primary">2-Year Limited Warranty:</strong> Covers manufacturing defects in materials and workmanship under normal use. Does not cover normal wear and tear, or accidental damage.</p>
+            </div>
+          )}
+          {activeTab === 'care instructions' && (
+            <div className="space-y-4 text-text-secondary">
+              <p className="text-lg leading-relaxed"><strong className="text-text-primary">Care:</strong> Dust regularly with a soft, dry cloth. Avoid direct sunlight to prevent fading. Wipe up spills immediately with a damp cloth.</p>
             </div>
           )}
         </div>
       </div>
 
+      {/* Related Products */}
+      <RelatedProducts productId={product.id} />
+
     </PageContainer>
+  );
+};
+
+const RelatedProducts = ({ productId }) => {
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        const { default: api } = await import('../../services/api');
+        const response = await api.get(`/products/${productId}/related?limit=4`);
+        setProducts(response.data.data.products);
+      } catch (error) {
+        console.error('Failed to fetch related products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRelated();
+  }, [productId]);
+
+  if (isLoading || products.length === 0) return null;
+
+  return (
+    <div className="border-t border-secondary-200 pt-16 mt-8">
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-text-primary">You Might Also Like</h2>
+          <p className="text-text-secondary mt-1">Recommended products in the same category</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {products.map(p => (
+          <ProductCard key={p.id} product={p} />
+        ))}
+      </div>
+    </div>
   );
 };
 

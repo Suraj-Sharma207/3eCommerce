@@ -1,0 +1,847 @@
+{
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\cart\\CartCard.jsx": [
+    {
+      "line": 6,
+      "match": "placeholder",
+      "text": "// Placeholder item data if none provided"
+    },
+    {
+      "line": 11,
+      "match": "imageUrl",
+      "text": "imageUrl: 'https://images.unsplash.com/photo-1613203009765-a8c4ce8c7f96?w=500&q=80',"
+    },
+    {
+      "line": 18,
+      "match": "imageUrl",
+      "text": "src={data.imageUrl}"
+    },
+    {
+      "line": 26,
+      "match": "\\$",
+      "text": "<p className=\"text-sm text-secondary-500 mt-1\">${data.price.toFixed(2)}</p>"
+    },
+    {
+      "line": 42,
+      "match": "\\$",
+      "text": "<p className=\"text-base font-bold text-secondary-900\">${(data.price * data.quantity).toFixed(2)}</p>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ecommerce\\HeroBanner.jsx": [
+    {
+      "line": 44,
+      "match": "\\$",
+      "text": "<TrustBadge icon=\"M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4\" title=\"Free Delivery\" desc=\"On orders over $299\" />"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ecommerce\\ProductGallery.jsx": [
+    {
+      "line": 6,
+      "match": "placeholder",
+      "text": "// If no images provided, use placeholder"
+    },
+    {
+      "line": 15,
+      "match": "\\$",
+      "text": "alt={`Product View ${activeIndex + 1}`}"
+    },
+    {
+      "line": 27,
+      "match": "\\$",
+      "text": "className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 transition-all duration-200 ${"
+    },
+    {
+      "line": 31,
+      "match": "\\$",
+      "text": "<img src={img} alt={`Thumbnail ${idx + 1}`} className=\"w-full h-full object-cover\" />"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ecommerce\\QuantitySelector.jsx": [
+    {
+      "line": 14,
+      "match": "\\$",
+      "text": "<div className={`inline-flex items-center border border-secondary-200 rounded-lg bg-surface ${className}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ecommerce\\RatingDisplay.jsx": [
+    {
+      "line": 10,
+      "match": "\\$",
+      "text": "<div className={`flex items-center gap-2 ${className}`}>"
+    },
+    {
+      "line": 13,
+      "match": "\\$",
+      "text": "<Star key={`full-${i}`} className=\"w-4 h-4 fill-current\" />"
+    },
+    {
+      "line": 17,
+      "match": "\\$",
+      "text": "<Star key={`empty-${i}`} className=\"w-4 h-4 text-secondary-300\" />"
+    },
+    {
+      "line": 22,
+      "match": "\\$",
+      "text": "{rating.toFixed(1)} {count !== undefined && `(${count})`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\layout\\Navbar.jsx": [
+    {
+      "line": 53,
+      "match": "\\$",
+      "text": "const response = await api.get(`/products/search/suggestions?q=${encodeURIComponent(searchQuery)}`, {"
+    },
+    {
+      "line": 87,
+      "match": "\\$",
+      "text": "navigate(`/products/${selected.slug || selected.id}`);"
+    },
+    {
+      "line": 169,
+      "match": "placeholder",
+      "text": "className=\"block w-full pl-11 pr-14 py-2.5 border border-secondary-200 rounded-full bg-secondary-50 text-text-primary placeholder-secondary-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 relative z-10\""
+    },
+    {
+      "line": 170,
+      "match": "placeholder",
+      "text": "placeholder=\"Search furniture...\""
+    },
+    {
+      "line": 196,
+      "match": "\\$",
+      "text": "navigate(`/products/${item.slug || item.id}`);"
+    },
+    {
+      "line": 200,
+      "match": "\\$",
+      "text": "className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${"
+    },
+    {
+      "line": 212,
+      "match": "\\$",
+      "text": "${item.finalPrice?.toFixed(2)}"
+    },
+    {
+      "line": 284,
+      "match": "placeholder",
+      "text": "placeholder=\"Search furniture...\""
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\layout\\PageContainer.jsx": [
+    {
+      "line": 5,
+      "match": "\\$",
+      "text": "<div className={`max-w-[1440px] mx-auto w-full ${noPadding ? '' : 'px-4 sm:px-6 lg:px-12'} ${className}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\orders\\OrderCard.jsx": [
+    {
+      "line": 8,
+      "match": "placeholder",
+      "text": "// Placeholder order data if none provided"
+    },
+    {
+      "line": 48,
+      "match": "\\$",
+      "text": "<p className=\"text-lg font-bold text-secondary-900\">${data.totalAmount.toFixed(2)}</p>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\products\\ProductCard.jsx": [
+    {
+      "line": 41,
+      "match": "\\$",
+      "text": "<Link to={`/products/${product.slug || product.id}`} className=\"block w-full h-full\">"
+    },
+    {
+      "line": 70,
+      "match": "\\$",
+      "text": "className={`w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-colors ${"
+    },
+    {
+      "line": 75,
+      "match": "\\$",
+      "text": "<Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />"
+    },
+    {
+      "line": 90,
+      "match": "\\$",
+      "text": "<Link to={`/products/${product.slug || product.id}`} className=\"block mb-2 group-hover:text-primary-600 transition-colors\">"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\Badge.jsx": [
+    {
+      "line": 16,
+      "match": "\\$",
+      "text": "<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${variants[variant]} ${className}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\Button.jsx": [
+    {
+      "line": 29,
+      "match": "\\$",
+      "text": "className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\Card.jsx": [
+    {
+      "line": 8,
+      "match": "\\$",
+      "text": "className={`bg-white rounded-xl border border-secondary-100 ${shadowClass} overflow-hidden ${className}`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\ImageFallback.jsx": [
+    {
+      "line": 17,
+      "match": "\\$",
+      "text": "<div className={`flex flex-col items-center justify-center bg-secondary-100 text-secondary-400 ${className} ${fallbackClassName}`}>"
+    },
+    {
+      "line": 25,
+      "match": "\\$",
+      "text": "<div className={`relative overflow-hidden ${className}`}>"
+    },
+    {
+      "line": 34,
+      "match": "\\$",
+      "text": "className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\Input.jsx": [
+    {
+      "line": 18,
+      "match": "\\$",
+      "text": "<div className={`flex flex-col gap-1.5 ${className}`}>"
+    },
+    {
+      "line": 30,
+      "match": "placeholder",
+      "text": "text-text-primary placeholder:text-text-muted"
+    },
+    {
+      "line": 33,
+      "match": "\\$",
+      "text": "${isPassword ? 'pr-12' : ''}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\LoadingSpinner.jsx": [
+    {
+      "line": 12,
+      "match": "\\$",
+      "text": "<div className={`flex justify-center items-center p-4 ${className}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\Pagination.jsx": [
+    {
+      "line": 52,
+      "match": "\\$",
+      "text": "className={`w-10 h-10 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center ${"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\components\\ui\\SkeletonLoader.jsx": [
+    {
+      "line": 14,
+      "match": "\\$",
+      "text": "className={`${baseClass} ${types[type]} ${className}`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\addresses\\AddressBook.jsx": [
+    {
+      "line": 66,
+      "match": "\\$",
+      "text": "else if (!/^[A-Za-z\\s'\\-]+$/.test(val)) err = 'Only letters, spaces, hyphens, and apostrophes allowed';"
+    },
+    {
+      "line": 70,
+      "match": "\\$",
+      "text": "else if (!/^[+\\-\\s0-9]{7,15}$/.test(val)) err = 'Enter a valid phone number (7-15 digits)';"
+    },
+    {
+      "line": 81,
+      "match": "\\$",
+      "text": "else if (!/^[A-Za-z\\s]+$/.test(val)) err = 'Only letters and spaces allowed';"
+    },
+    {
+      "line": 87,
+      "match": "\\$",
+      "text": "else if (!/^[A-Za-z\\s]+$/.test(val)) err = 'Only letters and spaces allowed';"
+    },
+    {
+      "line": 95,
+      "match": "\\$",
+      "text": "else if (allData.country === 'India' && !/^\\d{6}$/.test(val)) err = 'India requires a valid 6-digit PIN code';"
+    },
+    {
+      "line": 178,
+      "match": "slice\\(",
+      "text": "if (name === 'zipCode' && currentAddress.country === 'India') sanitizedValue = value.replace(/[^\\d]/g, '').slice(0, 6);"
+    },
+    {
+      "line": 274,
+      "match": "placeholder",
+      "text": "{...getFieldStatus('phoneNumber')} required placeholder=\"+1 234 567 8900\""
+    },
+    {
+      "line": 289,
+      "match": "placeholder",
+      "text": "{...getFieldStatus('street')} required placeholder=\"Street address, P.O. box, etc.\""
+    },
+    {
+      "line": 294,
+      "match": "placeholder",
+      "text": "{...getFieldStatus('addressLine2')} placeholder=\"Apartment, suite, unit, etc.\""
+    },
+    {
+      "line": 299,
+      "match": "placeholder",
+      "text": "{...getFieldStatus('landmark')} placeholder=\"Near...\""
+    },
+    {
+      "line": 351,
+      "match": "\\$",
+      "text": "<div key={address.id} className={`bg-white rounded-2xl border p-6 sm:p-8 relative group hover:shadow-md transition-shadow ${address.isDefaultShipping ? 'border-primary-200' : 'border-neutral-200'}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\admin\\AdminLayout.jsx": [
+    {
+      "line": 45,
+      "match": "\\$",
+      "text": "${isActive"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\admin\\AdminOrders.jsx": [
+    {
+      "line": 39,
+      "match": "placeholder",
+      "text": "placeholder=\"Search by order ID or customer...\""
+    },
+    {
+      "line": 95,
+      "match": "\\$",
+      "text": "${order.totalAmount.toFixed(2)}"
+    },
+    {
+      "line": 98,
+      "match": "\\$",
+      "text": "<span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${"
+    },
+    {
+      "line": 109,
+      "match": "\\$",
+      "text": "className={`appearance-none pl-3 pr-8 py-1.5 text-xs font-bold rounded cursor-pointer border-none focus:ring-2 focus:ring-primary-500 outline-none ${statusColors[order.orderStatus]}`}"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\admin\\AdminProducts.jsx": [
+    {
+      "line": 41,
+      "match": "placeholder",
+      "text": "placeholder=\"Search products...\""
+    },
+    {
+      "line": 94,
+      "match": "\\$",
+      "text": "<span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\admin\\Dashboard.jsx": [
+    {
+      "line": 22,
+      "match": "USD",
+      "text": "const { kpis, revenueTrend, statusDistribution, recentOrders, topProducts } = analytics;"
+    },
+    {
+      "line": 66,
+      "match": "USD",
+      "text": "{statusDistribution.length > 0 ? ("
+    },
+    {
+      "line": 70,
+      "match": "USD",
+      "text": "data={statusDistribution}"
+    },
+    {
+      "line": 78,
+      "match": "USD",
+      "text": "{statusDistribution.map((entry, index) => ("
+    },
+    {
+      "line": 79,
+      "match": "\\$",
+      "text": "<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />"
+    },
+    {
+      "line": 99,
+      "match": "USD",
+      "text": "{statusDistribution.map((entry, index) => ("
+    },
+    {
+      "line": 178,
+      "match": "\\$",
+      "text": "<div className={`w-14 h-14 rounded-xl flex items-center justify-center ${color}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\auth\\LoginPage.jsx": [
+    {
+      "line": 61,
+      "match": "placeholder",
+      "text": "placeholder=\"Enter your email\""
+    },
+    {
+      "line": 71,
+      "match": "placeholder",
+      "text": "placeholder=\"Enter your password\""
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\auth\\RegisterPage.jsx": [
+    {
+      "line": 106,
+      "match": "placeholder",
+      "text": "placeholder=\"Enter your full name\""
+    },
+    {
+      "line": 115,
+      "match": "placeholder",
+      "text": "placeholder=\"Enter your email\""
+    },
+    {
+      "line": 124,
+      "match": "placeholder",
+      "text": "placeholder=\"Create a password\""
+    },
+    {
+      "line": 133,
+      "match": "placeholder",
+      "text": "placeholder=\"Confirm your password\""
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\cart\\CartPage.jsx": [
+    {
+      "line": 103,
+      "match": "\\$",
+      "text": "<div key={item.id} className={`p-4 sm:p-6 flex flex-col sm:grid sm:grid-cols-12 gap-4 items-center group ${isUnavailable ? 'opacity-60 bg-secondary-50' : ''}`}>"
+    },
+    {
+      "line": 107,
+      "match": "\\$",
+      "text": "<Link to={`/products/${item.productId}`} className=\"shrink-0 relative w-24 h-24 rounded-xl overflow-hidden bg-secondary-100\">"
+    },
+    {
+      "line": 111,
+      "match": "\\$",
+      "text": "<Link to={`/products/${item.productId}`} className=\"text-base font-bold text-text-primary hover:text-primary-600 transition-colors line-clamp-2\">"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\checkout\\CheckoutPage.jsx": [
+    {
+      "line": 87,
+      "match": "\\$",
+      "text": "navigate(`/order-success/${order.id}`);"
+    },
+    {
+      "line": 108,
+      "match": "\\$",
+      "text": "<label key={addr.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${selectedId === addr.id ? 'border-primary-500 bg-primary-50 text-primary-900' : 'border-neutral-200 bg-white hover:border-primary-200'}`}>"
+    },
+    {
+      "line": 111,
+      "match": "\\$",
+      "text": "name={`${type}Address`}"
+    },
+    {
+      "line": 159,
+      "match": "placeholder",
+      "text": "<Input label=\"Card Number\" placeholder=\"**** **** **** ****\" required value={paymentDetails.cardNumber} onChange={e => setPaymentDetails({...paymentDetails, cardNumber: e.target.value})} />"
+    },
+    {
+      "line": 161,
+      "match": "placeholder",
+      "text": "<Input label=\"Expiry (MM/YY)\" placeholder=\"MM/YY\" required value={paymentDetails.expiry} onChange={e => setPaymentDetails({...paymentDetails, expiry: e.target.value})} />"
+    },
+    {
+      "line": 162,
+      "match": "placeholder",
+      "text": "<Input label=\"CVC\" placeholder=\"123\" required value={paymentDetails.cvc} onChange={e => setPaymentDetails({...paymentDetails, cvc: e.target.value})} />"
+    },
+    {
+      "line": 204,
+      "match": "slice\\(",
+      "text": "<p className=\"text-neutral-700\">Card ending in •••• {paymentDetails.cardNumber.slice(-4) || 'XXXX'}</p>"
+    },
+    {
+      "line": 228,
+      "match": "\\$",
+      "text": "style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}"
+    },
+    {
+      "line": 238,
+      "match": "\\$",
+      "text": "<div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${"
+    },
+    {
+      "line": 244,
+      "match": "\\$",
+      "text": "<span className={`mt-2 text-xs font-bold uppercase tracking-wider ${isCurrent || isCompleted ? 'text-primary-700' : 'text-neutral-400'}`}>"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\checkout\\OrderSuccessPage.jsx": [
+    {
+      "line": 64,
+      "match": "\\$",
+      "text": "<span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${"
+    },
+    {
+      "line": 74,
+      "match": "\\$",
+      "text": "<Button as={Link} to={`/orders/${currentOrder.id}`} variant=\"outline\" size=\"lg\" className=\"sm:w-auto\">"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\home\\HomePage.jsx": [
+    {
+      "line": 119,
+      "match": "\\$",
+      "text": "to={`/products?category=${encodeURIComponent(cat.name)}`}"
+    },
+    {
+      "line": 195,
+      "match": "placeholder",
+      "text": "placeholder=\"Enter your email\""
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\orders\\OrderDetailPage.jsx": [
+    {
+      "line": 60,
+      "match": "\\$",
+      "text": "<div key={step.status} className={`flex md:flex-col items-center gap-4 md:gap-3 flex-1 ${index > currentIndex ? 'opacity-50' : ''}`}>"
+    },
+    {
+      "line": 61,
+      "match": "\\$",
+      "text": "<div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-white border-2 transition-colors ${"
+    },
+    {
+      "line": 67,
+      "match": "\\$",
+      "text": "<p className={`font-medium ${isCurrent ? 'text-primary-700' : 'text-neutral-900'}`}>{step.label}</p>"
+    },
+    {
+      "line": 88,
+      "match": "slice\\(",
+      "text": "<h1 className=\"text-3xl font-medium text-neutral-900 mb-2\">Order #{currentOrder.id.slice(-8).toUpperCase()}</h1>"
+    },
+    {
+      "line": 108,
+      "match": "\\$",
+      "text": "<Link to={`/products/${item.productId}`} className=\"shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-neutral-100\">"
+    },
+    {
+      "line": 112,
+      "match": "\\$",
+      "text": "<Link to={`/products/${item.productId}`} className=\"text-base font-medium text-neutral-900 hover:text-primary-600 transition-colors line-clamp-1 mb-1\">"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\orders\\OrdersPage.jsx": [
+    {
+      "line": 56,
+      "match": "\\$",
+      "text": "to={`/orders/${order.id}`}"
+    },
+    {
+      "line": 70,
+      "match": "\\$",
+      "text": "<span className={`ml-2 inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${"
+    },
+    {
+      "line": 84,
+      "match": "\\$",
+      "text": "<Link key={item.id} to={`/products/${item.productId}`} className=\"shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-neutral-100 group border border-neutral-200\">"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\products\\ProductDetail.jsx": [
+    {
+      "line": 83,
+      "match": "\\$",
+      "text": "<Link to={`/products?category=${product.category}`} className=\"hover:text-primary-600 transition-colors\">{product.category || 'Furniture'}</Link>"
+    },
+    {
+      "line": 135,
+      "match": "\\$",
+      "text": "className={`w-14 h-14 shrink-0 rounded-lg border border-secondary-200 flex items-center justify-center transition-colors shadow-sm bg-surface ${"
+    },
+    {
+      "line": 139,
+      "match": "\\$",
+      "text": "<Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />"
+    },
+    {
+      "line": 171,
+      "match": "\\$",
+      "text": "className={`pb-4 text-base font-bold capitalize transition-colors relative flex-shrink-0 ${"
+    },
+    {
+      "line": 248,
+      "match": "\\$",
+      "text": "const response = await api.get(`/products/${productId}/related?limit=4`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\products\\ProductList.jsx": [
+    {
+      "line": 135,
+      "match": "\\$",
+      "text": "<div className={`w-full md:w-64 flex-shrink-0 space-y-8 ${isFilterOpen ? 'block' : 'hidden md:block'}`}>"
+    },
+    {
+      "line": 142,
+      "match": "\\$",
+      "text": "<div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${"
+    },
+    {
+      "line": 149,
+      "match": "\\$",
+      "text": "<span className={`text-sm ${filters.category === cat ? 'font-semibold text-primary-700' : 'text-text-secondary group-hover:text-text-primary'}`}>"
+    },
+    {
+      "line": 170,
+      "match": "\\$",
+      "text": "<div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${"
+    },
+    {
+      "line": 177,
+      "match": "\\$",
+      "text": "<span className={`text-sm ${filters.minRating == rating ? 'font-semibold text-primary-700' : 'text-text-secondary group-hover:text-text-primary'}`}>"
+    },
+    {
+      "line": 201,
+      "match": "placeholder",
+      "text": "placeholder=\"0\""
+    },
+    {
+      "line": 211,
+      "match": "placeholder",
+      "text": "placeholder=\"2000\""
+    },
+    {
+      "line": 224,
+      "match": "\\$",
+      "text": "<div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${"
+    },
+    {
+      "line": 241,
+      "match": "\\$",
+      "text": "<div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\pages\\profile\\ProfilePage.jsx": [
+    {
+      "line": 43,
+      "match": "\\$",
+      "text": "className={`flex-1 rounded-full ${i <= strength ? getColor(strength) : 'bg-neutral-200'} transition-colors duration-300`}"
+    },
+    {
+      "line": 123,
+      "match": "\\$",
+      "text": "if (formData.phone && !/^[+\\-\\s0-9]{7,15}$/.test(formData.phone)) {"
+    },
+    {
+      "line": 389,
+      "match": "placeholder",
+      "text": "placeholder=\"https://example.com/avatar.jpg\""
+    },
+    {
+      "line": 416,
+      "match": "placeholder",
+      "text": "placeholder=\"+1 234 567 8900\""
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\services\\api.js": [
+    {
+      "line": 30,
+      "match": "\\$",
+      "text": "config.headers.Authorization = `Bearer ${token}`;"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\services\\productService.js": [
+    {
+      "line": 20,
+      "match": "\\$",
+      "text": "const response = await api.get(`/products/${id}`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\store\\addressStore.js": [
+    {
+      "line": 54,
+      "match": "\\$",
+      "text": "const response = await api.put(`/addresses/${id}`, data);"
+    },
+    {
+      "line": 86,
+      "match": "\\$",
+      "text": "await api.delete(`/addresses/${id}`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\store\\adminStore.js": [
+    {
+      "line": 24,
+      "match": "\\$",
+      "text": "const response = await api.get(`/admin/orders?page=${page}&limit=${limit}`);"
+    },
+    {
+      "line": 34,
+      "match": "\\$",
+      "text": "await api.put(`/admin/orders/${orderId}/status`, { status });"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\store\\cartStore.js": [
+    {
+      "line": 34,
+      "match": "\\$",
+      "text": "const response = await api.put(`/cart/items/${productId}`, { quantity });"
+    },
+    {
+      "line": 44,
+      "match": "\\$",
+      "text": "const response = await api.delete(`/cart/items/${productId}`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\store\\orderStore.js": [
+    {
+      "line": 35,
+      "match": "\\$",
+      "text": "const response = await api.get(`/orders/${orderId}`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\store\\paymentStore.js": [
+    {
+      "line": 13,
+      "match": "mock",
+      "text": "// For now, we mock the API call that would happen after a successful gateway callback"
+    },
+    {
+      "line": 17,
+      "match": "mock",
+      "text": "// Mock successful payment"
+    },
+    {
+      "line": 21,
+      "match": "\\$",
+      "text": "// await api.put(`/orders/${orderId}/payment`, { status: 'PAID' });"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\frontend\\src\\theme\\radius.js": [
+    {
+      "line": 10,
+      "match": "9999",
+      "text": "full: '9999px',"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\controllers\\productController.js": [
+    {
+      "line": 26,
+      "match": "imageUrl",
+      "text": "thumbnail: p.thumbnail || p.imageUrl,"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\controllers\\userController.js": [
+    {
+      "line": 19,
+      "match": "\\$",
+      "text": "} else if (/[a-zA-Z]/.test(req.body.phone) || !/^[+\\-\\s0-9]{7,15}$/.test(req.body.phone)) {"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\repositories\\adminRepository.js": [
+    {
+      "line": 50,
+      "match": "mock",
+      "text": "// Revenue Trend (last 7 days for now, mock logic for aggregation)"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\repositories\\productRepository.js": [
+    {
+      "line": 108,
+      "match": "\\$",
+      "text": "const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\server.js": [
+    {
+      "line": 8,
+      "match": "\\$",
+      "text": "await prisma.$connect();"
+    },
+    {
+      "line": 12,
+      "match": "\\$",
+      "text": "console.log(`🚀 Server is running on port ${config.port}`);"
+    },
+    {
+      "line": 16,
+      "match": "\\$",
+      "text": "await prisma.$disconnect();"
+    },
+    {
+      "line": 26,
+      "match": "\\$",
+      "text": "await prisma.$disconnect();"
+    },
+    {
+      "line": 32,
+      "match": "\\$",
+      "text": "await prisma.$disconnect();"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\services\\adminService.js": [
+    {
+      "line": 27,
+      "match": "USD",
+      "text": "const statusDistribution = data.orderStatuses.map(status => ({"
+    },
+    {
+      "line": 40,
+      "match": "USD",
+      "text": "statusDistribution,"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\services\\cartService.js": [
+    {
+      "line": 30,
+      "match": "\\$",
+      "text": "throw new Error(`Cannot add more than available stock (${product.stock})`);"
+    },
+    {
+      "line": 60,
+      "match": "\\$",
+      "text": "throw new Error(`Cannot update quantity above available stock (${product.stock})`);"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\validations\\addressValidation.js": [
+    {
+      "line": 9,
+      "match": "\\$",
+      "text": ".regex(/^[A-Za-z\\s'\\-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes'),"
+    },
+    {
+      "line": 13,
+      "match": "\\$",
+      "text": ".regex(/^[+\\-\\s0-9]{7,15}$/, 'Invalid phone number format'),"
+    },
+    {
+      "line": 32,
+      "match": "\\$",
+      "text": ".regex(/^[A-Za-z\\s]+$/, 'City can only contain letters and spaces'),"
+    },
+    {
+      "line": 38,
+      "match": "\\$",
+      "text": ".regex(/^[A-Za-z\\s]+$/, 'State can only contain letters and spaces'),"
+    },
+    {
+      "line": 51,
+      "match": "\\$",
+      "text": "if (!/^\\d{6}$/.test(data.zipCode)) {"
+    }
+  ],
+  "C:\\Users\\Admin\\Desktop\\eCommerce\\backend\\src\\validations\\productValidation.js": [
+    {
+      "line": 9,
+      "match": "imageUrl",
+      "text": "imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),"
+    }
+  ]
+}

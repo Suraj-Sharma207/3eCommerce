@@ -44,6 +44,19 @@ class AuthController {
       next(error);
     }
   }
+
+  async changePassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      await authService.changePassword(req.user.id, currentPassword, newPassword);
+      return successResponse(res, 'Password changed successfully', {}, 200);
+    } catch (error) {
+      if (error.message === 'Invalid current password') {
+        return errorResponse(res, error.message, [], 400);
+      }
+      next(error);
+    }
+  }
 }
 
 export default new AuthController();

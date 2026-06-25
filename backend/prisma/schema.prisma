@@ -13,12 +13,23 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(CUSTOMER)
+  
+  phone      String?
+  birthday   DateTime?
+  gender     String?
+  avatarUrl  String?
+  language   String    @default("en")
+  currency   String    @default("USD")
+  newsletter Boolean   @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   cart      Cart?
   orders    Order[]
   wishlist  Wishlist?
+  addresses Address[]
+  stockNotifications StockNotification[]
 }
 
 enum Role {
@@ -27,19 +38,33 @@ enum Role {
 }
 
 model Product {
-  id          String      @id @default(uuid())
-  name        String
-  description String
-  price       Float
-  category    String      @default("Living Room")
-  stock       Int         @default(0)
-  imageUrl    String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                 String      @id @default(uuid())
+  name               String
+  slug               String?     @unique
+  brand              String      @default("FurnitureCo")
+  sku                String?     @unique
+  description        String
+  price              Float
+  discountPercentage Float       @default(0)
+  finalPrice         Float       @default(0)
+  category           String      @default("Living Room")
+  stock              Int         @default(0)
+  rating             Float       @default(0)
+  reviewCount        Int         @default(0)
+  thumbnail          String?
+  galleryImages      String[]
+  featured           Boolean     @default(false)
+  trending           Boolean     @default(false)
+  bestSeller         Boolean     @default(false)
+  newArrival         Boolean     @default(false)
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
   
   cartItems   CartItem[]
   orderItems  OrderItem[]
   wishlistItems WishlistItem[]
+  stockNotifications StockNotification[]
 }
 
 model Cart {
@@ -64,15 +89,23 @@ model CartItem {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  totalAmount   Float
-  paymentStatus PaymentStatus @default(PENDING)
-  orderStatus   OrderStatus   @default(PENDING)
-  items         OrderItem[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalAmount     Float
+  paymentStatus   PaymentStatus @default(PENDING)
+  orderStatus     OrderStatus   @default(PENDING)
+  paymentMethod   String?
+  transactionRef  String?
+  cardBrand       String?
+  last4Digits     String?
+  maskedUPI       String?
+  shippingAddress Json?
+  billingAddress  Json?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -94,10 +127,15 @@ enum PaymentStatus {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
+  PACKED
   SHIPPED
+  OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
+  RETURNED
+  REFUNDED
 }
 
 model Wishlist {
@@ -118,4 +156,38 @@ model WishlistItem {
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([wishlistId, productId])
+}
+
+model Address {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName     String
+  phoneNumber       String
+  label             String   @default("Home")
+  street            String
+  addressLine2      String?
+  landmark          String?
+  city              String
+  state             String
+  zipCode           String
+  country           String
+  isDefaultShipping Boolean  @default(false)
+  isDefaultBilling  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model StockNotification {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email      String
+  phone      String?
+  isNotified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([productId, email])
 }

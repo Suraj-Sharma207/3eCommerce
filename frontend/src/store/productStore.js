@@ -9,9 +9,12 @@ const useProductStore = create((set, get) => ({
   searchQuery: '',
   filters: {
     category: 'All',
+    brand: 'All',
+    minRating: '',
     minPrice: '',
     maxPrice: '',
     inStock: false,
+    sale: false,
     sort: 'newest'
   },
   pagination: {
@@ -38,9 +41,12 @@ const useProductStore = create((set, get) => ({
       searchQuery: '',
       filters: {
         category: 'All',
+        brand: 'All',
+        minRating: '',
         minPrice: '',
         maxPrice: '',
         inStock: false,
+        sale: false,
         sort: 'newest'
       },
       pagination: { ...state.pagination, currentPage: 1 }

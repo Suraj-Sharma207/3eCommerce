@@ -10,27 +10,45 @@ import { Filter, ChevronDown, Check } from 'lucide-react';
 
 const ProductList = () => {
   const [searchParams] = useSearchParams();
-  const { products, isLoading, error, fetchProducts, pagination, filters, setFilters, clearFilters } = useProductStore();
+  const { products, isLoading, error, fetchProducts, pagination, filters, setFilters, clearFilters, searchQuery } = useProductStore();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    // If URL has category, set it
     const categoryParam = searchParams.get('category');
     const saleParam = searchParams.get('sale');
     const sortParam = searchParams.get('sort');
     
-    if (categoryParam) {
-      setFilters({ category: categoryParam });
-    } else if (sortParam) {
-      setFilters({ sort: sortParam });
-    } else if (saleParam) {
-      // In a real app we'd have a sale filter
-      setFilters({ sort: 'price_asc' }); 
-    } else {
-      fetchProducts(1);
+    let initialFilters = { ...filters };
+    let shouldUpdate = false;
+
+    if (categoryParam && categoryParam !== filters.category) {
+      initialFilters.category = categoryParam;
+      shouldUpdate = true;
+    }
+    if (saleParam === 'true') {
+      initialFilters.sale = true;
+      initialFilters.sort = 'price_asc';
+      shouldUpdate = true;
+    }
+    if (sortParam && sortParam !== filters.sort) {
+      initialFilters.sort = sortParam;
+      shouldUpdate = true;
+    }
+
+    if (shouldUpdate) {
+      setFilters(initialFilters);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Debounced fetch on search or filters change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProducts(1);
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, filters]);
 
   const handlePageChange = (newPage) => {
     fetchProducts(newPage);
@@ -42,8 +60,13 @@ const ProductList = () => {
     { value: 'newest', label: 'Newest Arrivals' },
     { value: 'price_asc', label: 'Price: Low to High' },
     { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'popular', label: 'Popularity' },
+    { value: 'popular', label: 'Most Popular' },
+    { value: 'highest_rated', label: 'Highest Rated' },
+    { value: 'discount', label: 'Largest Discount' },
   ];
+
+  const startItem = pagination.totalItems > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0;
+  const endItem = Math.min(startItem + pagination.itemsPerPage - 1, pagination.totalItems);
 
   return (
     <PageContainer className="py-8 lg:py-12">
@@ -78,7 +101,7 @@ const ProductList = () => {
             {filters.category === 'All' ? 'All Furniture' : filters.category}
           </h1>
           <p className="text-text-secondary">
-            Showing {products.length} of {pagination.totalItems} products
+            Showing {startItem}–{endItem} of {pagination.totalItems} Products
           </p>
         </div>
         
@@ -138,52 +161,99 @@ const ProductList = () => {
             </div>
           </div>
 
+          {/* Rating */}
+          <div>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Rating</h3>
+            <div className="space-y-2">
+              {[4, 3, 2, 1].map(rating => (
+                <label key={rating} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    filters.minRating == rating 
+                      ? 'bg-primary-600 border-primary-600' 
+                      : 'border-secondary-300 group-hover:border-primary-400'
+                  }`}>
+                    {filters.minRating == rating && <Check className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <span className={`text-sm ${filters.minRating == rating ? 'font-semibold text-primary-700' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                    {rating} Stars & Up
+                  </span>
+                  <input 
+                    type="radio" 
+                    name="minRating" 
+                    className="sr-only"
+                    checked={filters.minRating == rating}
+                    onChange={() => setFilters({ minRating: rating })}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Price Range */}
           <div>
             <h3 className="text-lg font-bold text-text-primary mb-4">Price Range</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-text-muted mb-1 block">Min ($)</label>
+                <label className="text-xs text-text-muted mb-1 block">Min (₹)</label>
                 <input 
                   type="number" 
                   className="w-full px-3 py-2 border border-secondary-200 rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="0"
-                  value={filters.minPrice}
+                  value={filters.minPrice || ''}
                   onChange={(e) => setFilters({ minPrice: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-xs text-text-muted mb-1 block">Max ($)</label>
+                <label className="text-xs text-text-muted mb-1 block">Max (₹)</label>
                 <input 
                   type="number" 
                   className="w-full px-3 py-2 border border-secondary-200 rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="2000"
-                  value={filters.maxPrice}
+                  value={filters.maxPrice || ''}
                   onChange={(e) => setFilters({ maxPrice: e.target.value })}
                 />
               </div>
             </div>
           </div>
 
-          {/* Availability */}
+          {/* Availability & Discount */}
           <div>
             <h3 className="text-lg font-bold text-text-primary mb-4">Availability</h3>
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                filters.inStock 
-                  ? 'bg-primary-600 border-primary-600' 
-                  : 'border-secondary-300 group-hover:border-primary-400'
-              }`}>
-                {filters.inStock && <Check className="w-3.5 h-3.5 text-white" />}
-              </div>
-              <span className="text-sm text-text-secondary group-hover:text-text-primary">In Stock Only</span>
-              <input 
-                type="checkbox" 
-                className="sr-only"
-                checked={filters.inStock}
-                onChange={(e) => setFilters({ inStock: e.target.checked })}
-              />
-            </label>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                  filters.inStock 
+                    ? 'bg-primary-600 border-primary-600' 
+                    : 'border-secondary-300 group-hover:border-primary-400'
+                }`}>
+                  {filters.inStock && <Check className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span className="text-sm text-text-secondary group-hover:text-text-primary">In Stock Only</span>
+                <input 
+                  type="checkbox" 
+                  className="sr-only"
+                  checked={filters.inStock || false}
+                  onChange={(e) => setFilters({ inStock: e.target.checked })}
+                />
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                  filters.sale 
+                    ? 'bg-primary-600 border-primary-600' 
+                    : 'border-secondary-300 group-hover:border-primary-400'
+                }`}>
+                  {filters.sale && <Check className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span className="text-sm text-text-secondary group-hover:text-text-primary">On Sale</span>
+                <input 
+                  type="checkbox" 
+                  className="sr-only"
+                  checked={filters.sale || false}
+                  onChange={(e) => setFilters({ sale: e.target.checked })}
+                />
+              </label>
+            </div>
           </div>
 
           <button 

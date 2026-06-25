@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, Search, Inbox } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import ImageFallback from '../../components/ui/ImageFallback';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import { formatPrice } from '../../utils/currency';
 
 const AdminProducts = () => {
   const { products, isLoading, fetchProducts } = useProductStore();
@@ -84,11 +85,11 @@ const AdminProducts = () => {
                 filteredProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-secondary-50 transition-colors group">
                     <td className="p-4 pl-6 flex items-center gap-4">
-                      <ImageFallback src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-secondary-100" />
+                      <ImageFallback src={product.thumbnail} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-secondary-100" />
                       <div className="font-bold text-text-primary text-sm line-clamp-1 max-w-[250px]">{product.name}</div>
                     </td>
                     <td className="p-4 text-sm text-text-secondary">{product.category || 'N/A'}</td>
-                    <td className="p-4 font-bold text-text-primary">${product.price.toFixed(2)}</td>
+                    <td className="p-4 font-bold text-text-primary">{formatPrice(product.price)}</td>
                     <td className="p-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${
                         product.stock > 10 ? 'bg-success-100 text-success-700' : 

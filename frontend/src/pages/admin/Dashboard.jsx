@@ -4,6 +4,7 @@ import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, ShoppingBag, Users, Package, Inbox, AlertCircle } from 'lucide-react';
 import ImageFallback from '../../components/ui/ImageFallback';
+import { formatPrice } from '../../utils/currency';
 
 const COLORS = ['#6366F1', '#F09005', '#10B981', '#EF4444', '#8B5CF6'];
 
@@ -25,7 +26,7 @@ const Dashboard = () => {
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard title="Total Revenue" value={`$${kpis.revenue.toFixed(2)}`} icon={DollarSign} color="bg-primary-50 text-primary-600" />
+        <KPICard title="Total Revenue" value={formatPrice(kpis.revenue)} icon={DollarSign} color="bg-primary-50 text-primary-600" />
         <KPICard title="Total Orders" value={kpis.orders} icon={ShoppingBag} color="bg-success-50 text-success-600" />
         <KPICard title="Total Customers" value={kpis.customers} icon={Users} color="bg-accent-50 text-accent-600" />
         <KPICard title="Total Products" value={kpis.products} icon={Package} color="bg-warning-50 text-warning-600" />
@@ -47,10 +48,10 @@ const Dashboard = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dx={-10} tickFormatter={(val) => `$${val}`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dx={-10} tickFormatter={(val) => formatPrice(val)} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value) => [`$${value}`, 'Revenue']}
+                  formatter={(value) => [formatPrice(value), 'Revenue']}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
@@ -119,7 +120,7 @@ const Dashboard = () => {
                   <p className="text-xs text-text-muted mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-extrabold text-primary-600">${order.totalAmount.toFixed(2)}</p>
+                  <p className="font-extrabold text-primary-600">{formatPrice(order.totalAmount)}</p>
                   <p className="text-xs font-bold text-text-secondary mt-1">{order.orderStatus}</p>
                 </div>
               </div>
@@ -143,14 +144,14 @@ const Dashboard = () => {
             {topProducts.map(tp => (
               <div key={tp.product.id} className="flex items-center justify-between p-4 bg-secondary-50 rounded-xl">
                 <div className="flex items-center gap-4">
-                  <ImageFallback src={tp.product.imageUrl} alt={tp.product.name} className="w-10 h-10 rounded object-cover" />
+                  <ImageFallback src={tp.product.thumbnail} alt={tp.product.name} className="w-10 h-10 rounded object-cover" />
                   <div>
                     <p className="font-bold text-text-primary text-sm line-clamp-1">{tp.product.name}</p>
                     <p className="text-xs text-text-muted mt-1">{tp.totalSold} sold</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-extrabold text-success-600">${tp.revenue.toFixed(2)}</p>
+                  <p className="font-extrabold text-success-600">{formatPrice(tp.revenue)}</p>
                 </div>
               </div>
             ))}

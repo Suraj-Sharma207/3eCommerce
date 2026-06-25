@@ -1,36 +1,60 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 const Button = ({ 
   children, 
   variant = 'primary', 
   size = 'md', 
   fullWidth = false,
+  isLoading = false,
+  disabled = false,
   className = '', 
+  as: Component = 'button',
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-DEFAULT transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const isIcon = variant === 'icon';
+  const borderRadius = isIcon ? 'rounded-[12px]' : 'rounded-[14px]';
+  
+  const baseStyles = `relative inline-flex items-center justify-center font-semibold ${borderRadius} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`;
   
   const variants = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm focus:ring-primary-500',
-    secondary: 'bg-surface text-text-primary border border-secondary-200 hover:bg-secondary-50 shadow-sm focus:ring-secondary-500',
+    secondary: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 shadow-sm focus:ring-neutral-500',
     outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500',
-    ghost: 'text-text-secondary hover:bg-secondary-100 hover:text-text-primary',
-    danger: 'bg-danger text-white hover:bg-danger-dark shadow-sm focus:ring-danger',
+    ghost: 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500',
+    icon: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 shadow-sm focus:ring-neutral-500', 
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: 'h-[40px] px-4 text-sm',
+    md: 'h-[48px] px-6 text-base',
+    lg: 'h-[56px] px-8 text-lg',
+    iconSm: 'h-[40px] w-[40px]',
+    iconMd: 'h-[48px] w-[48px]',
+    iconLg: 'h-[56px] w-[56px]',
   };
 
+  const finalSize = isIcon ? (size === 'sm' ? 'iconSm' : size === 'lg' ? 'iconLg' : 'iconMd') : size;
+
   return (
-    <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+    <Component 
+      className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[finalSize] || sizes.md} ${fullWidth ? 'w-full' : ''} ${className}`}
+      disabled={disabled || isLoading}
       {...props}
     >
-      {children}
-    </button>
+      {/* Invisible content wrapper maintains width while loading */}
+      <span className={`inline-flex items-center justify-center gap-2 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        {children}
+      </span>
+      
+      {/* Absolute positioned spinner */}
+      {isLoading && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="w-5 h-5 animate-spin" />
+        </span>
+      )}
+    </Component>
   );
 };
 
