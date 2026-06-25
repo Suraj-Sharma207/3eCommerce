@@ -42,6 +42,18 @@ class AdminService {
       topProducts: data.topProducts
     };
   }
+
+  async getAllCustomers(queryParams) {
+    return await adminRepository.getAllCustomers(queryParams);
+  }
+
+  async getCustomerById(id) {
+    return await adminRepository.getCustomerById(id);
+  }
+
+  async updateCustomerStatus(id, active) {
+    return await adminRepository.updateCustomerStatus(id, active);
+  }
 }
 
 export default new AdminService();

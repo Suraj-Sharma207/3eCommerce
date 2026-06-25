@@ -42,7 +42,7 @@ const useUserStore = create((set) => ({
   changePassword: async (currentPassword, newPassword) => {
     set({ isLoading: true, error: null });
     try {
-      await api.put('/auth/password', { currentPassword, newPassword });
+      await api.put('/users/profile/password', { currentPassword, newPassword });
       set({ isLoading: false });
       return true;
     } catch (error) {

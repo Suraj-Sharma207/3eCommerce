@@ -14,7 +14,7 @@ const ImageFallback = ({ src, alt, className = '', fallbackClassName = '' }) => 
 
   if (hasError) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-secondary-100 text-secondary-400 ${className} ${fallbackClassName}`}>
+      <div className={`flex flex-col items-center justify-center bg-border-light text-secondary-400 ${className} ${fallbackClassName}`}>
         <ImageOff className="w-8 h-8 mb-2 opacity-50" />
         <span className="text-xs font-medium uppercase tracking-widest opacity-50">Image Unavailable</span>
       </div>
@@ -25,7 +25,7 @@ const ImageFallback = ({ src, alt, className = '', fallbackClassName = '' }) => 
     <div className={`relative overflow-hidden ${className}`}>
       {/* Skeleton loader while loading */}
       {!isLoaded && (
-        <div className={`absolute inset-0 bg-secondary-100 animate-pulse`} />
+        <div className={`absolute inset-0 bg-border-light animate-pulse`} />
       )}
       
       <img

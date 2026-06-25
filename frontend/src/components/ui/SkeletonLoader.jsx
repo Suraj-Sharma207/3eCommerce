@@ -35,7 +35,7 @@ export const DashboardSkeleton = () => (
   <div className="space-y-8 max-w-[1400px] mx-auto animate-pulse">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[1, 2, 3, 4].map(i => (
-        <div key={i} className="bg-white rounded-2xl shadow-sm border border-secondary-200 p-6 flex items-center gap-4">
+        <div key={i} className="bg-white rounded-2xl shadow-sm border border-border p-6 flex items-center gap-4">
           <SkeletonLoader className="w-14 h-14 rounded-xl" />
           <div className="space-y-2 flex-1">
             <SkeletonLoader className="h-4 w-1/2" />
@@ -45,11 +45,11 @@ export const DashboardSkeleton = () => (
       ))}
     </div>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-secondary-200 p-6 h-[380px]">
+      <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-border p-6 h-[380px]">
         <SkeletonLoader className="w-1/3 h-6 mb-6" />
         <SkeletonLoader className="w-full h-[280px] rounded-xl" />
       </div>
-      <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-secondary-200 p-6 h-[380px]">
+      <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-border p-6 h-[380px]">
         <SkeletonLoader className="w-1/2 h-6 mb-6" />
         <div className="flex justify-center items-center h-[280px]">
           <SkeletonLoader type="circle" className="w-48 h-48" />

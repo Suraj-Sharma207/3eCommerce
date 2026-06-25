@@ -27,6 +27,20 @@ class UserController {
       next(error);
     }
   }
+
+  async changePassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return errorResponse(res, 'Both current and new passwords are required', [], 400);
+      }
+      
+      await userService.changePassword(req.user.id, currentPassword, newPassword);
+      return successResponse(res, 'Password changed successfully', null, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new UserController();

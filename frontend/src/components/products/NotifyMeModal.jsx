@@ -42,18 +42,19 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-[24px] w-full max-w-md overflow-hidden shadow-xl animate-fade-in-up">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-secondary-100">
+        <div
+          className="bg-white w-full max-w-md rounded-[24px] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        ><div className="flex justify-between items-center p-6 border-b border-border-light">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
+            <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
               <Bell className="w-5 h-5" />
             </div>
-            <h3 className="text-xl font-bold text-text-primary">Notify Me</h3>
+            <h3 className="text-xl font-bold text-text-brand-600">Notify Me</h3>
           </div>
           <button 
             onClick={onClose}
-            className="text-text-muted hover:text-text-primary transition-colors p-2"
+            className="text-text-muted hover:text-text-brand-600 transition-colors p-2"
           >
             <X className="w-5 h-5" />
           </button>
@@ -68,9 +69,9 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h4 className="text-lg font-bold text-text-primary mb-2">Request Received!</h4>
+              <h4 className="text-lg font-bold text-text-brand-600 mb-2">Request Received!</h4>
               <p className="text-text-secondary mb-6">
-                We'll email you as soon as <span className="font-semibold text-text-primary">{productName}</span> is back in stock.
+                We'll email you as soon as <span className="font-semibold text-text-brand-600">{productName}</span> is back in stock.
               </p>
               <Button 
                 onClick={onClose}
@@ -82,34 +83,34 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
           ) : (
             <form onSubmit={handleSubmit}>
               <p className="text-text-secondary mb-6">
-                <span className="font-semibold text-text-primary">{productName}</span> is currently out of stock. Leave your details below and we'll notify you when it's available.
+                <span className="font-semibold text-text-brand-600">{productName}</span> is currently out of stock. Leave your details below and we'll notify you when it's available.
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-danger-light text-danger-dark text-sm rounded-lg border border-danger-200">
+                <div className="mb-4 p-3 bg-danger-50 text-danger-700 text-sm rounded-lg border border-danger-600-200">
                   {error}
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-text-primary mb-1">Email Address *</label>
+                  <label className="block text-sm font-bold text-text-brand-600 mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[12px] border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all bg-surface"
+                    className="w-full px-4 py-3 rounded-[12px] border border-border focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-all bg-surface"
                     placeholder="you@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-text-primary mb-1">Phone Number (Optional)</label>
+                  <label className="block text-sm font-bold text-text-brand-600 mb-1">Phone Number (Optional)</label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[12px] border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all bg-surface"
+                    className="w-full px-4 py-3 rounded-[12px] border border-border focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-all bg-surface"
                     placeholder="+1 234 567 8900"
                   />
                 </div>

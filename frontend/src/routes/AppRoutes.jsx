@@ -21,8 +21,12 @@ const AdminLayout = lazy(() => import('../pages/admin/AdminLayout'));
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('../pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('../pages/admin/AdminOrders'));
+const AdminCustomers = lazy(() => import('../pages/admin/AdminCustomers'));
+const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
+const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
 
 const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
+const GuestProtectedRoute = lazy(() => import('../components/layout/GuestProtectedRoute'));
 const AddressBook = lazy(() => import('../pages/addresses/AddressBook'));
 const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 
@@ -41,12 +45,12 @@ const AppRoutes = () => {
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
             
             {/* Customer Protected Routes */}
             <Route element={<CustomerProtectedRoute />}>
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/addresses" element={<AddressBook />} />
               <Route path="/orders" element={<OrdersPage />} />
@@ -59,9 +63,11 @@ const AppRoutes = () => {
 
           {/* Authentication Routes */}
           <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/admin/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route element={<GuestProtectedRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
           </Route>
 
           {/* Admin Routes */}
@@ -70,10 +76,11 @@ const AppRoutes = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="customers" element={<div className="p-8">Customers feature coming soon.</div>} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
             <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
-            <Route path="settings" element={<div className="p-8">Settings feature coming soon.</div>} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
         </Routes>

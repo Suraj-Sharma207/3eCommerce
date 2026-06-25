@@ -6,34 +6,103 @@ import Input from '../../components/ui/Input';
 import ImageFallback from '../../components/ui/ImageFallback';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import { formatPrice } from '../../utils/currency';
+import toast from 'react-hot-toast';
+import ProductModal from '../../components/admin/ProductModal';
+import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
 
 const AdminProducts = () => {
-  const { products, isLoading, fetchProducts } = useProductStore();
+  const { products, isLoading, fetchProducts, createProduct, updateProduct, deleteProduct } = useProductStore();
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   useEffect(() => {
     fetchProducts(1);
   }, [fetchProducts]);
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const searchLow = searchTerm.toLowerCase();
+    return (
+      (p.name && p.name.toLowerCase().includes(searchLow)) || 
+      (p.category && p.category.toLowerCase().includes(searchLow)) ||
+      (p.sku && p.sku.toLowerCase().includes(searchLow))
+    );
+  });
+
+  const handleOpenModal = (product = null) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleSaveProduct = async (productData) => {
+    setIsActionLoading(true);
+    let success = false;
+    
+    if (selectedProduct) {
+      success = await updateProduct(selectedProduct.id, productData);
+      if (success) toast.success('Product updated successfully');
+      else toast.error(useProductStore.getState().error || 'Unable to update product.');
+    } else {
+      success = await createProduct(productData);
+      if (success) toast.success('Product created successfully');
+      else toast.error(useProductStore.getState().error || 'Unable to create product.');
+    }
+    
+    if (success) {
+      fetchProducts(1);
+      handleCloseModal();
+    }
+    setIsActionLoading(false);
+  };
+
+  const handleOpenDelete = (product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCloseDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setProductToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+    setIsActionLoading(true);
+    
+    const success = await deleteProduct(productToDelete.id);
+    if (success) {
+      toast.success('Product deleted successfully');
+      fetchProducts(1);
+      handleCloseDelete();
+    }
+    setIsActionLoading(false);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-extrabold text-text-primary">Products</h1>
-        <Button className="shrink-0 group">
+        <h1 className="text-2xl font-extrabold text-text-brand-600">Products</h1>
+        <Button className="shrink-0 group" onClick={() => handleOpenModal()}>
           <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
           Add Product
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
         
         {/* Toolbar */}
-        <div className="p-4 border-b border-secondary-200 flex items-center justify-between bg-secondary-50">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input 
@@ -41,7 +110,7 @@ const AdminProducts = () => {
               placeholder="Search products..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
             />
           </div>
         </div>
@@ -50,7 +119,7 @@ const AdminProducts = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-secondary-50 text-text-muted text-xs uppercase tracking-wider font-bold border-b border-secondary-200">
+              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider font-bold border-b border-border">
                 <th className="p-4 pl-6">Product</th>
                 <th className="p-4">Category</th>
                 <th className="p-4">Price</th>
@@ -71,38 +140,62 @@ const AdminProducts = () => {
                 ))
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-12 text-center text-text-muted">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-3">
-                        <Inbox className="w-6 h-6 text-secondary-400" />
+                  <td colSpan="5" className="p-16 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                      <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4 border border-border">
+                        <Inbox className="w-8 h-8 text-text-muted opacity-50" />
                       </div>
-                      <p className="text-sm font-bold text-text-primary">No products found</p>
-                      <p className="text-xs text-text-muted mt-1">Try adjusting your search criteria.</p>
+                      <h3 className="text-lg font-extrabold text-text-primary mb-1">No products found</h3>
+                      <p className="text-sm text-text-secondary font-medium">
+                        {searchTerm ? 'We couldn\'t find any products matching your search criteria. Try adjusting your filters.' : 'Your store doesn\'t have any products yet. Add a product to get started.'}
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-secondary-50 transition-colors group">
+                  <tr key={product.id} className="hover:bg-surface-background transition-colors group">
                     <td className="p-4 pl-6 flex items-center gap-4">
-                      <ImageFallback src={product.thumbnail} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-secondary-100" />
-                      <div className="font-bold text-text-primary text-sm line-clamp-1 max-w-[250px]">{product.name}</div>
+                      <ImageFallback src={product.thumbnail} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-border-light" />
+                      <div className="font-bold text-text-brand-600 text-sm line-clamp-1 max-w-[250px]">{product.name}</div>
                     </td>
                     <td className="p-4 text-sm text-text-secondary">{product.category || 'N/A'}</td>
-                    <td className="p-4 font-bold text-text-primary">{formatPrice(product.price)}</td>
+                    <td className="p-4 font-bold text-text-brand-600">{formatPrice(product.price)}</td>
                     <td className="p-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${
-                        product.stock > 10 ? 'bg-success-100 text-success-700' : 
-                        product.stock > 0 ? 'bg-warning text-white' : 'bg-danger-light text-danger-dark'
-                      }`}>
-                        {product.stock} in stock
-                      </span>
+                      {(() => {
+                        const stock = product.stock || 0;
+                        if (stock > 10) {
+                          return (
+                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-success-50 text-success-700 border border-success-200">
+                              {stock} In Stock
+                            </span>
+                          );
+                        } else if (stock > 0) {
+                          return (
+                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-warning-50 text-warning-700 border border-warning-200">
+                              {stock} Left
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-danger-50 text-danger-700 border border-danger-200">
+                              Out of Stock
+                            </span>
+                          );
+                        }
+                      })()}
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button className="p-2 text-text-muted hover:text-primary-600 bg-white hover:bg-primary-50 rounded-lg transition-colors border border-transparent hover:border-primary-200 shadow-sm opacity-0 group-hover:opacity-100">
+                      <button 
+                        onClick={() => handleOpenModal(product)}
+                        className="p-2 text-text-muted hover:text-brand-600 bg-white hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-200 shadow-sm opacity-0 group-hover:opacity-100"
+                      >
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-text-muted hover:text-danger hover:bg-danger-light bg-white rounded-lg transition-colors border border-transparent hover:border-danger shadow-sm opacity-0 group-hover:opacity-100">
+                      <button 
+                        onClick={() => handleOpenDelete(product)}
+                        className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 bg-white rounded-lg transition-colors border border-transparent hover:border-danger-600 shadow-sm opacity-0 group-hover:opacity-100"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
@@ -112,8 +205,25 @@ const AdminProducts = () => {
             </tbody>
           </table>
         </div>
-
       </div>
+
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        product={selectedProduct}
+        onSave={handleSaveProduct}
+        isLoading={isActionLoading}
+      />
+
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCloseDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Product?"
+        message="This action cannot be undone. This will permanently delete the product and remove all associations."
+        itemTitle={productToDelete?.name}
+        isLoading={isActionLoading}
+      />
     </div>
   );
 };

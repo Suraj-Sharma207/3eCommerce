@@ -35,10 +35,10 @@ const ProductCard = ({ product }) => {
   const hasDiscount = product.discountPercentage > 0;
 
   return (
-    <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-secondary-100">
+    <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-border-light">
       
       {/* Image Area with Actions */}
-      <div className="relative aspect-[4/3] bg-secondary-50 overflow-hidden">
+      <div className="relative aspect-[4/3] bg-surface-background overflow-hidden">
         <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full">
           <ImageFallback 
             src={product.thumbnail} 
@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
             <span className="bg-secondary-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Sold Out</span>
           )}
           {hasDiscount && product.stock > 0 && product.active && (
-            <span className="bg-danger text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">{product.discountPercentage}% OFF</span>
+            <span className="bg-danger-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">{product.discountPercentage}% OFF</span>
           )}
           {product.newArrival && product.stock > 0 && product.active && !hasDiscount && (
             <span className="bg-accent-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">New</span>
@@ -69,13 +69,13 @@ const ProductCard = ({ product }) => {
           <button 
             onClick={handleToggleWishlist}
             className={`w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-colors ${
-              isWishlisted ? 'text-danger hover:bg-danger-light' : 'text-text-secondary hover:text-danger hover:bg-danger-light'
+              isWishlisted ? 'text-danger-600 hover:bg-danger-50' : 'text-text-secondary hover:text-danger-600 hover:bg-danger-50'
             }`} 
             aria-label="Add to wishlist"
           >
             <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
           </button>
-          <button className="w-10 h-10 rounded-full bg-white text-text-secondary hover:text-primary-600 hover:bg-primary-50 shadow-md flex items-center justify-center transition-colors" aria-label="Quick view">
+          <button className="w-10 h-10 rounded-full bg-white text-text-secondary hover:text-brand-600 hover:bg-brand-50 shadow-md flex items-center justify-center transition-colors" aria-label="Quick view">
             <Eye className="w-5 h-5" />
           </button>
         </div>
@@ -88,15 +88,15 @@ const ProductCard = ({ product }) => {
           {product.brand && <span className="opacity-70">{product.brand}</span>}
         </div>
         
-        <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-primary-600 transition-colors">
-          <h3 className="text-lg font-bold text-text-primary line-clamp-1">{product.name}</h3>
+        <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors">
+          <h3 className="text-lg font-bold text-text-brand-600 line-clamp-1">{product.name}</h3>
         </Link>
         
         <RatingDisplay rating={product.rating || 0} count={product.reviewCount || 0} className="mb-4" />
         
-        <div className="mt-auto flex items-center justify-between pt-4 border-t border-secondary-100">
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-light">
           <div className="flex flex-col">
-            <span className="text-xl font-extrabold text-text-primary">
+            <span className="text-xl font-extrabold text-text-brand-600">
               {formatPrice(product.finalPrice || product.price)}
             </span>
             {hasDiscount && (

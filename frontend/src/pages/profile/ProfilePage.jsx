@@ -44,7 +44,7 @@ const PasswordStrengthMeter = ({ password }) => {
           />
         ))}
       </div>
-      <p className="text-xs text-neutral-500 text-right h-4">{getLabel(strength)}</p>
+      <p className="text-xs text-text-muted text-right h-4">{getLabel(strength)}</p>
     </div>
   );
 };
@@ -215,7 +215,7 @@ const ProfilePage = () => {
       <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden p-8 animate-pulse">
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden p-8 animate-pulse">
               <div className="flex flex-col sm:flex-row gap-8">
                 <div className="w-32 h-32 rounded-full bg-neutral-200"></div>
                 <div className="space-y-4 flex-1 py-4">
@@ -266,34 +266,34 @@ const ProfilePage = () => {
       {currentView === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden p-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden p-8">
               <div className="flex flex-col sm:flex-row gap-8">
                 <div className="flex-shrink-0">
                   {profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt={profile.name} className="w-32 h-32 rounded-full object-cover border border-neutral-200 shadow-sm" />
+                    <img src={profile.avatarUrl} alt={profile.name} className="w-32 h-32 rounded-full object-cover border border-border shadow-sm" />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center text-4xl font-bold border border-primary-100 shadow-sm">
+                    <div className="w-32 h-32 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-4xl font-bold border border-brand-100 shadow-sm">
                       {getInitials(profile.name)}
                     </div>
                   )}
                 </div>
                 <div className="space-y-4 flex-1">
                   <div>
-                    <h3 className="text-3xl font-semibold text-neutral-900 tracking-tight">{profile.name}</h3>
-                    <p className="text-neutral-500 mt-1">Customer Account • Member since {getMemberSince()}</p>
+                    <h3 className="text-3xl font-semibold text-text-primary tracking-tight">{profile.name}</h3>
+                    <p className="text-text-muted mt-1">Customer Account • Member since {getMemberSince()}</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm pt-2">
-                    <div className="flex items-center gap-3 text-neutral-600">
-                      <Mail className="w-4 h-4 text-neutral-400" />
+                    <div className="flex items-center gap-3 text-text-secondary">
+                      <Mail className="w-4 h-4 text-text-muted" />
                       {profile.email}
                     </div>
-                    <div className="flex items-center gap-3 text-neutral-600">
-                      <Phone className="w-4 h-4 text-neutral-400" />
+                    <div className="flex items-center gap-3 text-text-secondary">
+                      <Phone className="w-4 h-4 text-text-muted" />
                       {profile.phone || 'No phone number'}
                     </div>
                     {profile?.birthday && (
-                      <div className="flex items-center gap-3 text-neutral-600">
-                        <Calendar className="w-4 h-4 text-neutral-400" />
+                      <div className="flex items-center gap-3 text-text-secondary">
+                        <Calendar className="w-4 h-4 text-text-muted" />
                         {new Date(profile.birthday).toLocaleDateString()}
                       </div>
                     )}
@@ -303,14 +303,14 @@ const ProfilePage = () => {
             </div>
 
             {defaultAddress && (
-              <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden mt-8">
-                <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
-                  <h2 className="text-xl font-medium text-neutral-900 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-neutral-400" /> Default Shipping Address
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8">
+                <div className="p-6 border-b border-border-light flex items-center justify-between">
+                  <h2 className="text-xl font-medium text-text-primary flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-text-muted" /> Default Shipping Address
                   </h2>
                 </div>
-                <div className="p-6 text-sm text-neutral-600 space-y-1">
-                  <p className="font-medium text-neutral-900 text-base">{defaultAddress.recipientName}</p>
+                <div className="p-6 text-sm text-text-secondary space-y-1">
+                  <p className="font-medium text-text-primary text-base">{defaultAddress.recipientName}</p>
                   <p>{defaultAddress.street}</p>
                   {defaultAddress.addressLine2 && <p>{defaultAddress.addressLine2}</p>}
                   <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}</p>
@@ -319,14 +319,14 @@ const ProfilePage = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden mt-8">
-              <div className="p-6 border-b border-neutral-100">
-                <h2 className="text-xl font-medium text-neutral-900">Quick Actions</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8">
+              <div className="p-6 border-b border-border-light">
+                <h2 className="text-xl font-medium text-text-primary">Quick Actions</h2>
               </div>
               <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setCurrentView('edit')}
-                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
                 >
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                     <Edit2 className="w-5 h-5" />
@@ -335,7 +335,7 @@ const ProfilePage = () => {
                 </button>
                 <Link 
                   to="/addresses"
-                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
                 >
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                     <MapPin className="w-5 h-5" />
@@ -344,7 +344,7 @@ const ProfilePage = () => {
                 </Link>
                 <button 
                   onClick={() => setCurrentView('security')}
-                  className="flex flex-col items-center justify-center gap-3 p-6 bg-neutral-50 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200 border border-transparent rounded-xl transition-all"
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
                 >
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                     <Shield className="w-5 h-5" />
@@ -356,9 +356,9 @@ const ProfilePage = () => {
           </div>
           
           <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-              <div className="p-6 border-b border-neutral-100">
-                <h2 className="text-lg font-medium text-neutral-900">Recent Activity</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="p-6 border-b border-border-light">
+                <h2 className="text-lg font-medium text-text-primary">Recent Activity</h2>
               </div>
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-4">
@@ -366,8 +366,8 @@ const ProfilePage = () => {
                     <Package className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-900">{profile?.stats?.totalOrders || 0} Total Orders</p>
-                    <Link to="/orders" className="text-xs text-primary-600 hover:text-primary-700 font-medium">View order history</Link>
+                    <p className="text-sm font-medium text-text-primary">{profile?.stats?.totalOrders || 0} Total Orders</p>
+                    <Link to="/orders" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View order history</Link>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -375,8 +375,8 @@ const ProfilePage = () => {
                     <Heart className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-neutral-900">{profile?.stats?.wishlistCount || 0} Wishlist Items</p>
-                    <Link to="/wishlist" className="text-xs text-primary-600 hover:text-primary-700 font-medium">View wishlist</Link>
+                    <p className="text-sm font-medium text-text-primary">{profile?.stats?.wishlistCount || 0} Wishlist Items</p>
+                    <Link to="/wishlist" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View wishlist</Link>
                   </div>
                 </div>
               </div>
@@ -387,10 +387,10 @@ const ProfilePage = () => {
 
       {currentView === 'edit' && (
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-            <div className="p-6 sm:p-8 border-b border-neutral-100 flex items-center justify-between">
-              <h2 className="text-2xl font-medium text-neutral-900">Edit Profile</h2>
-              <button onClick={cancelProfileEdit} className="p-2 text-neutral-400 hover:bg-neutral-100 rounded-full transition-colors">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between">
+              <h2 className="text-2xl font-medium text-text-primary">Edit Profile</h2>
+              <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -406,9 +406,9 @@ const ProfilePage = () => {
                 <div className="flex flex-col sm:flex-row gap-8 items-start">
                   <div className="flex-shrink-0">
                     {formData.avatarUrl && !formErrors.avatarUrl ? (
-                      <img src={formData.avatarUrl} alt="Preview" className="w-24 h-24 rounded-full object-cover border border-neutral-200" />
+                      <img src={formData.avatarUrl} alt="Preview" className="w-24 h-24 rounded-full object-cover border border-border" />
                     ) : (
-                      <div className="w-24 h-24 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center border border-neutral-200">
+                      <div className="w-24 h-24 rounded-full bg-border-light text-text-muted flex items-center justify-center border border-border">
                         <User className="w-8 h-8" />
                       </div>
                     )}
@@ -439,7 +439,7 @@ const ProfilePage = () => {
                     value={profile.email} 
                     disabled 
                     readOnly
-                    className="bg-neutral-50 opacity-70 cursor-not-allowed"
+                    className="bg-surface-background opacity-70 cursor-not-allowed"
                   />
                   <Input 
                     label="Phone Number" 
@@ -459,12 +459,12 @@ const ProfilePage = () => {
                     error={formErrors.birthday}
                   />
                   <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-text-primary">Gender</label>
+                    <label className="block text-sm font-semibold text-text-brand-600">Gender</label>
                     <select 
                       name="gender" 
                       value={formData.gender || ''} 
                       onChange={handleProfileChange} 
-                      className="w-full px-4 py-3 bg-surface border border-secondary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+                      className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
                     >
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
@@ -491,15 +491,15 @@ const ProfilePage = () => {
 
       {currentView === 'security' && (
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-            <div className="p-6 sm:p-8 border-b border-neutral-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
+                <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center text-text-secondary">
                   <Shield className="w-5 h-5" />
                 </div>
-                <h2 className="text-2xl font-medium text-neutral-900">Change Password</h2>
+                <h2 className="text-2xl font-medium text-text-primary">Change Password</h2>
               </div>
-              <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-neutral-400 hover:bg-neutral-100 rounded-full transition-colors">
+              <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

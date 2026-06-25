@@ -13,6 +13,10 @@ router.get('/analytics', adminController.getDashboardAnalytics);
 router.get('/orders', adminController.getAllOrders);
 router.put('/orders/:id/status', adminController.updateOrderStatus);
 
+router.get('/customers', adminController.getAllCustomers);
+router.get('/customers/:id', adminController.getCustomerById);
+router.put('/customers/:id/status', adminController.updateCustomerStatus);
+
 // Temporary test endpoint
 router.get('/test-admin', (req, res) => {
   res.json({ user: req.user });

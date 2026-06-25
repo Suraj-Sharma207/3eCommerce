@@ -1,19 +1,67 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
 
 const AuthLayout = () => {
+  const [imageError, setImageError] = useState(false);
+
   return (
-    <div className="min-h-screen bg-background-default font-sans flex flex-col">
-      {/* Optional minimal header if needed */}
-      <header className="p-4 sm:px-6 lg:px-12 absolute top-0 w-full z-10 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-extrabold text-primary-600 tracking-tight">
-          LuxeHome
-        </Link>
-      </header>
+    <div className="flex w-full min-h-screen bg-surface-background font-sans">
       
-      <main className="flex-1 flex">
-        <Outlet />
-      </main>
+      {/* Left side - Form Area */}
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:flex-none md:w-3/5 lg:w-1/2 bg-white relative border-r border-border-light shadow-2xl z-10">
+        
+        {/* Header inside the form area */}
+        <div className="absolute top-0 left-0 w-full p-6 sm:p-8">
+          <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight">
+            LuxeHome
+          </Link>
+        </div>
+
+        <main className="w-full max-w-[540px] mx-auto py-12 mt-12 lg:mt-16 overflow-y-auto max-h-screen no-scrollbar">
+          <Outlet />
+        </main>
+      </div>
+
+      {/* Right side - Lifestyle Image */}
+      <div className="hidden md:block relative md:w-2/5 lg:w-1/2 overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600">
+        {!imageError && (
+          <img
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-105"
+            src="/images/auth/auth-bg.jpg"
+            alt="Premium Furniture"
+            onError={() => setImageError(true)}
+          />
+        )}
+        
+        {/* Gradient Overlay - Subtle dark gradient */}
+        <div className="absolute inset-0 bg-secondary-900/40 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/20 to-transparent" />
+        
+        {/* Value Prop Overlay - Centered vertically */}
+        <div className="absolute inset-0 flex flex-col justify-center p-12 lg:p-16 text-white max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <h3 className="text-4xl lg:text-5xl font-extrabold mb-8 tracking-tight leading-tight drop-shadow-sm">
+            Elevate your living space with LuxeHome.
+          </h3>
+          <div className="flex flex-wrap gap-4">
+            {[
+              'Secure Checkout',
+              'Premium Furniture',
+              'Fast Delivery',
+              '24×7 Support',
+              'Easy Returns'
+            ].map((feature, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/20">
+                <div className="w-6 h-6 rounded-full bg-brand-500/90 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-sm font-semibold tracking-wide">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

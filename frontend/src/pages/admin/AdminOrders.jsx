@@ -18,27 +18,27 @@ const AdminOrders = () => {
   const statusColors = {
     PENDING: 'bg-warning text-white',
     PROCESSING: 'bg-accent-500 text-white',
-    SHIPPED: 'bg-primary-600 text-white',
+    SHIPPED: 'bg-brand-600 text-white',
     DELIVERED: 'bg-success-100 text-success-700',
-    CANCELLED: 'bg-danger-light text-danger-dark'
+    CANCELLED: 'bg-danger-50 text-danger-700'
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-extrabold text-text-primary">Orders</h1>
+        <h1 className="text-2xl font-extrabold text-text-brand-600">Orders</h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-secondary-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
         
         {/* Toolbar */}
-        <div className="p-4 border-b border-secondary-200 flex items-center justify-between bg-secondary-50">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input 
               type="text" 
               placeholder="Search by order ID or customer..." 
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
             />
           </div>
         </div>
@@ -47,7 +47,7 @@ const AdminOrders = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-secondary-50 text-text-muted text-xs uppercase tracking-wider font-bold border-b border-secondary-200">
+              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider font-bold border-b border-border">
                 <th className="p-4 pl-6">Order ID</th>
                 <th className="p-4">Date</th>
                 <th className="p-4">Customer</th>
@@ -72,27 +72,27 @@ const AdminOrders = () => {
                 <tr>
                   <td colSpan="6" className="p-12 text-center text-text-muted">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-3">
+                      <div className="w-12 h-12 bg-border-light rounded-full flex items-center justify-center mb-3">
                         <Inbox className="w-6 h-6 text-secondary-400" />
                       </div>
-                      <p className="text-sm font-bold text-text-primary">No orders found</p>
+                      <p className="text-sm font-bold text-text-brand-600">No orders found</p>
                       <p className="text-xs text-text-muted mt-1">There are currently no orders in the system.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-secondary-50 transition-colors">
-                    <td className="p-4 pl-6 font-bold text-text-primary text-sm uppercase">
+                  <tr key={order.id} className="hover:bg-surface-background transition-colors">
+                    <td className="p-4 pl-6 font-bold text-text-brand-600 text-sm uppercase">
                       {order.id.split('-')[0]}
                     </td>
                     <td className="p-4 text-sm text-text-secondary">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-4 text-sm text-text-primary font-medium">
+                    <td className="p-4 text-sm text-text-brand-600 font-medium">
                       {order.user.name}
                     </td>
-                    <td className="p-4 font-bold text-text-primary">
+                    <td className="p-4 font-bold text-text-brand-600">
                       {formatPrice(order.totalAmount)}
                     </td>
                     <td className="p-4">
@@ -107,7 +107,7 @@ const AdminOrders = () => {
                         <select 
                           value={order.orderStatus}
                           onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                          className={`appearance-none pl-3 pr-8 py-1.5 text-xs font-bold rounded cursor-pointer border-none focus:ring-2 focus:ring-primary-500 outline-none ${statusColors[order.orderStatus]}`}
+                          className={`appearance-none pl-3 pr-8 py-1.5 text-xs font-bold rounded cursor-pointer border-none focus:ring-2 focus:ring-brand-600 outline-none ${statusColors[order.orderStatus]}`}
                         >
                           <option value="PENDING">PENDING</option>
                           <option value="PROCESSING">PROCESSING</option>

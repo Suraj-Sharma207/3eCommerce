@@ -6,13 +6,13 @@ import { formatPrice } from '../../utils/currency';
 
 const HeroBanner = () => {
   return (
-    <div className="bg-secondary-50 py-12 lg:py-20">
+    <div className="bg-surface-background py-12 lg:py-20">
       <PageContainer>
         <div className="relative rounded-3xl overflow-hidden bg-white shadow-soft flex flex-col lg:flex-row min-h-[500px] lg:min-h-[600px]">
           
           {/* Content */}
           <div className="flex-1 p-10 lg:p-16 flex flex-col justify-center order-2 lg:order-1 relative z-10 bg-white/80 lg:bg-transparent backdrop-blur-md lg:backdrop-blur-none">
-            <h1 className="text-4xl lg:text-6xl font-extrabold text-text-primary leading-tight mb-6">
+            <h1 className="text-4xl lg:text-6xl font-extrabold text-text-brand-600 leading-tight mb-6">
               Transform Your <br className="hidden lg:block"/> Living Space
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary mb-10 max-w-md">
@@ -54,13 +54,13 @@ const HeroBanner = () => {
 
 const TrustBadge = ({ icon, title, desc }) => (
   <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
-    <div className="flex-shrink-0 text-text-primary">
+    <div className="flex-shrink-0 text-text-brand-600">
       <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
       </svg>
     </div>
     <div>
-      <h4 className="font-bold text-text-primary text-sm sm:text-base">{title}</h4>
+      <h4 className="font-bold text-text-brand-600 text-sm sm:text-base">{title}</h4>
       <p className="text-xs sm:text-sm text-text-secondary mt-1">{desc}</p>
     </div>
   </div>

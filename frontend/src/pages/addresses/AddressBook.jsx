@@ -237,8 +237,8 @@ const AddressBook = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-medium text-neutral-900">Address Book</h1>
-          <p className="text-neutral-500 mt-2">Manage your shipping and billing addresses.</p>
+          <h1 className="text-3xl font-medium text-text-primary">Address Book</h1>
+          <p className="text-text-muted mt-2">Manage your shipping and billing addresses.</p>
         </div>
         {!isEditing && (
           <Button onClick={handleAddNew} className="flex items-center gap-2">
@@ -248,9 +248,9 @@ const AddressBook = () => {
       </div>
 
       {isEditing ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-neutral-100 flex justify-between items-center">
-            <h2 className="text-xl font-medium text-neutral-900">
+        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-border-light flex justify-between items-center">
+            <h2 className="text-xl font-medium text-text-primary">
               {currentAddress.id ? 'Edit Address' : 'Add New Address'}
             </h2>
           </div>
@@ -275,8 +275,8 @@ const AddressBook = () => {
                 />
                 
                 <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-text-primary">Label</label>
-                  <select name="label" value={currentAddress.label} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-secondary-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all shadow-sm">
+                  <label className="block text-sm font-semibold text-text-brand-600">Label</label>
+                  <select name="label" value={currentAddress.label} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm">
                     <option value="Home">Home</option>
                     <option value="Work">Work</option>
                     <option value="Other">Other</option>
@@ -311,8 +311,8 @@ const AddressBook = () => {
                 />
                 
                 <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-text-primary">Country</label>
-                  <select name="country" value={currentAddress.country} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-secondary-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all shadow-sm">
+                  <label className="block text-sm font-semibold text-text-brand-600">Country</label>
+                  <select name="country" value={currentAddress.country} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm">
                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -324,18 +324,18 @@ const AddressBook = () => {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-6 mt-6 p-6 bg-neutral-50 rounded-xl border border-neutral-100">
-                <label className="flex items-center gap-3 text-sm font-medium text-neutral-900 cursor-pointer">
-                  <input type="checkbox" name="isDefaultShipping" checked={currentAddress.isDefaultShipping} onChange={handleChange} className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer" />
+              <div className="flex flex-col sm:flex-row gap-6 mt-6 p-6 bg-surface-background rounded-xl border border-border-light">
+                <label className="flex items-center gap-3 text-sm font-medium text-text-primary cursor-pointer">
+                  <input type="checkbox" name="isDefaultShipping" checked={currentAddress.isDefaultShipping} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer" />
                   Set as Default Shipping Address
                 </label>
-                <label className="flex items-center gap-3 text-sm font-medium text-neutral-900 cursor-pointer">
-                  <input type="checkbox" name="isDefaultBilling" checked={currentAddress.isDefaultBilling} onChange={handleChange} className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer" />
+                <label className="flex items-center gap-3 text-sm font-medium text-text-primary cursor-pointer">
+                  <input type="checkbox" name="isDefaultBilling" checked={currentAddress.isDefaultBilling} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer" />
                   Set as Default Billing Address
                 </label>
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t border-neutral-100">
+              <div className="flex justify-end gap-4 pt-6 border-t border-border-light">
                 <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                 <Button type="submit" disabled={!isFormValid || !isDirty} isLoading={isLoading} className="min-w-[140px]">
                   Save Address
@@ -348,45 +348,45 @@ const AddressBook = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {addresses.length > 0 ? (
             addresses.map(address => (
-              <div key={address.id} className={`bg-white rounded-2xl border p-6 sm:p-8 relative group hover:shadow-md transition-shadow ${address.isDefaultShipping ? 'border-primary-200' : 'border-neutral-200'}`}>
+              <div key={address.id} className={`bg-white rounded-2xl border p-6 sm:p-8 relative group hover:shadow-md transition-shadow ${address.isDefaultShipping ? 'border-brand-200' : 'border-border'}`}>
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="bg-neutral-100 text-neutral-700 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                    <span className="bg-border-light text-text-secondary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
                       {address.label}
                     </span>
                     {address.isDefaultShipping && <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium border border-green-200">Default Shipping</span>}
                     {address.isDefaultBilling && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium border border-blue-200">Default Billing</span>}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(address)} className="p-2 text-neutral-500 hover:text-primary-600 bg-neutral-50 hover:bg-primary-50 rounded-lg transition-colors">
+                    <button onClick={() => handleEdit(address)} className="p-2 text-text-muted hover:text-brand-600 bg-surface-background hover:bg-brand-50 rounded-lg transition-colors">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(address.id)} className="p-2 text-neutral-500 hover:text-red-600 bg-neutral-50 hover:bg-red-50 rounded-lg transition-colors" disabled={isLoading}>
+                    <button onClick={() => handleDelete(address.id)} className="p-2 text-text-muted hover:text-red-600 bg-surface-background hover:bg-red-50 rounded-lg transition-colors" disabled={isLoading}>
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-lg text-neutral-900 mb-2">{address.recipientName}</h3>
-                <div className="text-neutral-600 text-sm space-y-1.5">
+                <h3 className="font-semibold text-lg text-text-primary mb-2">{address.recipientName}</h3>
+                <div className="text-text-secondary text-sm space-y-1.5">
                   <p>{address.street}</p>
                   {address.addressLine2 && <p>{address.addressLine2}</p>}
-                  {address.landmark && <p className="italic text-neutral-500">Landmark: {address.landmark}</p>}
+                  {address.landmark && <p className="italic text-text-muted">Landmark: {address.landmark}</p>}
                   <p>{address.city}, {address.state} {address.zipCode}</p>
                   <p>{address.country}</p>
-                  <p className="pt-4 text-neutral-800 flex items-center gap-2 font-medium">
-                    Phone: <span className="text-neutral-600 font-normal">{address.phoneNumber}</span>
+                  <p className="pt-4 text-text-primary flex items-center gap-2 font-medium">
+                    Phone: <span className="text-text-secondary font-normal">{address.phoneNumber}</span>
                   </p>
                 </div>
               </div>
             ))
           ) : (
             <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-neutral-300">
-              <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center mb-6">
-                <MapPin className="w-10 h-10 text-neutral-400" />
+              <div className="w-20 h-20 bg-surface-background rounded-full flex items-center justify-center mb-6">
+                <MapPin className="w-10 h-10 text-text-muted" />
               </div>
-              <h3 className="text-xl font-medium text-neutral-900 mb-2">No addresses saved</h3>
-              <p className="text-neutral-500 mb-8 max-w-sm">Add a shipping address to make your checkout experience faster and easier.</p>
+              <h3 className="text-xl font-medium text-text-primary mb-2">No addresses saved</h3>
+              <p className="text-text-muted mb-8 max-w-sm">Add a shipping address to make your checkout experience faster and easier.</p>
               <Button onClick={handleAddNew} className="flex items-center gap-2">
                 <Plus className="w-5 h-5" /> Add New Address
               </Button>

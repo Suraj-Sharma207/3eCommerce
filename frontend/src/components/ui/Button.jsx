@@ -15,15 +15,15 @@ const Button = ({
   const isIcon = variant === 'icon';
   const borderRadius = isIcon ? 'rounded-[12px]' : 'rounded-[14px]';
   
-  const baseStyles = `relative inline-flex items-center justify-center font-semibold ${borderRadius} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`;
+  const baseStyles = `relative inline-flex items-center justify-center font-semibold ${borderRadius} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-surface-background disabled:text-text-muted disabled:border-transparent disabled:shadow-none disabled:cursor-not-allowed active:scale-[0.98]`;
   
   const variants = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm focus:ring-primary-500',
-    secondary: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 shadow-sm focus:ring-neutral-500',
-    outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500',
-    ghost: 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
-    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500',
-    icon: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 shadow-sm focus:ring-neutral-500', 
+    primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800 shadow-md focus:ring-brand-600',
+    secondary: 'bg-white text-brand-600 border border-brand-200 hover:bg-brand-50 shadow-sm focus:ring-brand-600',
+    outline: 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50 focus:ring-brand-600',
+    ghost: 'text-brand-600 hover:bg-brand-50 focus:ring-brand-600 bg-transparent',
+    danger: 'bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800 shadow-sm focus:ring-danger-600',
+    icon: 'bg-white text-text-primary border border-border hover:bg-surface-background shadow-sm focus:ring-brand-600', 
   };
 
   const sizes = {

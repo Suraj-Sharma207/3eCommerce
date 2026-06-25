@@ -103,10 +103,10 @@ const HomePage = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {isCategoriesLoading ? (
             [...Array(6)].map((_, i) => (
-               <div key={i} className="bg-white border border-neutral-200 rounded-2xl p-6 flex flex-col items-center justify-center animate-pulse">
-                 <div className="w-16 h-16 bg-neutral-100 rounded-full mb-4"></div>
-                 <div className="h-5 bg-neutral-100 rounded w-24 mb-2"></div>
-                 <div className="h-4 bg-neutral-100 rounded w-16"></div>
+               <div key={i} className="bg-white border border-border rounded-2xl p-6 flex flex-col items-center justify-center animate-pulse">
+                 <div className="w-16 h-16 bg-border-light rounded-full mb-4"></div>
+                 <div className="h-5 bg-border-light rounded w-24 mb-2"></div>
+                 <div className="h-4 bg-border-light rounded w-16"></div>
                </div>
             ))
           ) : (
@@ -124,7 +124,7 @@ const HomePage = () => {
       </PageContainer>
 
       {/* Featured Collection */}
-      <PageContainer className="bg-secondary-50/50 py-16 rounded-3xl">
+      <PageContainer className="bg-surface-background/50 py-16 rounded-3xl">
         <SectionHeader 
           title="Featured Collection" 
           subtitle="Handpicked favorites for you"
@@ -146,7 +146,7 @@ const HomePage = () => {
       </PageContainer>
       
       {/* Sale / Special Offers */}
-      <PageContainer className="bg-danger/5 py-16 rounded-3xl">
+      <PageContainer className="bg-danger-600/5 py-16 rounded-3xl">
         <SectionHeader 
           title="Special Offers" 
           subtitle="Grab them before they're gone"
@@ -168,7 +168,7 @@ const HomePage = () => {
       </PageContainer>
 
       {/* Best Sellers */}
-      <PageContainer className="bg-secondary-50/50 py-16 rounded-3xl">
+      <PageContainer className="bg-surface-background/50 py-16 rounded-3xl">
         <SectionHeader 
           title="Best Sellers" 
           subtitle="Our most loved furniture"
@@ -180,20 +180,20 @@ const HomePage = () => {
 
       {/* Newsletter Section */}
       <PageContainer>
-        <div className="bg-primary-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-primary-800 rounded-full blur-3xl opacity-50"></div>
-          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-primary-800 rounded-full blur-3xl opacity-50"></div>
+        <div className="bg-brand-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
+          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
           
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">Join Our Newsletter</h2>
-            <p className="text-primary-100 text-lg mb-8">
+            <p className="text-brand-100 text-lg mb-8">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
             </p>
             <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="flex-1 px-6 py-4 rounded-full text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-1 px-6 py-4 rounded-full text-text-brand-600 focus:outline-none focus:ring-2 focus:ring-primary-400"
                 required
               />
               <Button type="submit" size="lg" className="rounded-full px-8 shadow-lg bg-accent-500 hover:bg-accent-600 focus:ring-accent-500">

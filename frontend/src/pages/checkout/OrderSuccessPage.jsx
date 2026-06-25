@@ -26,7 +26,7 @@ const OrderSuccessPage = () => {
 
   return (
     <PageContainer className="py-20 flex justify-center">
-      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 sm:p-12 shadow-xl border border-secondary-100 text-center relative overflow-hidden">
+      <div className="w-full max-w-2xl bg-white rounded-2xl p-8 sm:p-12 shadow-xl border border-border-light text-center relative overflow-hidden">
         
         {/* Decorative background element */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-success-50 to-transparent -z-10" />
@@ -36,28 +36,28 @@ const OrderSuccessPage = () => {
           <div className="absolute inset-0 rounded-full border-4 border-success-200 animate-ping opacity-20"></div>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">Order Confirmed!</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-text-brand-600 mb-2">Order Confirmed!</h1>
         <p className="text-lg text-text-secondary mb-8">
           Thank you for shopping with LuxeHome. Your order has been placed successfully and is now being processed.
         </p>
 
-        <div className="bg-secondary-50 rounded-xl p-6 text-left mb-8 border border-secondary-200 shadow-inner">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-secondary-200">
+        <div className="bg-surface-background rounded-xl p-6 text-left mb-8 border border-border shadow-inner">
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <Package className="w-5 h-5 text-text-muted" />
-            <span className="font-bold text-text-primary uppercase tracking-wider text-sm">Order Summary</span>
+            <span className="font-bold text-text-brand-600 uppercase tracking-wider text-sm">Order Summary</span>
           </div>
-          <div className="grid grid-cols-2 gap-y-4 text-sm mb-6 pb-6 border-b border-secondary-200">
+          <div className="grid grid-cols-2 gap-y-4 text-sm mb-6 pb-6 border-b border-border">
             <div>
               <p className="text-text-muted mb-1">Order Number</p>
-              <p className="font-bold text-text-primary">{currentOrder.orderNumber}</p>
+              <p className="font-bold text-text-brand-600">{currentOrder.orderNumber}</p>
             </div>
             <div>
               <p className="text-text-muted mb-1">Date</p>
-              <p className="font-bold text-text-primary">{new Date(currentOrder.createdAt).toLocaleDateString()}</p>
+              <p className="font-bold text-text-brand-600">{new Date(currentOrder.createdAt).toLocaleDateString()}</p>
             </div>
             <div>
               <p className="text-text-muted mb-1">Total Paid</p>
-              <p className="font-bold text-text-primary">{formatPrice(currentOrder.totalAmount)}</p>
+              <p className="font-bold text-text-brand-600">{formatPrice(currentOrder.totalAmount)}</p>
             </div>
             <div>
               <p className="text-text-muted mb-1">Payment Status</p>
@@ -69,20 +69,20 @@ const OrderSuccessPage = () => {
             </div>
             <div>
               <p className="text-text-muted mb-1">Payment Method</p>
-              <p className="font-medium text-text-primary">{currentOrder.paymentMethod}</p>
+              <p className="font-medium text-text-brand-600">{currentOrder.paymentMethod}</p>
             </div>
             {currentOrder.transactionRef && (
               <div>
                 <p className="text-text-muted mb-1">Transaction Ref</p>
-                <p className="font-medium text-text-primary text-xs break-all">{currentOrder.transactionRef}</p>
+                <p className="font-medium text-text-brand-600 text-xs break-all">{currentOrder.transactionRef}</p>
               </div>
             )}
           </div>
           
-          <div className="mb-6 pb-6 border-b border-secondary-200">
+          <div className="mb-6 pb-6 border-b border-border">
             <p className="text-text-muted text-sm mb-2 font-medium">Shipping Address</p>
             {currentOrder.shippingAddress && (
-              <div className="text-sm text-text-primary">
+              <div className="text-sm text-text-brand-600">
                 <p className="font-bold">{currentOrder.shippingAddress.recipientName}</p>
                 <p>{currentOrder.shippingAddress.street}</p>
                 <p>{currentOrder.shippingAddress.city}, {currentOrder.shippingAddress.state} {currentOrder.shippingAddress.zipCode}</p>
@@ -97,8 +97,8 @@ const OrderSuccessPage = () => {
               {currentOrder.items?.map((item) => (
                 <div key={item.id} className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-neutral-500">{item.quantity}x</span>
-                    <span className="text-text-primary line-clamp-1">{item.product?.name || 'Product'}</span>
+                    <span className="font-bold text-text-muted">{item.quantity}x</span>
+                    <span className="text-text-brand-600 line-clamp-1">{item.product?.name || 'Product'}</span>
                   </div>
                   <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
                 </div>

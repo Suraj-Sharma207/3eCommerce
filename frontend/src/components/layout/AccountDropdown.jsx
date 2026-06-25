@@ -62,11 +62,11 @@ const AccountDropdown = ({ isOpen, onClose }) => {
   return (
     <div 
       ref={dropdownRef}
-      className="absolute right-0 top-full mt-3 w-64 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-neutral-100 overflow-hidden z-50 transform origin-top-right transition-all duration-200 ease-out"
+      className="absolute right-0 top-full mt-3 w-64 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border-light overflow-hidden z-50 transform origin-top-right transition-all duration-200 ease-out"
     >
-      <div className="p-4 bg-neutral-50/50 border-b border-neutral-100">
+      <div className="p-4 bg-surface-background/50 border-b border-border-light">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold flex-shrink-0 overflow-hidden">
             {profile?.avatarUrl ? (
               <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
             ) : (
@@ -74,10 +74,10 @@ const AccountDropdown = ({ isOpen, onClose }) => {
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900 truncate">
+            <p className="text-sm font-semibold text-text-primary truncate">
               Hello, {profile?.name}
             </p>
-            <p className="text-xs text-neutral-500 truncate">
+            <p className="text-xs text-text-muted truncate">
               {profile?.email}
             </p>
           </div>
@@ -87,35 +87,35 @@ const AccountDropdown = ({ isOpen, onClose }) => {
       <div className="py-2">
         <button 
           onClick={() => handleNavigate('/profile')}
-          className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+          className="w-full flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-background hover:text-brand-600 transition-colors"
         >
-          <User className="w-4 h-4 mr-3 text-neutral-400" />
+          <User className="w-4 h-4 mr-3 text-text-muted" />
           My Profile
         </button>
         <button 
           onClick={() => handleNavigate('/orders')}
-          className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+          className="w-full flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-background hover:text-brand-600 transition-colors"
         >
-          <Package className="w-4 h-4 mr-3 text-neutral-400" />
+          <Package className="w-4 h-4 mr-3 text-text-muted" />
           My Orders
         </button>
         <button 
           onClick={() => handleNavigate('/wishlist')}
-          className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+          className="w-full flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-background hover:text-brand-600 transition-colors"
         >
-          <Heart className="w-4 h-4 mr-3 text-neutral-400" />
+          <Heart className="w-4 h-4 mr-3 text-text-muted" />
           Wishlist
         </button>
         <button 
           onClick={() => handleNavigate('/addresses')}
-          className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+          className="w-full flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-background hover:text-brand-600 transition-colors"
         >
-          <MapPin className="w-4 h-4 mr-3 text-neutral-400" />
+          <MapPin className="w-4 h-4 mr-3 text-text-muted" />
           Saved Addresses
         </button>
       </div>
       
-      <div className="border-t border-neutral-100 py-2">
+      <div className="border-t border-border-light py-2">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"

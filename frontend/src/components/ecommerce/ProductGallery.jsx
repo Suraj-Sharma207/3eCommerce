@@ -9,7 +9,7 @@ const ProductGallery = ({ images = [] }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Main Image */}
-      <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-secondary-100 shadow-sm relative">
+      <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-border-light shadow-sm relative">
         <img 
           src={safeImages[activeIndex]} 
           alt={`Product View ${activeIndex + 1}`}
@@ -25,7 +25,7 @@ const ProductGallery = ({ images = [] }) => {
               key={idx}
               onClick={() => setActiveIndex(idx)}
               className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
-                activeIndex === idx ? 'border-primary-600 shadow-md ring-2 ring-primary-100' : 'border-transparent opacity-70 hover:opacity-100'
+                activeIndex === idx ? 'border-brand-600 shadow-md ring-2 ring-primary-100' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
               <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />

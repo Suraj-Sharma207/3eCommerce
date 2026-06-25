@@ -194,19 +194,19 @@ const CheckoutPage = () => {
     return (
       <div className="space-y-4">
         {addresses.map(addr => (
-          <label key={addr.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${selectedId === addr.id ? 'border-primary-500 bg-primary-50 text-primary-900' : 'border-neutral-200 bg-white hover:border-primary-200'}`}>
+          <label key={addr.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-colors ${selectedId === addr.id ? 'border-brand-600 bg-brand-50 text-brand-900' : 'border-border bg-white hover:border-brand-200'}`}>
             <input 
               type="radio" 
               name={`${type}Address`} 
               checked={selectedId === addr.id}
               onChange={() => setSelection(addr.id)}
-              className="mt-1 w-4 h-4 text-primary-600 border-neutral-300 focus:ring-primary-500"
+              className="mt-1 w-4 h-4 text-brand-600 border-neutral-300 focus:ring-brand-600"
             />
             <div className="ml-3">
               <p className="font-medium">{addr.recipientName} <span className="text-xs ml-2 bg-neutral-200 px-2 py-0.5 rounded-full">{addr.label}</span></p>
-              <p className="text-sm text-neutral-600 mt-1">{addr.street}</p>
-              <p className="text-sm text-neutral-600">{addr.city}, {addr.state} {addr.zipCode}</p>
-              <p className="text-sm text-neutral-600">{addr.country}</p>
+              <p className="text-sm text-text-secondary mt-1">{addr.street}</p>
+              <p className="text-sm text-text-secondary">{addr.city}, {addr.state} {addr.zipCode}</p>
+              <p className="text-sm text-text-secondary">{addr.country}</p>
             </div>
           </label>
         ))}
@@ -223,7 +223,7 @@ const CheckoutPage = () => {
             
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-medium text-neutral-900 flex items-center gap-2"><MapPin className="w-6 h-6"/> Shipping Address</h2>
+                <h2 className="text-2xl font-medium text-text-primary flex items-center gap-2"><MapPin className="w-6 h-6"/> Shipping Address</h2>
                 <Button variant="outline" size="sm" onClick={() => navigate('/addresses')}>Manage Addresses</Button>
               </div>
               {renderAddressSelection('shipping', shippingAddressId, setShippingAddressId)}
@@ -233,7 +233,7 @@ const CheckoutPage = () => {
       case 2:
         return (
           <form id="checkout-form" onSubmit={handleNextStep} className="space-y-6">
-            <h2 className="text-2xl font-medium text-neutral-900 mb-6">Select Payment Method</h2>
+            <h2 className="text-2xl font-medium text-text-primary mb-6">Select Payment Method</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
@@ -244,7 +244,7 @@ const CheckoutPage = () => {
                 const Icon = method.icon;
                 const isSelected = paymentMethod === method.id;
                 return (
-                  <label key={method.id} className={`flex flex-col items-center justify-center p-6 border rounded-xl cursor-pointer transition-all ${isSelected ? 'border-primary-600 bg-primary-50 text-primary-900 shadow-sm' : 'border-neutral-200 bg-white hover:border-primary-200 text-neutral-600'}`}>
+                  <label key={method.id} className={`flex flex-col items-center justify-center p-6 border rounded-xl cursor-pointer transition-all ${isSelected ? 'border-brand-600 bg-brand-50 text-brand-900 shadow-sm' : 'border-border bg-white hover:border-brand-200 text-text-secondary'}`}>
                     <input 
                       type="radio" 
                       name="paymentMethod" 
@@ -253,17 +253,17 @@ const CheckoutPage = () => {
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="sr-only"
                     />
-                    <Icon className={`w-8 h-8 mb-3 ${isSelected ? 'text-primary-600' : 'text-neutral-400'}`} />
+                    <Icon className={`w-8 h-8 mb-3 ${isSelected ? 'text-brand-600' : 'text-text-muted'}`} />
                     <span className="font-medium text-center">{method.name}</span>
                   </label>
                 );
               })}
             </div>
 
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-neutral-200 shadow-sm">
+            <div className="bg-white p-6 sm:p-8 rounded-xl border border-border shadow-sm">
               {paymentMethod === 'UPI' && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-medium text-neutral-900 mb-4">Select UPI App</h3>
+                  <h3 className="text-lg font-medium text-text-primary mb-4">Select UPI App</h3>
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
@@ -271,8 +271,8 @@ const CheckoutPage = () => {
                       { id: 'PHONEPE', name: 'PhonePe', icon: MonitorSmartphone, color: 'text-purple-600' },
                       { id: 'PAYTM', name: 'Paytm', icon: MonitorSmartphone, color: 'text-blue-400' },
                       { id: 'BHIM', name: 'BHIM UPI', icon: MonitorSmartphone, color: 'text-orange-500' },
-                      { id: 'OTHER', name: 'Other UPI ID', icon: Smartphone, color: 'text-neutral-500' },
-                      { id: 'QR', name: 'Scan QR Code', icon: QrCode, color: 'text-neutral-800' }
+                      { id: 'OTHER', name: 'Other UPI ID', icon: Smartphone, color: 'text-text-muted' },
+                      { id: 'QR', name: 'Scan QR Code', icon: QrCode, color: 'text-text-primary' }
                     ].map(provider => (
                       <button
                         key={provider.id}
@@ -283,11 +283,11 @@ const CheckoutPage = () => {
                         }}
                         className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
                           paymentDetails.upiProvider === provider.id
-                            ? 'border-primary-600 bg-primary-50 text-primary-900 shadow-sm'
-                            : 'border-neutral-100 bg-white hover:border-primary-200 text-neutral-600 hover:bg-neutral-50'
+                            ? 'border-brand-600 bg-brand-50 text-brand-900 shadow-sm'
+                            : 'border-border-light bg-white hover:border-brand-200 text-text-secondary hover:bg-surface-background'
                         }`}
                       >
-                        <provider.icon className={`w-8 h-8 mb-2 ${paymentDetails.upiProvider === provider.id ? 'text-primary-600' : provider.color}`} />
+                        <provider.icon className={`w-8 h-8 mb-2 ${paymentDetails.upiProvider === provider.id ? 'text-brand-600' : provider.color}`} />
                         <span className="text-sm font-medium text-center">{provider.name}</span>
                       </button>
                     ))}
@@ -310,11 +310,11 @@ const CheckoutPage = () => {
                   )}
 
                   {paymentDetails.upiProvider === 'QR' && (
-                    <div className="mt-4 p-6 border-2 border-dashed border-neutral-200 rounded-xl flex flex-col items-center justify-center bg-neutral-50 animate-in fade-in zoom-in-95 duration-300">
-                      <div className="w-48 h-48 bg-white border border-neutral-200 rounded-lg p-2 shadow-sm flex items-center justify-center">
+                    <div className="mt-4 p-6 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center bg-surface-background animate-in fade-in zoom-in-95 duration-300">
+                      <div className="w-48 h-48 bg-white border border-border rounded-lg p-2 shadow-sm flex items-center justify-center">
                         <QrCode className="w-32 h-32 text-neutral-300" strokeWidth={1} />
                       </div>
-                      <p className="text-sm text-neutral-500 mt-4 text-center">
+                      <p className="text-sm text-text-muted mt-4 text-center">
                         Scan this QR code using any UPI app on your phone.<br/>
                         <span className="text-xs">(Gateway placeholder ready for future integration)</span>
                       </p>
@@ -325,7 +325,7 @@ const CheckoutPage = () => {
               
               {paymentMethod === 'CREDIT_CARD' && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-medium text-neutral-900 mb-4">Enter Card Details</h3>
+                  <h3 className="text-lg font-medium text-text-primary mb-4">Enter Card Details</h3>
                   <div className="relative">
                     <Input 
                       label="Name on Card" 
@@ -346,9 +346,9 @@ const CheckoutPage = () => {
                   </div>
                   <div className="relative">
                     <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-neutral-700">Card Number <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-text-secondary">Card Number <span className="text-red-500">*</span></label>
                       {paymentDetails.cardNumber && (
-                        <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded">{getCardType(paymentDetails.cardNumber) || 'Card'}</span>
+                        <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">{getCardType(paymentDetails.cardNumber) || 'Card'}</span>
                       )}
                     </div>
                     <Input 
@@ -380,7 +380,7 @@ const CheckoutPage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
-                      <label className="block text-sm font-medium text-neutral-700 mb-1">Expiry (MM/YY) <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Expiry (MM/YY) <span className="text-red-500">*</span></label>
                       <input 
                         ref={expiryRef}
                         type="text"
@@ -396,7 +396,7 @@ const CheckoutPage = () => {
                             setPaymentDetails(prev => ({ ...prev, expiry: val }));
                           }
                         }} 
-                        className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 bg-white ${getInputClassName('expiry') || 'border-neutral-200 focus:border-primary-500 focus:ring-primary-100'}`}
+                        className={`w-full px-4 py-2.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 bg-white ${getInputClassName('expiry') || 'border-border focus:border-brand-600 focus:ring-primary-100'}`}
                       />
                       {touchedFields.expiry && paymentErrors.expiry && (
                         <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1"><AlertCircle className="w-3 h-3"/>{paymentErrors.expiry}</p>
@@ -426,11 +426,11 @@ const CheckoutPage = () => {
               
               {paymentMethod === 'COD' && (
                 <div className="text-center py-6">
-                  <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600">
                     <Banknote className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-medium text-neutral-900 mb-2">Cash on Delivery</h3>
-                  <p className="text-neutral-500">You will pay for your order upon delivery.</p>
+                  <h3 className="text-lg font-medium text-text-primary mb-2">Cash on Delivery</h3>
+                  <p className="text-text-muted">You will pay for your order upon delivery.</p>
                 </div>
               )}
             </div>
@@ -443,37 +443,37 @@ const CheckoutPage = () => {
         
         return (
           <div className="space-y-8">
-            <h2 className="text-2xl font-medium text-neutral-900 mb-6">Review Your Order</h2>
+            <h2 className="text-2xl font-medium text-text-primary mb-6">Review Your Order</h2>
             
-            <div className="bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
-              <h3 className="text-lg font-medium text-neutral-900 mb-4 border-b border-neutral-100 pb-2 flex items-center gap-2">
-                <Truck className="w-5 h-5 text-neutral-400" /> Delivery Details
+            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
+              <h3 className="text-lg font-medium text-text-primary mb-4 border-b border-border-light pb-2 flex items-center gap-2">
+                <Truck className="w-5 h-5 text-text-muted" /> Delivery Details
               </h3>
               {shippingAddr ? (
                 <>
-                  <p className="text-neutral-700 font-medium">{shippingAddr.recipientName}</p>
-                  <p className="text-neutral-500">{shippingAddr.street}</p>
-                  <p className="text-neutral-500">{shippingAddr.city}, {shippingAddr.state} {shippingAddr.zipCode}</p>
-                  <p className="text-neutral-500">{shippingAddr.country}</p>
+                  <p className="text-text-secondary font-medium">{shippingAddr.recipientName}</p>
+                  <p className="text-text-muted">{shippingAddr.street}</p>
+                  <p className="text-text-muted">{shippingAddr.city}, {shippingAddr.state} {shippingAddr.zipCode}</p>
+                  <p className="text-text-muted">{shippingAddr.country}</p>
                 </>
               ) : <p className="text-red-500">Missing Address</p>}
             </div>
 
-            <div className="bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
-              <h3 className="text-lg font-medium text-neutral-900 mb-4 border-b border-neutral-100 pb-2 flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-neutral-400" /> Payment Details
+            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
+              <h3 className="text-lg font-medium text-text-primary mb-4 border-b border-border-light pb-2 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-text-muted" /> Payment Details
               </h3>
               {paymentMethod === 'UPI' && (
-                <p className="text-neutral-700">UPI ID: {paymentDetails.upiId}</p>
+                <p className="text-text-secondary">UPI ID: {paymentDetails.upiId}</p>
               )}
               {paymentMethod === 'CREDIT_CARD' && (
                 <>
-                  <p className="text-neutral-700 font-medium">{paymentDetails.nameOnCard}</p>
-                  <p className="text-neutral-500">Card ending in •••• {paymentDetails.cardNumber.slice(-4) || 'XXXX'}</p>
+                  <p className="text-text-secondary font-medium">{paymentDetails.nameOnCard}</p>
+                  <p className="text-text-muted">Card ending in •••• {paymentDetails.cardNumber.slice(-4) || 'XXXX'}</p>
                 </>
               )}
               {paymentMethod === 'COD' && (
-                <p className="text-neutral-700 font-medium">Cash on Delivery</p>
+                <p className="text-text-secondary font-medium">Cash on Delivery</p>
               )}
             </div>
             
@@ -496,7 +496,7 @@ const CheckoutPage = () => {
         <div className="flex items-center justify-between relative">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-neutral-200 -z-10 rounded-full"></div>
           <div 
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary-600 -z-10 rounded-full transition-all duration-500"
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand-600 -z-10 rounded-full transition-all duration-500"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
           ></div>
           
@@ -508,12 +508,12 @@ const CheckoutPage = () => {
             return (
               <div key={step.id} className="flex flex-col items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                  isCompleted ? 'bg-primary-600 text-white' : 
-                  isCurrent ? 'bg-primary-600 text-white ring-4 ring-primary-100' : 'bg-white text-neutral-400 border-2 border-neutral-200'
+                  isCompleted ? 'bg-brand-600 text-white' : 
+                  isCurrent ? 'bg-brand-600 text-white shadow-[0_0_10px_rgba(91,92,235,0.4)]' : 'bg-surface-background text-text-muted border-2 border-border'
                 }`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className={`mt-2 text-xs font-bold uppercase tracking-wider ${isCurrent || isCompleted ? 'text-primary-700' : 'text-neutral-400'}`}>
+                <span className={`mt-2 text-xs font-bold uppercase tracking-wider ${isCurrent || isCompleted ? 'text-brand-700' : 'text-text-muted'}`}>
                   {step.name}
                 </span>
               </div>
@@ -528,12 +528,12 @@ const CheckoutPage = () => {
         <div className="flex-1">
           {renderStepContent()}
           
-          <div className="mt-8 flex justify-between items-center pt-6 border-t border-neutral-200">
+          <div className="mt-8 flex justify-between items-center pt-6 border-t border-border">
             {currentStep > 1 ? (
               <button 
                 type="button"
                 onClick={() => setCurrentStep(prev => prev - 1)}
-                className="text-neutral-500 font-medium hover:text-neutral-900"
+                className="text-text-muted font-medium hover:text-text-primary"
               >
                 Back
               </button>
@@ -564,8 +564,8 @@ const CheckoutPage = () => {
 
         {/* Order Summary Sidebar */}
         <div className="w-full lg:w-[380px] shrink-0">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200 sticky top-24">
-            <h3 className="text-lg font-medium text-neutral-900 mb-4 pb-4 border-b border-neutral-100">Order Summary</h3>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-border sticky top-24">
+            <h3 className="text-lg font-medium text-text-primary mb-4 pb-4 border-b border-border-light">Order Summary</h3>
             
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
               {validItems.map((item) => {
@@ -573,7 +573,7 @@ const CheckoutPage = () => {
                 return (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-100">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-border-light">
                       <ImageFallback src={item.product.thumbnail} alt={item.product.name} className="w-full h-full object-cover" />
                     </div>
                     <span className="absolute -top-2 -right-2 w-5 h-5 bg-neutral-800 text-white text-xs font-bold flex items-center justify-center rounded-full">
@@ -581,27 +581,27 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <div className="flex-1 text-sm">
-                    <p className="font-medium text-neutral-900 line-clamp-2">{item.product.name}</p>
-                    <p className="text-neutral-500 mt-1">{formatPrice(itemPrice)}</p>
+                    <p className="font-medium text-text-primary line-clamp-2">{item.product.name}</p>
+                    <p className="text-text-muted mt-1">{formatPrice(itemPrice)}</p>
                   </div>
                 </div>
               )})}
             </div>
 
-            <div className="space-y-3 text-neutral-600 border-t border-neutral-100 pt-4 mb-6">
+            <div className="space-y-3 text-text-secondary border-t border-border-light pt-4 mb-6">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-medium text-neutral-900">{formatPrice(subtotal)}</span>
+                <span className="font-medium text-text-primary">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span className="font-medium text-neutral-900">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+                <span className="font-medium text-text-primary">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
               </div>
             </div>
 
-            <div className="flex justify-between items-center border-t border-neutral-200 pt-4">
-              <span className="text-lg font-medium text-neutral-900">Total</span>
-              <span className="text-2xl font-bold text-neutral-900">{formatPrice(total)}</span>
+            <div className="flex justify-between items-center border-t border-border pt-4">
+              <span className="text-lg font-medium text-text-primary">Total</span>
+              <span className="text-2xl font-bold text-text-primary">{formatPrice(total)}</span>
             </div>
           </div>
         </div>

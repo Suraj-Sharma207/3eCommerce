@@ -91,6 +91,51 @@ const useProductStore = create((set, get) => ({
       });
     }
   },
+
+  createProduct: async (productData) => {
+    set({ isLoading: true, error: null });
+    try {
+      await productService.createProduct(productData);
+      set({ isLoading: false });
+      return true;
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.message || 'Failed to create product', 
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  updateProduct: async (id, productData) => {
+    set({ isLoading: true, error: null });
+    try {
+      await productService.updateProduct(id, productData);
+      set({ isLoading: false });
+      return true;
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.message || 'Failed to update product', 
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  deleteProduct: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      await productService.deleteProduct(id);
+      set({ isLoading: false });
+      return true;
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.message || 'Failed to delete product', 
+        isLoading: false 
+      });
+      return false;
+    }
+  },
 }));
 
 export default useProductStore;
