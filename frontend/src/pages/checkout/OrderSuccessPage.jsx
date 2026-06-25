@@ -5,11 +5,13 @@ import Button from '../../components/ui/Button';
 import useOrderStore from '../../store/orderStore';
 import { CheckCircle2, Package, ArrowRight } from 'lucide-react';
 import { formatPrice } from '../../utils/currency';
+import toast from 'react-hot-toast';
 
 const OrderSuccessPage = () => {
   const { id } = useParams();
   const { fetchOrderById, currentOrder } = useOrderStore();
   const [loading, setLoading] = useState(true);
+  const [toastShown, setToastShown] = useState(false);
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -20,6 +22,26 @@ const OrderSuccessPage = () => {
     };
     loadOrder();
   }, [id, fetchOrderById]);
+
+  useEffect(() => {
+    if (currentOrder && !toastShown) {
+      toast.success("Order confirmation email has been sent.", {
+        duration: 4000,
+        position: "top-center",
+        style: {
+          background: "#ffffff",
+          color: "#1f2937",
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          fontSize: "14px",
+          fontWeight: "500",
+          padding: "12px 24px"
+        }
+      });
+      setToastShown(true);
+    }
+  }, [currentOrder, toastShown]);
 
   if (loading) return <div className="h-[60vh] flex items-center justify-center">Loading...</div>;
   if (!currentOrder) return <div className="h-[60vh] flex items-center justify-center">Order not found</div>;

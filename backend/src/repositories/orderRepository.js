@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import promotionService from '../services/promotionService.js';
 
 class OrderRepository {
   async executeCheckoutTransaction(userId, shippingAddressId, billingAddressId, paymentMethod, paymentMetadata) {
@@ -31,49 +32,51 @@ class OrderRepository {
     const startTime = Date.now();
     console.log(`[CHECKOUT] Starting transaction for ${orderNumber}...`);
 
-    // 2. Atomic Transaction (Keep as small as possible)
-    const order = await prisma.$transaction(async (tx) => {
-      let totalAmount = 0;
-      const orderItemsData = [];
+    // 2. Pre-compute promotions and prices OUTSIDE the transaction to prevent P2028 timeout
+    const activePromotions = await promotionService.getActivePromotions();
 
-      // Fetch all products at once to solve N+1 issue
-      const productIds = cart.items.map(item => item.productId);
-      const products = await tx.product.findMany({
-        where: { id: { in: productIds } }
-      });
-      const productMap = new Map(products.map(p => [p.id, p]));
+    // Fetch all products outside the transaction
+    const productIds = cart.items.map(item => item.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } }
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
 
-      // Validate stock in memory
-      for (const item of cart.items) {
-        const product = productMap.get(item.productId);
-        
-        if (!product || !product.active) {
-          throw { status: 409, message: `Product ${product?.name || item.productId} is no longer available` };
-        }
-        
-        if (product.stock < item.quantity) {
-          throw { status: 409, message: `Insufficient stock for ${product.name}. Available: ${product.stock}` };
-        }
+    // Validate stock and compute prices before entering the transaction
+    let preComputedTotal = 0;
+    const orderItemsData = [];
 
-        const price = product.finalPrice || product.price;
-        totalAmount += price * item.quantity;
-        
-        orderItemsData.push({
-          productId: product.id,
-          quantity: item.quantity,
-          price
-        });
+    for (const item of cart.items) {
+      const product = productMap.get(item.productId);
+
+      if (!product || !product.active) {
+        throw { status: 409, message: `Product ${product?.name || item.productId} is no longer available` };
       }
 
-      const shippingCost = totalAmount > 4999 ? 0 : 499;
-      totalAmount += shippingCost;
+      if (product.stock < item.quantity) {
+        throw { status: 409, message: `Insufficient stock for ${product.name}. Available: ${product.stock}` };
+      }
 
-      // Reduce inventory sequentially
+      const { finalPrice } = await promotionService.calculateProductPrice(product, activePromotions);
+      preComputedTotal += finalPrice * item.quantity;
+      orderItemsData.push({
+        productId: product.id,
+        quantity: item.quantity,
+        price: finalPrice
+      });
+    }
+
+    const shippingCost = preComputedTotal > 4999 ? 0 : 499;
+    const grandTotal = preComputedTotal + shippingCost;
+
+    // 3. Atomic Transaction — only pure DB writes, no external calls
+    const order = await prisma.$transaction(async (tx) => {
+      // Reduce inventory sequentially using pre-computed productMap
       for (const item of cart.items) {
         const product = productMap.get(item.productId);
         const newStock = product.stock - item.quantity;
         const isSoldOut = newStock <= 0;
-        
+
         await tx.product.update({
           where: { id: product.id },
           data: {
@@ -83,12 +86,16 @@ class OrderRepository {
         });
       }
 
-      // Create Order and Items
+      // Create Order and Items using pre-computed totals
       const createdOrder = await tx.order.create({
         data: {
           orderNumber,
           userId,
-          totalAmount,
+          totalAmount: grandTotal,
+          subtotal: preComputedTotal,
+          discountAmount: 0,
+          taxAmount: 0,
+          shippingCharge: shippingCost,
           shippingAddress: shippingAddress,
           billingAddress: billingAddress,
           paymentMethod,
@@ -117,7 +124,8 @@ class OrderRepository {
       });
 
       return createdOrder;
-    });
+    }, { timeout: 15000 });
+
 
     const duration = Date.now() - startTime;
     console.log(`[CHECKOUT] Transaction committed for ${orderNumber} in ${duration}ms`);
@@ -163,6 +171,7 @@ class OrderRepository {
       where: { id: orderId },
       data: { orderStatus: status },
       include: {
+        user: true,
         items: {
           include: {
             product: true

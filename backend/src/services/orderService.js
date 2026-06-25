@@ -1,5 +1,7 @@
 import orderRepository from '../repositories/orderRepository.js';
 import emailService from './emailService.js';
+import emailEvents from '../email/utils/emailEvents.js';
+import settingsService from './settingsService.js';
 
 class OrderService {
   async checkout(userId, { shippingAddressId, billingAddressId, paymentMethod, paymentMetadata }) {
@@ -19,8 +21,18 @@ class OrderService {
         await new Promise(resolve => setTimeout(resolve, 500)); // Simulate payment processing delay
         console.log(`[BACKGROUND] Payment simulation completed successfully.`);
 
-        emailService.sendOrderConfirmation(order.user.email, order);
-        emailService.sendNewOrderNotification('admin@ecommerce.com', order);
+        // Emit order.created event
+        emailEvents.emit('order.created', order);
+
+        // Check for low stock on any of the ordered items
+        const settings = await settingsService.getSettingsByKeys(['notifications']);
+        const threshold = parseInt(settings.notifications?.lowStockThreshold || '5', 10);
+
+        for (const item of order.items) {
+          if (item.product && item.product.stock <= threshold) {
+            emailEvents.emit('product.low_stock', { product: item.product, threshold });
+          }
+        }
       } catch (error) {
         console.error('Failed to execute background tasks for order:', error);
       }
@@ -44,7 +56,25 @@ class OrderService {
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid order status');
     }
-    return await orderRepository.updateOrderStatus(orderId, status);
+    const order = await orderRepository.updateOrderStatus(orderId, status);
+
+    // Emit status transition events
+    try {
+      if (status === 'SHIPPED') {
+        emailEvents.emit('order.shipped', { order });
+      } else if (status === 'DELIVERED') {
+        emailEvents.emit('order.delivered', { order, deliveredDate: new Date().toLocaleDateString() });
+      } else if (status === 'CANCELLED') {
+        emailEvents.emit('order.cancelled', { order, cancellationReason: 'Fulfillment cancellation' });
+        if (order.paymentStatus === 'PAID') {
+          emailEvents.emit('order.refunded', { order, refundAmount: order.totalAmount });
+        }
+      }
+    } catch (eventError) {
+      console.error('[ORDER SERVICE] Failed to emit order status event:', eventError);
+    }
+
+    return order;
   }
 
   async updatePaymentStatus(orderId, status) {

@@ -4,15 +4,20 @@ import api from '../services/api';
 const useWishlistStore = create((set, get) => ({
   wishlist: null,
   isLoading: false,
+  hasFetched: false,
   error: null,
 
   fetchWishlist: async () => {
-    set({ isLoading: true, error: null });
+    const { hasFetched } = get();
+    if (!hasFetched) {
+      set({ isLoading: true, error: null });
+    }
+    
     try {
       const response = await api.get('/wishlist');
-      set({ wishlist: response.data.data, isLoading: false });
+      set({ wishlist: response.data.data, isLoading: false, hasFetched: true });
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch wishlist', isLoading: false });
+      set({ error: error.response?.data?.message || 'Failed to fetch wishlist', isLoading: false, hasFetched: true });
     }
   },
 

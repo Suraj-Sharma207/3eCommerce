@@ -8,14 +8,51 @@ import EmptyState from '../../components/ui/EmptyState';
 import { formatPrice } from '../../utils/currency';
 import ImageFallback from '../../components/ui/ImageFallback';
 
+const OrdersSkeleton = () => (
+  <PageContainer className="py-8 lg:py-12 max-w-5xl">
+    <div className="h-10 w-48 bg-neutral-200 rounded animate-pulse mb-8"></div>
+    <div className="space-y-6">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-surface-background px-6 py-4 border-b border-border flex justify-between items-center">
+            <div className="flex gap-8">
+              <div className="space-y-2">
+                <div className="h-3 w-16 bg-neutral-200 rounded animate-pulse"></div>
+                <div className="h-4 w-24 bg-neutral-200 rounded animate-pulse"></div>
+              </div>
+              <div className="space-y-2 hidden sm:block">
+                <div className="h-3 w-12 bg-neutral-200 rounded animate-pulse"></div>
+                <div className="h-4 w-16 bg-neutral-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+            <div className="h-8 w-24 bg-neutral-200 rounded-lg animate-pulse"></div>
+          </div>
+          <div className="p-6">
+            <div className="h-5 w-40 bg-neutral-200 rounded animate-pulse mb-6"></div>
+            <div className="flex gap-4 overflow-hidden">
+              {[...Array(3)].map((_, j) => (
+                <div key={j} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 bg-neutral-200 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </PageContainer>
+);
+
 const OrdersPage = () => {
-  const { orders, isLoading, fetchUserOrders } = useOrderStore();
+  const { orders, hasFetched, fetchUserOrders } = useOrderStore();
 
   useEffect(() => {
     fetchUserOrders();
   }, [fetchUserOrders]);
 
-  if (!isLoading && orders.length === 0) {
+  if (!hasFetched) {
+    return <OrdersSkeleton />;
+  }
+
+  if (orders.length === 0) {
     return (
       <PageContainer className="py-20">
         <EmptyState 

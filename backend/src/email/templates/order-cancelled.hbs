@@ -1,0 +1,16 @@
+<h1>Your Order Has Been Cancelled</h1>
+<p>Hello {{name}},</p>
+<p>As requested or due to an issue with processing, your order <strong>#{{orderNumber}}</strong> has been cancelled.</p>
+
+{{#if cancellationReason}}
+<p style="background-color: #FEF2F2; border: 1px solid #FEE2E2; border-radius: 8px; padding: 16px; font-size: 14px; color: #991B1B;">
+  <strong>Reason for cancellation:</strong> {{cancellationReason}}
+</p>
+{{/if}}
+
+<p>If you have already been charged, a refund is being processed to your original payment method. Refunds typically take 5-7 business days to reflect in your account.</p>
+
+{{> button url=shopUrl text="Continue Shopping"}}
+
+<p>If this cancellation was unintended, or if you have any questions regarding your refund, please feel free to reach out to our support team.</p>
+<p>Thank you,<br><strong>LuxeHome Support Team</strong></p>

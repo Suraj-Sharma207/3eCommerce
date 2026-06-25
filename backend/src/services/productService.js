@@ -1,6 +1,7 @@
 import productRepository from '../repositories/productRepository.js';
 import { validateProductInput } from '../utils/productValidation.js';
-import prisma from '../lib/prisma.js'; // Need prisma for duplicate checks if not in repository, or we can use repository. Let's import prisma directly here for duplicate check.
+import prisma from '../lib/prisma.js';
+import promotionService from './promotionService.js';
 
 class ProductService {
   async getProducts({ page = 1, limit = 12, search = '', category, minPrice, maxPrice, inStock, sort, featured, trending, newArrival, bestSeller, sale }) {
@@ -16,8 +17,15 @@ class ProductService {
 
     const totalPages = Math.ceil(totalItems / take);
 
+    // Fetch active promotions and calculate final prices dynamically
+    const activePromotions = await promotionService.getActivePromotions();
+    const dynamicProducts = await Promise.all(products.map(async (product) => {
+      const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(product, activePromotions);
+      return { ...product, finalPrice, discountPercentage };
+    }));
+
     return {
-      products,
+      products: dynamicProducts,
       pagination: {
         currentPage: parseInt(page),
         totalPages,
@@ -36,7 +44,10 @@ class ProductService {
     if (!product) {
       throw new Error('Product not found');
     }
-    return product;
+    const activePromotions = await promotionService.getActivePromotions();
+    const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(product, activePromotions);
+
+    return { ...product, finalPrice, discountPercentage };
   }
 
   async createProduct(data) {
@@ -70,8 +81,8 @@ class ProductService {
       sku: generatedSku,
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
-      discountPercentage: data.discountPercentage ? parseInt(data.discountPercentage, 10) : 0,
-      finalPrice: parseFloat(data.price) * (1 - ((data.discountPercentage ? parseInt(data.discountPercentage, 10) : 0) / 100)),
+      discountPercentage: 0,
+      finalPrice: parseFloat(data.price),
     };
 
     return await productRepository.create(formattedData);
@@ -111,8 +122,8 @@ class ProductService {
       description: data.description.trim(),
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
-      discountPercentage: data.discountPercentage ? parseInt(data.discountPercentage, 10) : 0,
-      finalPrice: parseFloat(data.price) * (1 - ((data.discountPercentage ? parseInt(data.discountPercentage, 10) : 0) / 100)),
+      discountPercentage: 0,
+      finalPrice: parseFloat(data.price),
     };
 
     return await productRepository.update(id, formattedData);

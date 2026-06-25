@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
-const useOrderStore = create((set) => ({
+const useOrderStore = create((set, get) => ({
   orders: [],
   currentOrder: null,
   isLoading: false,
+  hasFetched: false,
   error: null,
 
   checkout: async (checkoutData) => {
@@ -20,12 +21,16 @@ const useOrderStore = create((set) => ({
   },
 
   fetchUserOrders: async () => {
-    set({ isLoading: true, error: null });
+    const { hasFetched } = get();
+    if (!hasFetched) {
+      set({ isLoading: true, error: null });
+    }
+
     try {
       const response = await api.get('/orders');
-      set({ orders: response.data.data, isLoading: false });
+      set({ orders: response.data.data, isLoading: false, hasFetched: true });
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch orders', isLoading: false });
+      set({ error: error.response?.data?.message || 'Failed to fetch orders', isLoading: false, hasFetched: true });
     }
   },
 

@@ -57,6 +57,42 @@ class AuthController {
       next(error);
     }
   }
+
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body;
+      const result = await authService.forgotPassword(email);
+      return successResponse(res, 'If your email is registered, a password reset link has been sent.', result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resetPassword(req, res, next) {
+    try {
+      const { token, password } = req.body;
+      const result = await authService.resetPassword(token, password);
+      return successResponse(res, 'Password reset successfully', result, 200);
+    } catch (error) {
+      if (error.message === 'Invalid or expired password reset token') {
+        return errorResponse(res, error.message, [], 400);
+      }
+      next(error);
+    }
+  }
+
+  async verifyEmail(req, res, next) {
+    try {
+      const { token } = req.body;
+      const result = await authService.verifyEmail(token);
+      return successResponse(res, 'Email verified successfully', result, 200);
+    } catch (error) {
+      if (error.message === 'Invalid or expired email verification token') {
+        return errorResponse(res, error.message, [], 400);
+      }
+      next(error);
+    }
+  }
 }
 
 export default new AuthController();

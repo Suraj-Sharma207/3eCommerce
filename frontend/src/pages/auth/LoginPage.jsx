@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import Button from '../../components/ui/Button';
@@ -12,7 +12,11 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [socialMessage, setSocialMessage] = useState('');
   
-  const { login, isLoading, error } = useAuthStore();
+  const { login, isLoading, error, clearError } = useAuthStore();
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,7 +60,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col justify-center min-h-[calc(100vh-160px)] py-4">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col justify-center py-4">
       <div className="mb-6">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Welcome Back</h2>
         <p className="mt-1 text-[16px] text-text-muted">

@@ -18,6 +18,7 @@ model User {
   birthday   DateTime?
   gender     String?
   avatarUrl  String?
+  avatarPublicId String?
   language   String    @default("en")
   currency   String    @default("USD")
   newsletter Boolean   @default(false)
@@ -25,17 +26,30 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  failedLoginAttempts Int      @default(0)
+  lockoutUntil        DateTime?
+  tokenVersion        Int      @default(0)
+  passwordUpdatedAt   DateTime @default(now())
+  
+  verificationToken    String?
+  verificationExpires  DateTime?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  isEmailVerified      Boolean   @default(false)
   
   cart      Cart?
   orders    Order[]
   wishlist  Wishlist?
   addresses Address[]
   stockNotifications StockNotification[]
+  emailLogs EmailLog[]
 }
 
 enum Role {
   CUSTOMER
   ADMIN
+  SUPER_ADMIN
 }
 
 model Product {
@@ -66,6 +80,7 @@ model Product {
   orderItems  OrderItem[]
   wishlistItems WishlistItem[]
   stockNotifications StockNotification[]
+  promotions  PromotionProduct[]
 
   @@index([stock])
   @@index([createdAt])
@@ -98,6 +113,10 @@ model Order {
   userId          String
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   totalAmount     Float
+  subtotal        Float       @default(0)
+  discountAmount  Float       @default(0)
+  taxAmount       Float       @default(0)
+  shippingCharge  Float       @default(0)
   paymentStatus   PaymentStatus @default(PENDING)
   orderStatus     OrderStatus   @default(PENDING)
   paymentMethod   String?
@@ -204,9 +223,143 @@ model StockNotification {
   @@unique([productId, email])
 }
 
-model Setting {
+model SystemSettings {
   id        String   @id @default(uuid())
   key       String   @unique
   value     Json
   updatedAt DateTime @updatedAt
+
+  @@map("Setting")
 }
+
+model Promotion {
+  id            String             @id @default(uuid())
+  name          String
+  description   String?
+  type          CampaignType
+  status        CampaignStatus     @default(DISABLED)
+  priority      Int                @default(0)
+  startDate     DateTime
+  endDate       DateTime
+  applyTo       ApplyToType        @default(STORE)
+  
+  discountValue Float              @default(0)
+  buyQty        Int?
+  getYQty       Int?
+  minPurchase   Float?
+  couponCode    String?            @unique
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  products      PromotionProduct[]
+  categories    PromotionCategory[]
+  brands        PromotionBrand[]
+}
+
+model PromotionProduct {
+  id          String    @id @default(uuid())
+  promotionId String
+  productId   String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, productId])
+}
+
+model PromotionCategory {
+  id          String    @id @default(uuid())
+  promotionId String
+  category    String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, category])
+}
+
+model PromotionBrand {
+  id          String    @id @default(uuid())
+  promotionId String
+  brand       String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, brand])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminName String
+  section   String
+  oldValue  Json
+  newValue  Json
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+enum CampaignType {
+  PERCENTAGE_DISCOUNT
+  FLAT_DISCOUNT
+  BUY_X_GET_Y
+  FREE_SHIPPING
+  COUPON
+  FLASH_SALE
+  CATEGORY_DISCOUNT
+  BRAND_DISCOUNT
+  PRODUCT_DISCOUNT
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ENABLED
+  DISABLED
+  EXPIRED
+  ARCHIVED
+}
+
+enum ApplyToType {
+  STORE
+  CATEGORY
+  BRAND
+  PRODUCT
+}
+
+enum EmailStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+enum EmailProvider {
+  SMTP
+  SES
+  SENDGRID
+  MAILGUN
+  POSTMARK
+  RESEND
+}
+
+model EmailLog {
+  id                  String        @id @default(uuid())
+  userId              String?
+  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email               String
+  template            String
+  subject             String
+  status              EmailStatus   @default(PENDING)
+  provider            EmailProvider @default(SMTP)
+  messageId           String?
+  error               String?
+  sentAt              DateTime?
+  retryCount          Int           @default(0)
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  nextRetryAt         DateTime?
+  idempotencyKey      String?       @unique
+  createdAt           DateTime      @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
+}
+

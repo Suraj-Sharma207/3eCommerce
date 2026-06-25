@@ -1,0 +1,30 @@
+<h1>⚠️ Low Stock Alert</h1>
+<p>Hello Admin,</p>
+<p>This is an automated alert to notify you that the inventory level for the following product has fallen below the configured low-stock threshold.</p>
+
+<div style="background-color: #FFFBEB; border: 1px solid #FEF3C7; border-radius: 12px; padding: 20px; margin-bottom: 24px; font-family: 'Inter', sans-serif;">
+  <h4 style="margin: 0 0 12px 0; color: #B45309; font-size: 15px; font-weight: 700;">Inventory Status</h4>
+  <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; color: #4B5563;">
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600;">Product Name:</td>
+      <td align="right" style="padding: 6px 0; font-weight: bold; color: #111827;">{{productName}}</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600;">SKU:</td>
+      <td align="right" style="padding: 6px 0; font-family: monospace;">{{sku}}</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600;">Current Stock:</td>
+      <td align="right" style="padding: 6px 0; font-weight: 700; color: #DC2626;">{{currentStock}} units</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 0; font-weight: 600;">Threshold Limit:</td>
+      <td align="right" style="padding: 6px 0;">{{threshold}} units</td>
+    </tr>
+  </table>
+</div>
+
+{{> button url=restockUrl text="Manage Product Inventory"}}
+
+<p>Please review and arrange a restock to ensure continuous availability on the storefront.</p>
+<p>LuxeHome System Administrator<br><strong>LuxeHome Inventory Engine</strong></p>

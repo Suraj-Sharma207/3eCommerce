@@ -6,25 +6,25 @@ const AuthLayout = () => {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="flex w-full min-h-screen bg-surface-background font-sans">
+    <div className="flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden bg-surface-background font-sans">
       
       {/* Left side - Form Area */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:flex-none md:w-3/5 lg:w-1/2 bg-white relative border-r border-border-light shadow-2xl z-10">
+      <div className="flex-1 flex flex-col lg:w-1/2 bg-white relative border-r border-border-light shadow-2xl z-10 overflow-y-auto">
         
         {/* Header inside the form area */}
-        <div className="absolute top-0 left-0 w-full p-6 sm:p-8">
+        <div className="p-6 sm:p-8 shrink-0">
           <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight">
             LuxeHome
           </Link>
         </div>
 
-        <main className="w-full max-w-[540px] mx-auto py-12 mt-12 lg:mt-16 overflow-y-auto max-h-screen no-scrollbar">
+        <main className="flex-1 w-full max-w-[540px] mx-auto py-12 flex flex-col justify-center no-scrollbar">
           <Outlet />
         </main>
       </div>
 
       {/* Right side - Lifestyle Image */}
-      <div className="hidden md:block relative md:w-2/5 lg:w-1/2 overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600">
+      <div className="hidden lg:block relative lg:w-1/2 overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600">
         {!imageError && (
           <img
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-105"

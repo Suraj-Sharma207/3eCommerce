@@ -6,6 +6,7 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PageContainer from '../../components/layout/PageContainer';
+import AvatarUploader from '../../components/common/AvatarUploader';
 import { User, Mail, Phone, Calendar, Edit2, Shield, CheckCircle2, AlertCircle, Save, X, MapPin, Package, Heart } from 'lucide-react';
 
 const PasswordStrengthMeter = ({ password }) => {
@@ -50,7 +51,8 @@ const PasswordStrengthMeter = ({ password }) => {
 };
 
 const ProfilePage = () => {
-  const { profile, fetchProfile, updateProfile, changePassword, isLoading, error: backendError, hasLoadedInitial } = useUserStore();
+  const { fetchProfile, fetchStats, updateProfile, changePassword, isLoading, error: backendError, stats } = useUserStore();
+  const { user: profile } = useAuthStore();
   
   const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'edit' | 'security'
   
@@ -65,8 +67,10 @@ const ProfilePage = () => {
   const [globalMessage, setGlobalMessage] = useState('');
 
   useEffect(() => {
+    // Silent background refresh
     fetchProfile();
-  }, [fetchProfile]);
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -130,9 +134,6 @@ const ProfilePage = () => {
       const minAgeDate = new Date();
       minAgeDate.setFullYear(today.getFullYear() - 13);
       if (bday > minAgeDate) errs.birthday = 'You must be at least 13 years old';
-    }
-    if (formData.avatarUrl && !/^https?:\/\/.+/.test(formData.avatarUrl)) {
-      errs.avatarUrl = 'Please enter a valid URL';
     }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -210,29 +211,7 @@ const ProfilePage = () => {
     });
   }, []);
 
-  if (!hasLoadedInitial) {
-    return (
-      <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden p-8 animate-pulse">
-              <div className="flex flex-col sm:flex-row gap-8">
-                <div className="w-32 h-32 rounded-full bg-neutral-200"></div>
-                <div className="space-y-4 flex-1 py-4">
-                  <div className="h-8 bg-neutral-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-neutral-200 rounded w-1/3"></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                    <div className="h-4 bg-neutral-200 rounded w-full"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
+
 
   // If initial load finished but profile is still completely missing, show error screen
   if (!profile) {
@@ -366,7 +345,9 @@ const ProfilePage = () => {
                     <Package className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-primary">{profile?.stats?.totalOrders || 0} Total Orders</p>
+                    <p className="text-sm font-medium text-text-primary">
+                      {stats ? `${stats.totalOrders} Total Orders` : 'Loading...'}
+                    </p>
                     <Link to="/orders" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View order history</Link>
                   </div>
                 </div>
@@ -375,7 +356,9 @@ const ProfilePage = () => {
                     <Heart className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-primary">{profile?.stats?.wishlistCount || 0} Wishlist Items</p>
+                    <p className="text-sm font-medium text-text-primary">
+                      {stats ? `${stats.wishlistCount} Wishlist Items` : 'Loading...'}
+                    </p>
                     <Link to="/wishlist" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View wishlist</Link>
                   </div>
                 </div>
@@ -403,26 +386,21 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row gap-8 items-start">
-                  <div className="flex-shrink-0">
-                    {formData.avatarUrl && !formErrors.avatarUrl ? (
-                      <img src={formData.avatarUrl} alt="Preview" className="w-24 h-24 rounded-full object-cover border border-border" />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-border-light text-text-muted flex items-center justify-center border border-border">
-                        <User className="w-8 h-8" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 w-full">
-                      <Input 
-                      label="Avatar URL" 
-                      name="avatarUrl" 
-                      value={formData.avatarUrl || ''} 
-                      onChange={handleProfileChange} 
-                      error={formErrors.avatarUrl}
-                      placeholder="https://example.com/avatar.jpg" 
-                    />
-                  </div>
+                <div className="mb-8">
+                  <h3 className="text-sm font-semibold text-text-primary mb-4">Profile Photo</h3>
+                  <AvatarUploader 
+                    currentAvatarUrl={profile.avatarUrl} 
+                    name={profile.name} 
+                    onUpload={async (file) => {
+                      const store = useUserStore.getState();
+                      await store.uploadAvatar(file, false);
+                      await store.fetchProfile();
+                      const updatedProfile = useUserStore.getState().profile;
+                      setFormData(prev => ({ ...prev, avatarUrl: updatedProfile.avatarUrl }));
+                      setInitialData(prev => ({ ...prev, avatarUrl: updatedProfile.avatarUrl }));
+                      setCurrentView('overview');
+                    }} 
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

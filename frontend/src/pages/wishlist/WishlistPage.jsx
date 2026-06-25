@@ -7,8 +7,25 @@ import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
 import { Heart } from 'lucide-react';
 
+const WishlistSkeleton = () => (
+  <PageContainer className="py-8 lg:py-12">
+    <div className="h-10 w-64 bg-neutral-200 rounded animate-pulse mb-8"></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="flex flex-col gap-4 animate-pulse">
+          <div className="bg-neutral-200 w-full aspect-[4/5] rounded-2xl"></div>
+          <div className="space-y-2">
+            <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+            <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </PageContainer>
+);
+
 const WishlistPage = () => {
-  const { wishlist, isLoading, fetchWishlist } = useWishlistStore();
+  const { wishlist, hasFetched, fetchWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -43,7 +60,11 @@ const WishlistPage = () => {
   // Filter out items where the product is completely missing (just in case cascade didn't run)
   const items = (wishlist?.items || []).filter(item => item.product);
 
-  if (!isLoading && items.length === 0) {
+  if (!hasFetched) {
+    return <WishlistSkeleton />;
+  }
+
+  if (items.length === 0) {
     return (
       <PageContainer className="py-20">
         <EmptyState 

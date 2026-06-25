@@ -1,12 +1,16 @@
 import app from './app.js';
 import { config } from './config/index.js';
 import prisma from './lib/prisma.js';
+import { initializeTemplates } from './email/utils/templateCompiler.js';
 
 const startServer = async () => {
   try {
     // Check database connection
     await prisma.$connect();
     console.log('📦 Connected to PostgreSQL Database');
+
+    // Pre-compile and cache all email templates at startup
+    initializeTemplates();
 
     const server = app.listen(config.port, () => {
       console.log(`🚀 Server is running on port ${config.port}`);

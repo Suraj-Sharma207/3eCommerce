@@ -11,6 +11,15 @@ class UserController {
     }
   }
 
+  async getStats(req, res, next) {
+    try {
+      const stats = await userService.getStats(req.user.id);
+      return successResponse(res, 'Profile stats retrieved successfully', { stats }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateProfile(req, res, next) {
     try {
       if (req.body.phone !== undefined) {
@@ -23,6 +32,18 @@ class UserController {
 
       const updatedUser = await userService.updateProfile(req.user.id, req.body);
       return successResponse(res, 'Profile updated successfully', { user: updatedUser }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async uploadAvatar(req, res, next) {
+    try {
+      if (!req.file) {
+        return errorResponse(res, 'No image file provided', [], 400);
+      }
+      const updatedUser = await userService.uploadAvatar(req.user.id, req.file);
+      return successResponse(res, 'Avatar uploaded successfully', { user: updatedUser }, 200);
     } catch (error) {
       next(error);
     }

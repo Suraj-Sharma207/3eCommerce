@@ -5,8 +5,7 @@ import useUserStore from '../../store/userStore';
 import { User, Package, Heart, MapPin, LogOut } from 'lucide-react';
 
 const AccountDropdown = ({ isOpen, onClose }) => {
-  const { logout } = useAuthStore();
-  const { profile } = useUserStore();
+  const { logout, user: profile } = useAuthStore();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();

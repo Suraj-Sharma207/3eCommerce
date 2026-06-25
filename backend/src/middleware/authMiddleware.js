@@ -21,11 +21,15 @@ export const protect = async (req, res, next) => {
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, name: true, email: true, role: true }
+      select: { id: true, name: true, email: true, role: true, tokenVersion: true }
     });
     
     if (!user) {
       return errorResponse(res, 'User no longer exists', [], 401);
+    }
+
+    if (decoded.tokenVersion !== user.tokenVersion) {
+      return errorResponse(res, 'Session expired or invalidated. Please login again.', [], 401);
     }
     
     req.user = user;

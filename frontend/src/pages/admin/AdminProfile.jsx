@@ -1,210 +1,436 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Save, Globe, Smartphone, LogOut, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, Lock, Save, Globe, Smartphone, LogOut, CheckCircle, Calendar, Shield, X, Edit2, AlertCircle } from 'lucide-react';
 import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import ImageFallback from '../../components/ui/ImageFallback';
+import AvatarUploader from '../../components/common/AvatarUploader';
 import toast from 'react-hot-toast';
 
 const AdminProfile = () => {
-  const { profile, isLoading, updateProfile, changePassword } = useUserStore();
+  const { fetchProfile, updateProfile, changePassword, isLoading } = useUserStore();
+  const { user: profile } = useAuthStore();
   const { logout } = useAuthStore();
   
-  const [activeTab, setActiveTab] = useState('personal');
+  const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'edit' | 'security'
   const [isSaving, setIsSaving] = useState(false);
 
-  // Personal Info Form
-  const [personalData, setPersonalData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    avatarUrl: '',
-    language: 'en',
-  });
+  // Form states
+  const [formData, setFormData] = useState({});
+  const [initialData, setInitialData] = useState({});
+  const [formErrors, setFormErrors] = useState({});
+  
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passError, setPassError] = useState('');
 
-  // Password Form
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  useEffect(() => {
+    fetchProfile(); // silent background refresh
+  }, []);
 
   useEffect(() => {
     if (profile) {
-      setPersonalData({
+      const data = {
         name: profile.name || '',
-        email: profile.email || '',
         phone: profile.phone || '',
-        avatarUrl: profile.avatarUrl || '',
+        birthday: profile.birthday ? new Date(profile.birthday).toISOString().split('T')[0] : '',
+        gender: profile.gender || '',
         language: profile.language || 'en',
-      });
+      };
+      setFormData(data);
+      setInitialData(data);
     }
   }, [profile]);
 
-  const handlePersonalChange = (e) => {
-    setPersonalData({ ...personalData, [e.target.name]: e.target.value });
+  const isProfileDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProfileDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isProfileDirty]);
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    // Prevent non-numeric characters for phone
+    if (name === 'phone') {
+      if (/[a-zA-Z]/.test(value)) return;
+      if (value.length > 15) return;
+    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handlePasswordChange = (e) => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+    setPassError('');
   };
 
-  const handlePersonalSubmit = async (e) => {
+  const validateProfile = () => {
+    const errs = {};
+    if (!formData.name || formData.name.trim().length < 2 || formData.name.trim().length > 80 || !/^[a-zA-Z\s]+$/.test(formData.name)) {
+      errs.name = 'Please enter a valid full name.';
+    }
+    if (formData.phone && !/^\+?[0-9]{10,15}$/.test(formData.phone.replace(/\s+/g, ''))) {
+      errs.phone = 'Please enter a valid phone number.';
+    }
+    if (formData.birthday) {
+      const bday = new Date(formData.birthday);
+      const today = new Date();
+      const minAgeDate = new Date();
+      minAgeDate.setFullYear(today.getFullYear() - 13);
+      if (bday > today || bday > minAgeDate) {
+        errs.birthday = 'Please enter a valid birth date.';
+      }
+    }
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const submitProfile = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
-    const success = await updateProfile({
-      name: personalData.name,
-      phone: personalData.phone,
-      avatarUrl: personalData.avatarUrl,
-      language: personalData.language
-    });
+    if (!validateProfile()) return;
+    if (!isProfileDirty) return;
     
+    setIsSaving(true);
+    // Trim strings
+    const trimmedData = {
+      ...formData,
+      name: formData.name.trim()
+    };
+    
+    const success = await updateProfile(trimmedData);
     if (success) {
-      toast.success('Profile updated successfully');
+      setInitialData(trimmedData);
+      setCurrentView('overview');
+      toast.success('Profile updated successfully.');
+      await fetchProfile();
     }
     setIsSaving(false);
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const cancelProfileEdit = () => {
+    setFormData(initialData);
+    setFormErrors({});
+    setCurrentView('overview');
+  };
+
+  const submitPassword = async (e) => {
     e.preventDefault();
+    setPassError('');
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
+      setPassError('New passwords do not match.');
       return;
     }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
+    
+    const pass = passwordData.newPassword;
+    if (pass.length < 8) {
+      setPassError('Password must be at least 8 characters.');
       return;
     }
 
     setIsSaving(true);
     const success = await changePassword(passwordData.currentPassword, passwordData.newPassword);
-    
     if (success) {
-      toast.success('Password changed successfully');
+      toast.success('Password changed successfully.');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setCurrentView('overview');
     }
     setIsSaving(false);
   };
 
-  const handleLogoutAll = () => {
-    toast.success('Logged out of all other devices successfully');
+  const getMemberSince = () => {
+    if (!profile?.createdAt) return 'Unknown';
+    return new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const calculatePasswordStrength = (pass) => {
-    if (!pass) return 0;
-    let score = 0;
-    if (pass.length >= 8) score++;
-    if (/[A-Z]/.test(pass)) score++;
-    if (/[a-z]/.test(pass)) score++;
-    if (/[0-9]/.test(pass)) score++;
-    if (/[^A-Za-z0-9]/.test(pass)) score++;
-    return score; // 0 to 5
+  const getLastLogin = () => {
+    // using updatedAt as a fallback for last login
+    if (!profile?.updatedAt) return 'Unknown';
+    return new Date(profile.updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const strength = calculatePasswordStrength(passwordData.newPassword);
-
-  const tabs = [
-    { id: 'personal', label: 'Personal Information', icon: <User className="w-4 h-4 mr-2" /> },
-    { id: 'security', label: 'Security & Password', icon: <Lock className="w-4 h-4 mr-2" /> },
-    { id: 'preferences', label: 'Preferences', icon: <Globe className="w-4 h-4 mr-2" /> },
-  ];
+  if (!profile) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-extrabold text-text-brand-600 flex items-center gap-2">
-          <User className="w-6 h-6" />
+          <Shield className="w-6 h-6" />
           Admin Profile
         </h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+      <div className="flex flex-col lg:flex-row gap-8">
         
-        {/* Sidebar Tabs */}
-        <div className="w-full md:w-64 bg-surface-background border-b md:border-b-0 md:border-r border-border p-4 space-y-1 shrink-0">
-          <div className="flex flex-col items-center p-4 border-b border-border mb-4">
-            <ImageFallback src={profile?.avatarUrl} alt={profile?.name} className="w-20 h-20 rounded-full object-cover border border-border mb-3" />
-            <div className="font-bold text-text-primary text-center">{profile?.name}</div>
-            <div className="text-xs text-brand-600 font-bold bg-brand-50 px-2 py-0.5 rounded uppercase tracking-wider mt-1">Administrator</div>
-          </div>
+        {/* LEFT SIDEBAR */}
+        <div className="w-full lg:w-1/3 shrink-0">
+          <div className="bg-white rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center">
+            
+            <AvatarUploader 
+              currentAvatarUrl={profile?.avatarUrl} 
+              name={profile?.name} 
+              size="lg"
+              onUpload={async (file) => {
+                const store = useUserStore.getState();
+                await store.uploadAvatar(file, true);
+                await store.fetchProfile();
+              }} 
+            />
 
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
-                activeTab === tab.id 
-                  ? 'bg-brand-600 text-white shadow-md' 
-                  : 'text-text-secondary hover:bg-border-light hover:text-text-primary'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+            <h2 className="text-xl font-bold text-text-primary mt-6 text-center">{profile.name}</h2>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-200 px-2.5 py-1 rounded-full">Administrator</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-success-700 bg-success-50 border border-success-200 px-2.5 py-1 rounded-full">Active</span>
+            </div>
+
+            <div className="w-full mt-8 space-y-4 text-sm text-text-secondary border-t border-border pt-6">
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-text-muted" /> Member Since</span>
+                <span className="font-medium text-text-primary">{getMemberSince()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-text-muted" /> Last Login</span>
+                <span className="font-medium text-text-primary">{getLastLogin()}</span>
+              </div>
+            </div>
+
+            <div className="w-full mt-8 space-y-3">
+              <Button 
+                variant={currentView === 'edit' ? 'primary' : 'outline'} 
+                className="w-full justify-center" 
+                onClick={() => {
+                  if (currentView === 'edit') return;
+                  if (isProfileDirty) {
+                    if (!window.confirm('You have unsaved changes. Discard them?')) return;
+                    cancelProfileEdit();
+                  }
+                  setCurrentView('edit');
+                }}
+              >
+                <Edit2 className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+              <Button 
+                variant={currentView === 'security' ? 'primary' : 'outline'} 
+                className="w-full justify-center" 
+                onClick={() => {
+                  if (currentView === 'security') return;
+                  if (isProfileDirty) {
+                    if (!window.confirm('You have unsaved changes. Discard them?')) return;
+                    cancelProfileEdit();
+                  }
+                  setCurrentView('security');
+                }}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Change Password
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 p-6 md:p-8">
+        {/* RIGHT CONTENT */}
+        <div className="w-full lg:w-2/3">
           
-          {/* PERSONAL INFO */}
-          {activeTab === 'personal' && (
+          {/* OVERVIEW MODE */}
+          {currentView === 'overview' && (
             <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="flex justify-between items-center border-b border-border pb-4">
-                <div>
-                  <h3 className="text-lg font-extrabold text-text-primary mb-1">Personal Information</h3>
-                  <p className="text-sm text-text-muted">Update your profile photo and personal details.</p>
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
+                  <div>
+                    <h3 className="text-lg font-bold text-text-primary">Personal Information</h3>
+                    <p className="text-sm text-text-muted mt-1">Review your personal details and preferences.</p>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <dl className="divide-y divide-border-light">
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
+                      <dt className="text-sm font-medium text-text-secondary">Full Name</dt>
+                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.name}</dd>
+                    </div>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
+                      <dt className="text-sm font-medium text-text-secondary">Email Address</dt>
+                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.email}</dd>
+                    </div>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
+                      <dt className="text-sm font-medium text-text-secondary">Phone Number</dt>
+                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.phone || 'Not provided'}</dd>
+                    </div>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
+                      <dt className="text-sm font-medium text-text-secondary">Birthday</dt>
+                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">
+                        {profile.birthday ? new Date(profile.birthday).toLocaleDateString() : 'Not provided'}
+                      </dd>
+                    </div>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
+                      <dt className="text-sm font-medium text-text-secondary">Gender</dt>
+                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.gender || 'Not provided'}</dd>
+                    </div>
+                  </dl>
                 </div>
               </div>
-              
-              <form id="personal-form" onSubmit={handlePersonalSubmit} className="max-w-xl space-y-5">
-                <div className="flex items-center gap-4 mb-2">
-                  <ImageFallback src={personalData.avatarUrl} className="w-16 h-16 rounded-full border border-border object-cover" />
-                  <Input 
-                    name="avatarUrl" 
-                    value={personalData.avatarUrl} 
-                    onChange={handlePersonalChange} 
-                    placeholder="Avatar image URL"
-                    className="flex-1"
-                  />
+
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="p-6 border-b border-border-light bg-surface-background">
+                  <h3 className="text-lg font-bold text-text-primary">System Preferences</h3>
                 </div>
-                
-                <div className="grid grid-cols-1 gap-5">
-                  <Input label="Full Name" name="name" required value={personalData.name} onChange={handlePersonalChange} />
-                  <Input label="Email Address" name="email" type="email" value={personalData.email} disabled className="bg-surface-background opacity-70" />
-                  <Input label="Phone Number" name="phone" value={personalData.phone} onChange={handlePersonalChange} placeholder="+1 (555) 000-0000" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-text-primary">Interface Language</div>
+                      <div className="text-sm text-text-muted mt-1">{profile.language === 'en' ? 'English (US)' : profile.language}</div>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="pt-4 flex justify-end">
-                  <Button type="submit" isLoading={isSaving} icon={<Save className="w-4 h-4 mr-2" />}>
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
+              </div>
             </div>
           )}
 
-          {/* SECURITY & PASSWORD */}
-          {activeTab === 'security' && (
-            <div className="space-y-8 animate-in fade-in duration-300">
-              <div>
-                <div className="border-b border-border pb-4 mb-6">
-                  <h3 className="text-lg font-extrabold text-text-primary mb-1">Change Password</h3>
-                  <p className="text-sm text-text-muted">Ensure your account is using a long, random password to stay secure.</p>
-                </div>
-                
-                <form id="password-form" onSubmit={handlePasswordSubmit} className="max-w-xl space-y-5">
-                  <Input 
-                    label="Current Password" 
-                    name="currentPassword" 
-                    type="password" 
-                    required 
-                    value={passwordData.currentPassword} 
-                    onChange={handlePasswordChange} 
-                  />
-                  
+          {/* EDIT MODE */}
+          {currentView === 'edit' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
                   <div>
+                    <h3 className="text-lg font-bold text-text-primary">Edit Personal Information</h3>
+                    <p className="text-sm text-text-muted mt-1">Update your profile details below.</p>
+                  </div>
+                  <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-6">
+                  <form onSubmit={submitProfile} className="space-y-6">
+                    
+                    {isProfileDirty && (
+                      <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl text-sm font-medium border border-amber-200">
+                        <AlertCircle className="w-5 h-5" />
+                        You have unsaved changes.
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Input 
+                        label="Full Name" 
+                        name="name" 
+                        value={formData.name || ''} 
+                        onChange={handleProfileChange} 
+                        error={formErrors.name}
+                        required 
+                      />
+                      <Input 
+                        label="Email Address" 
+                        value={profile.email} 
+                        disabled 
+                        readOnly
+                        className="bg-surface-background opacity-70 cursor-not-allowed"
+                        error="Email cannot be changed."
+                      />
+                      <Input 
+                        label="Phone Number" 
+                        name="phone" 
+                        value={formData.phone || ''} 
+                        onChange={handleProfileChange} 
+                        error={formErrors.phone}
+                        placeholder="+1 234 567 8900"
+                      />
+                      <Input 
+                        label="Birthday" 
+                        type="date" 
+                        name="birthday" 
+                        value={formData.birthday || ''} 
+                        onChange={handleProfileChange} 
+                        max={new Date().toISOString().split('T')[0]}
+                        error={formErrors.birthday}
+                      />
+                      
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="block text-sm font-semibold text-text-primary">Gender</label>
+                        <select 
+                          name="gender" 
+                          value={formData.gender || ''} 
+                          onChange={handleProfileChange} 
+                          className="w-full px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                          <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2 pt-4 border-t border-border-light">
+                        <label className="block text-sm font-semibold text-text-primary">Interface Language</label>
+                        <select 
+                          name="language" 
+                          value={formData.language || 'en'} 
+                          onChange={handleProfileChange}
+                          className="w-full md:w-1/2 px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
+                        >
+                          <option value="en">English (US)</option>
+                          <option value="fr">Français</option>
+                          <option value="es">Español</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-end gap-4">
+                      {!isProfileDirty && (
+                        <span className="text-sm text-text-muted mr-auto">No changes to save.</span>
+                      )}
+                      <Button type="button" variant="outline" onClick={cancelProfileEdit} className="w-full sm:w-auto">
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={!isProfileDirty || Object.keys(formErrors).length > 0} isLoading={isSaving} className="w-full sm:w-auto min-w-[140px]">
+                        Save Changes
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECURITY & PASSWORD MODE */}
+          {currentView === 'security' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
+                  <div>
+                    <h3 className="text-lg font-bold text-text-primary">Change Password</h3>
+                    <p className="text-sm text-text-muted mt-1">Ensure your account is using a secure password.</p>
+                  </div>
+                  <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-6">
+                  <form onSubmit={submitPassword} className="space-y-6 max-w-lg">
+                    {passError && (
+                      <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> 
+                        <span>{passError}</span>
+                      </div>
+                    )}
+                    
+                    <Input 
+                      label="Current Password" 
+                      name="currentPassword" 
+                      type="password" 
+                      required 
+                      value={passwordData.currentPassword} 
+                      onChange={handlePasswordChange} 
+                    />
+                    
                     <Input 
                       label="New Password" 
                       name="newPassword" 
@@ -212,110 +438,33 @@ const AdminProfile = () => {
                       required 
                       value={passwordData.newPassword} 
                       onChange={handlePasswordChange} 
+                      minLength="8"
                     />
-                    {passwordData.newPassword && (
-                      <div className="mt-2 flex gap-1">
-                        {[1, 2, 3, 4, 5].map((level) => (
-                          <div 
-                            key={level} 
-                            className={`h-1.5 flex-1 rounded-full ${
-                              strength >= level 
-                                ? strength < 3 ? 'bg-danger-500' : strength < 5 ? 'bg-warning-500' : 'bg-success-500'
-                                : 'bg-border-light'
-                            }`} 
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Input 
-                    label="Confirm New Password" 
-                    name="confirmPassword" 
-                    type="password" 
-                    required 
-                    value={passwordData.confirmPassword} 
-                    onChange={handlePasswordChange} 
-                  />
-                  
-                  <div className="pt-2 flex justify-end">
-                    <Button type="submit" isLoading={isSaving} icon={<Lock className="w-4 h-4 mr-2" />}>
-                      Update Password
-                    </Button>
-                  </div>
-                </form>
-              </div>
-
-              <div className="pt-8 border-t border-border">
-                <h3 className="text-lg font-extrabold text-text-primary mb-1">Active Sessions</h3>
-                <p className="text-sm text-text-muted mb-4">You're currently logged in on the following devices.</p>
-                
-                <div className="bg-surface-background rounded-xl border border-border p-4 flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-brand-100 text-brand-600 p-2 rounded-lg"><Globe className="w-5 h-5" /></div>
-                    <div>
-                      <div className="font-bold text-text-primary flex items-center gap-2">Chrome on Windows <span className="text-[10px] uppercase font-bold bg-success-100 text-success-700 px-1.5 rounded">Current</span></div>
-                      <div className="text-xs text-text-muted">192.168.1.1 • Active now</div>
+                    
+                    <Input 
+                      label="Confirm New Password" 
+                      name="confirmPassword" 
+                      type="password" 
+                      required 
+                      value={passwordData.confirmPassword} 
+                      onChange={handlePasswordChange} 
+                      minLength="8"
+                    />
+                    
+                    <div className="pt-6 border-t border-border flex items-center justify-end gap-4">
+                      <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" isLoading={isSaving} disabled={!passwordData.newPassword} className="min-w-[140px]">
+                        Update Password
+                      </Button>
                     </div>
-                  </div>
-                </div>
-
-                <div className="bg-surface-background rounded-xl border border-border p-4 flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-secondary-100 text-text-secondary p-2 rounded-lg"><Smartphone className="w-5 h-5" /></div>
-                    <div>
-                      <div className="font-bold text-text-primary">Safari on iPhone</div>
-                      <div className="text-xs text-text-muted">192.168.1.5 • Last active 2 hours ago</div>
-                    </div>
-                  </div>
-                </div>
-
-                <Button variant="outline" onClick={handleLogoutAll} icon={<LogOut className="w-4 h-4 mr-2" />}>
-                  Log out of all other devices
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* PREFERENCES */}
-          {activeTab === 'preferences' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="border-b border-border pb-4 mb-6">
-                <h3 className="text-lg font-extrabold text-text-primary mb-1">System Preferences</h3>
-                <p className="text-sm text-text-muted">Manage your dashboard display settings.</p>
-              </div>
-              
-              <div className="max-w-xl space-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-text-primary">Interface Language</label>
-                  <select 
-                    name="language" 
-                    value={personalData.language} 
-                    onChange={handlePersonalChange}
-                    className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600"
-                  >
-                    <option value="en">English (US)</option>
-                    <option value="fr">Français</option>
-                    <option value="es">Español</option>
-                  </select>
-                </div>
-                
-                <div className="p-4 border border-border rounded-xl bg-surface-background flex items-start gap-3">
-                  <div className="text-brand-600 mt-0.5"><CheckCircle className="w-5 h-5" /></div>
-                  <div>
-                    <div className="font-bold text-text-primary text-sm">Light Mode Active</div>
-                    <div className="text-xs text-text-muted mt-0.5">The enterprise dashboard currently only supports Light mode. Dark mode will be available in a future update.</div>
-                  </div>
-                </div>
-
-                <div className="pt-4 flex justify-end border-t border-border mt-8">
-                  <Button onClick={handlePersonalSubmit} isLoading={isSaving} icon={<Save className="w-4 h-4 mr-2" />}>
-                    Save Preferences
-                  </Button>
+                  </form>
                 </div>
               </div>
             </div>
           )}
+          
         </div>
       </div>
     </div>

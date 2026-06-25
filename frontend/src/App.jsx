@@ -1,19 +1,30 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
+import SessionTimeoutProvider from './providers/SessionTimeoutProvider';
 import useAuthStore from './store/authStore';
 import useUserStore from './store/userStore';
+import useSettingsStore from './store/settingsStore';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
-  const { isAuthenticated, token } = useAuthStore();
-  const { fetchProfile, profile, hasLoadedInitial } = useUserStore();
+  const { checkAuth, token, user } = useAuthStore();
+  const { fetchProfile } = useUserStore();
+  const { fetchPublicConfig } = useSettingsStore();
 
   useEffect(() => {
-    if (isAuthenticated && token && !profile && !hasLoadedInitial) {
-      fetchProfile();
+    fetchPublicConfig();
+  }, [fetchPublicConfig]);
+
+  useEffect(() => {
+    // If we have a token but haven't checked auth yet, check it on load
+    if (token && !user) {
+      checkAuth().then(() => {
+        // Also sync the userStore for any legacy components that still rely on it
+        fetchProfile();
+      });
     }
-  }, [isAuthenticated, token, profile, hasLoadedInitial, fetchProfile]);
+  }, [token, user, checkAuth, fetchProfile]);
 
   return (
     <Router>
@@ -28,7 +39,9 @@ function App() {
           padding: '12px 20px',
         },
       }} />
-      <AppRoutes />
+      <SessionTimeoutProvider>
+        <AppRoutes />
+      </SessionTimeoutProvider>
     </Router>
   );
 }

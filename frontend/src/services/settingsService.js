@@ -1,16 +1,25 @@
 import api from './api';
 
-const getSettings = async () => {
-  const response = await api.get('/settings');
-  return response.data;
-};
+class SettingsService {
+  async getPublicConfig() {
+    const response = await api.get('/settings/public');
+    return response.data;
+  }
 
-const updateSettings = async (settingsData) => {
-  const response = await api.put('/settings', settingsData);
-  return response.data;
-};
+  async getDomainSettings(domain) {
+    const response = await api.get(`/settings/${domain}`);
+    return response.data;
+  }
 
-export default {
-  getSettings,
-  updateSettings,
-};
+  async updateDomainSettings(domain, data) {
+    const response = await api.put(`/settings/${domain}`, data);
+    return response.data;
+  }
+
+  async testSmtp(data) {
+    const response = await api.post('/settings/smtp/test', data);
+    return response.data;
+  }
+}
+
+export default new SettingsService();

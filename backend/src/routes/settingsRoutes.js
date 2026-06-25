@@ -5,10 +5,33 @@ import { authorize } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-router.use(protect);
-router.use(authorize('ADMIN'));
+// Public Config
+router.get('/public', settingsController.getPublicConfig);
 
-router.get('/', settingsController.getSettings);
-router.put('/', settingsController.updateSettings);
+// Protected Admin Routes
+router.use(protect);
+router.use(authorize('ADMIN', 'SUPER_ADMIN'));
+
+router.get('/email/preview', settingsController.getEmailPreview);
+
+// Domain specific routes
+router.get('/store', settingsController.getStore);
+router.put('/store', settingsController.updateStore);
+
+router.get('/shipping', settingsController.getShipping);
+router.put('/shipping', settingsController.updateShipping);
+
+router.get('/payment', settingsController.getPayment);
+router.put('/payment', settingsController.updatePayment);
+
+router.get('/smtp', settingsController.getSmtp);
+router.put('/smtp', settingsController.updateSmtp);
+router.post('/smtp/test', settingsController.testSmtp);
+
+router.get('/security', settingsController.getSecurity);
+router.put('/security', settingsController.updateSecurity);
+
+router.get('/notifications', settingsController.getNotifications);
+router.put('/notifications', settingsController.updateNotifications);
 
 export default router;

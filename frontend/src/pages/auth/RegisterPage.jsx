@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
@@ -18,7 +18,11 @@ const RegisterPage = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [socialMessage, setSocialMessage] = useState('');
   
-  const { register, isLoading, error: backendError } = useAuthStore();
+  const { register, isLoading, error: backendError, clearError } = useAuthStore();
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
   const navigate = useNavigate();
 
   const validateField = (name, value) => {

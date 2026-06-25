@@ -7,7 +7,7 @@ const PublicLayout = () => {
   return (
     <>
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 flex flex-col w-full">
         <Outlet />
       </main>
       <Footer />

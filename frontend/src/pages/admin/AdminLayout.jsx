@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag } from 'lucide-react';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -19,13 +19,14 @@ const AdminLayout = () => {
     { name: 'Products', path: '/admin/products', icon: Package },
     { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
     { name: 'Customers', path: '/admin/customers', icon: Users },
+    { name: 'Offers', path: '/admin/offers', icon: Tag },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-surface-background flex">
+    <div className="h-[100dvh] bg-surface-background flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-border flex flex-col fixed inset-y-0 z-10">
+      <aside className="w-64 bg-white border-r border-border flex flex-col flex-shrink-0 z-10">
         <div className="h-20 flex items-center px-8 border-b border-border-light">
           <span className="text-2xl font-black tracking-tighter text-text-brand-600">
             Luxe<span className="text-brand-600">Admin</span>
@@ -66,8 +67,8 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 min-w-0 flex flex-col">
-        <header className="h-20 bg-white border-b border-border flex items-center justify-between px-8 sticky top-0 z-10">
+      <main className="flex-1 min-w-0 flex flex-col h-full">
+        <header className="h-20 flex-shrink-0 bg-white border-b border-border flex items-center justify-between px-8 z-10">
           <h2 className="text-xl font-bold text-text-brand-600">Admin Portal</h2>
           <NavLink to="/admin/profile" className="flex items-center gap-4 hover:bg-surface-background p-2 rounded-xl transition-colors">
             <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold overflow-hidden border border-brand-200">
@@ -84,7 +85,7 @@ const AdminLayout = () => {
           </NavLink>
         </header>
         
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-8 overflow-y-auto overscroll-contain">
           <Outlet />
         </div>
       </main>

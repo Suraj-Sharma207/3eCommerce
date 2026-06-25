@@ -1,39 +1,95 @@
 import { create } from 'zustand';
 import settingsService from '../services/settingsService';
 
-const useSettingsStore = create((set) => ({
-  settings: {},
-  isLoading: false,
-  isSaving: false,
+const useSettingsStore = create((set, get) => ({
+  publicConfig: {},
+  domains: {
+    store: { data: {}, isLoading: false, isSaving: false },
+    shipping: { data: {}, isLoading: false, isSaving: false },
+    payment: { data: {}, isLoading: false, isSaving: false },
+    smtp: { data: {}, isLoading: false, isSaving: false },
+    security: { data: {}, isLoading: false, isSaving: false },
+    notifications: { data: {}, isLoading: false, isSaving: false },
+  },
   error: null,
+  isTestingSmtp: false,
 
-  fetchSettings: async () => {
-    set({ isLoading: true, error: null });
+  fetchPublicConfig: async () => {
     try {
-      const { data } = await settingsService.getSettings();
-      set({ settings: data, isLoading: false });
+      const { data } = await settingsService.getPublicConfig();
+      set({ publicConfig: data || {} });
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch settings', 
-        isLoading: false 
-      });
+      console.error('Failed to fetch public config');
     }
   },
 
-  updateSettings: async (settingsData) => {
-    set({ isSaving: true, error: null });
+  fetchDomainSettings: async (domain) => {
+    set((state) => ({
+      domains: {
+        ...state.domains,
+        [domain]: { ...state.domains[domain], isLoading: true },
+      },
+      error: null,
+    }));
     try {
-      const { data } = await settingsService.updateSettings(settingsData);
-      set({ settings: data, isSaving: false });
+      const { data } = await settingsService.getDomainSettings(domain);
+      set((state) => ({
+        domains: {
+          ...state.domains,
+          [domain]: { data: data || {}, isLoading: false, isSaving: false },
+        },
+      }));
+    } catch (error) {
+      set((state) => ({
+        domains: {
+          ...state.domains,
+          [domain]: { ...state.domains[domain], isLoading: false },
+        },
+        error: error.response?.data?.message || `Failed to fetch ${domain} settings`,
+      }));
+    }
+  },
+
+  updateDomainSettings: async (domain, newData) => {
+    set((state) => ({
+      domains: {
+        ...state.domains,
+        [domain]: { ...state.domains[domain], isSaving: true },
+      },
+      error: null,
+    }));
+    try {
+      const { data } = await settingsService.updateDomainSettings(domain, newData);
+      set((state) => ({
+        domains: {
+          ...state.domains,
+          [domain]: { data: data || {}, isLoading: false, isSaving: false },
+        },
+      }));
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to update settings', 
-        isSaving: false 
-      });
+      set((state) => ({
+        domains: {
+          ...state.domains,
+          [domain]: { ...state.domains[domain], isSaving: false },
+        },
+        error: error.response?.data?.message || `Failed to update ${domain} settings`,
+      }));
       return false;
     }
   },
+
+  testSmtpConnection: async (smtpData) => {
+    set({ isTestingSmtp: true, error: null });
+    try {
+      await settingsService.testSmtp(smtpData);
+      set({ isTestingSmtp: false });
+      return { success: true };
+    } catch (error) {
+      set({ isTestingSmtp: false });
+      return { success: false, message: error.response?.data?.message || 'SMTP Test failed' };
+    }
+  }
 }));
 
 export default useSettingsStore;

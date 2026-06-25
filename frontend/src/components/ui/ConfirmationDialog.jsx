@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import Button from './Button';
 
@@ -14,6 +14,16 @@ const ConfirmationDialog = ({
   isDestructive = true,
   isLoading = false
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const previous = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = previous;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -25,10 +35,10 @@ const ConfirmationDialog = ({
       />
       
       {/* Dialog */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
-        {/* Header / Icon */}
-        <div className="p-6 pb-4">
+        {/* Scrollable Content */}
+        <div className="p-6 pb-4 overflow-y-auto flex-1">
           <button 
             onClick={!isLoading ? onClose : undefined}
             className="absolute right-4 top-4 text-text-muted hover:text-text-primary transition-colors focus:outline-none rounded-lg p-1 hover:bg-surface-background"
@@ -58,7 +68,7 @@ const ConfirmationDialog = ({
         </div>
 
         {/* Actions */}
-        <div className="p-6 pt-2 flex flex-col sm:flex-row gap-3">
+        <div className="p-6 pt-2 shrink-0 flex flex-col sm:flex-row gap-3 border-t border-border/50">
           <Button 
             variant="outline" 
             className="w-full sm:flex-1" 

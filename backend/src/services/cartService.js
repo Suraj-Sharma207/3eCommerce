@@ -1,5 +1,6 @@
 import cartRepository from '../repositories/cartRepository.js';
 import productRepository from '../repositories/productRepository.js';
+import promotionService from './promotionService.js';
 
 class CartService {
   async getCart(userId) {
@@ -7,7 +8,7 @@ class CartService {
     if (!cart) {
       cart = await cartRepository.createCart(userId);
     }
-    return cart;
+    return await this._processCartPromotions(cart);
   }
 
   async addToCart(userId, productId, quantity) {
@@ -36,7 +37,8 @@ class CartService {
       await cartRepository.addCartItem(cart.id, productId, quantity);
     }
 
-    return await cartRepository.getCartByUserId(userId);
+    const updatedCart = await cartRepository.getCartByUserId(userId);
+    return await this._processCartPromotions(updatedCart);
   }
 
   async updateQuantity(userId, productId, quantity) {
@@ -62,7 +64,8 @@ class CartService {
       await cartRepository.updateCartItem(item.id, quantity);
     }
 
-    return await cartRepository.getCartByUserId(userId);
+    const updatedCart = await cartRepository.getCartByUserId(userId);
+    return await this._processCartPromotions(updatedCart);
   }
 
   async removeFromCart(userId, productId) {
@@ -74,7 +77,8 @@ class CartService {
 
     await cartRepository.removeCartItem(item.id);
 
-    return await cartRepository.getCartByUserId(userId);
+    const updatedCart = await cartRepository.getCartByUserId(userId);
+    return await this._processCartPromotions(updatedCart);
   }
 
   async clearCart(userId) {
@@ -82,7 +86,25 @@ class CartService {
     if (cart) {
       await cartRepository.clearCart(cart.id);
     }
-    return await cartRepository.getCartByUserId(userId);
+    const updatedCart = await cartRepository.getCartByUserId(userId);
+    return await this._processCartPromotions(updatedCart);
+  }
+  async _processCartPromotions(cart) {
+    if (!cart || !cart.items) return cart;
+    const activePromotions = await promotionService.getActivePromotions();
+    let subtotal = 0;
+    
+    cart.items = await Promise.all(cart.items.map(async (item) => {
+      const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(item.product, activePromotions);
+      item.product.finalPrice = finalPrice;
+      item.product.discountPercentage = discountPercentage;
+      item.totalPrice = finalPrice * item.quantity;
+      subtotal += item.totalPrice;
+      return item;
+    }));
+
+    cart.subtotal = subtotal;
+    return cart;
   }
 }
 

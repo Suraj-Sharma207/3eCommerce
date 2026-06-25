@@ -23,6 +23,7 @@ const AdminProducts = lazy(() => import('../pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('../pages/admin/AdminOrders'));
 const AdminCustomers = lazy(() => import('../pages/admin/AdminCustomers'));
 const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
+const AdminOffers = lazy(() => import('../pages/admin/AdminOffers'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
 
 const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
@@ -32,7 +33,7 @@ const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 
 const AppRoutes = () => {
   return (
-    <div className="min-h-screen bg-background-default font-sans flex flex-col">
+    <div className="min-h-[100dvh] bg-background-default font-sans flex flex-col">
       <Suspense fallback={
         <div className="flex-1 flex justify-center items-center h-[50vh]">
           <LoadingSpinner size="lg" />
@@ -81,6 +82,7 @@ const AppRoutes = () => {
             <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
             <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="offers" element={<AdminOffers />} />
           </Route>
 
         </Routes>

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 
 // Import routes (will be created soon)
@@ -14,11 +15,18 @@ import adminRoutes from './routes/adminRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import addressRoutes from './routes/addressRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import promotionRoutes from './routes/promotionRoutes.js';
+import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
 
 // Security Middlewares
 app.use(helmet());
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || crypto.randomUUID();
+  res.setHeader('X-Request-ID', req.id);
+  next();
+});
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -47,6 +55,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
