@@ -66,13 +66,13 @@ class AuthService {
     // Check if user exists
     const user = await userRepository.findByEmail(email);
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new Error('Invalid email or password.');
     }
 
     // Check password
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
-      throw new Error('Invalid email or password');
+      throw new Error('Invalid email or password.');
     }
 
     // Generate token

@@ -18,6 +18,17 @@ const useAdminStore = create((set, get) => ({
   // Per-row loading: Set of order IDs currently being updated
   updatingOrderIds: new Set(),
   error: null,
+  searchQuery: '',
+
+  setSearchQuery: (query) => {
+    set({ searchQuery: query });
+  },
+
+  setOrdersItemsPerPage: (limit) => {
+    set((state) => ({
+      ordersPagination: { ...state.ordersPagination, itemsPerPage: limit, currentPage: 1 }
+    }));
+  },
 
   fetchAnalytics: async ({ force = false } = {}) => {
     const state = get();
@@ -67,10 +78,11 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  fetchOrders: async (page = 1, limit = 10) => {
+  fetchOrders: async (page = 1, limit = get().ordersPagination.itemsPerPage) => {
     set({ isLoading: true, error: null });
+    const { searchQuery } = get();
     try {
-      const response = await api.get(`/admin/orders?page=${page}&limit=${limit}`);
+      const response = await api.get(`/admin/orders?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`);
       set({ 
         orders: response.data.data.orders, 
         ordersPagination: response.data.data.pagination || {

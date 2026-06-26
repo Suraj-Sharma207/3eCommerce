@@ -13,8 +13,7 @@ import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
 
 const AdminProducts = () => {
-  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination } = useProductStore();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage } = useProductStore();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -27,17 +26,11 @@ const AdminProducts = () => {
   const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
 
   useEffect(() => {
-    fetchProducts(1);
-  }, [fetchProducts]);
-
-  const filteredProducts = products.filter(p => {
-    const searchLow = searchTerm.toLowerCase();
-    return (
-      (p.name && p.name.toLowerCase().includes(searchLow)) || 
-      (p.category && p.category.toLowerCase().includes(searchLow)) ||
-      (p.sku && p.sku.toLowerCase().includes(searchLow))
-    );
-  });
+    const timer = setTimeout(() => {
+      fetchProducts(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchProducts]);
 
   const handleOpenModal = (product = null) => {
     setSelectedProduct(product);
@@ -114,8 +107,8 @@ const AdminProducts = () => {
             <input 
               type="text" 
               placeholder="Search products..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
             />
           </div>
@@ -144,22 +137,22 @@ const AdminProducts = () => {
                     <td className="p-4 pr-6"><SkeletonLoader className="h-8 w-16 float-right" /></td>
                   </tr>
                 ))
-              ) : filteredProducts.length === 0 ? (
+              ) : products.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                       <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4 border border-border">
                         <Inbox className="w-8 h-8 text-text-muted opacity-50" />
                       </div>
-                      <h3 className="text-lg font-extrabold text-text-primary mb-1">No products found</h3>
+                      <h3 className="text-lg font-extrabold text-text-primary mb-1">No products found.</h3>
                       <p className="text-sm text-text-secondary font-medium">
-                        {searchTerm ? 'We couldn\'t find any products matching your search criteria. Try adjusting your filters.' : 'Your store doesn\'t have any products yet. Add a product to get started.'}
+                        {searchQuery ? 'We couldn\'t find any products matching your search criteria. Try adjusting your filters.' : 'Your store doesn\'t have any products yet. Add a product to get started.'}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
+                products.map((product) => (
                   <tr key={product.id} className="hover:bg-surface-background transition-colors group">
                     <td className="p-4 pl-6 flex items-center gap-4">
                       <ImageFallback src={product.thumbnail} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-border-light" />
@@ -219,6 +212,11 @@ const AdminProducts = () => {
               currentPage={pagination.currentPage} 
               totalPages={pagination.totalPages} 
               onPageChange={(page) => fetchProducts(page)} 
+              itemsPerPage={pagination.itemsPerPage}
+              onItemsPerPageChange={(limit) => {
+                setItemsPerPage(limit);
+                fetchProducts(1);
+              }}
             />
           </div>
         )}

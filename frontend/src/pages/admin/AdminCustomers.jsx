@@ -8,7 +8,7 @@ import Pagination from '../../components/ui/Pagination';
 import CustomerDetailsDrawer from '../../components/admin/CustomerDetailsDrawer';
 
 const AdminCustomers = () => {
-  const { customers, isLoading, pagination, fetchCustomers, searchQuery, setSearchQuery } = useCustomerStore();
+  const { customers, isLoading, pagination, fetchCustomers, searchQuery, setSearchQuery, setItemsPerPage } = useCustomerStore();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
@@ -147,6 +147,11 @@ const AdminCustomers = () => {
               currentPage={pagination.currentPage} 
               totalPages={pagination.totalPages} 
               onPageChange={handlePageChange} 
+              itemsPerPage={pagination.itemsPerPage}
+              onItemsPerPageChange={(limit) => {
+                setItemsPerPage(limit);
+                fetchCustomers(1);
+              }}
             />
           </div>
         )}

@@ -20,14 +20,20 @@ const useCustomerStore = create((set, get) => ({
     set({ searchQuery: query });
   },
 
+  setItemsPerPage: (limit) => {
+    set((state) => ({
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+    }));
+  },
+
   fetchCustomers: async (page = get().pagination.currentPage) => {
     set({ isLoading: true, error: null });
-    const { searchQuery } = get();
+    const { searchQuery, pagination } = get();
     
     try {
       const { data } = await customerService.getCustomers({
         page,
-        limit: 10,
+        limit: pagination.itemsPerPage,
         search: searchQuery,
       });
       

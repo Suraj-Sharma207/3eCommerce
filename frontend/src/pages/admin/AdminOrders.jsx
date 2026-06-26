@@ -14,29 +14,18 @@ const PAYMENT_COLORS = {
 };
 
 const AdminOrders = () => {
-  const { orders, isLoading, updatingOrderIds, fetchOrders, updateOrderStatus, ordersPagination } = useAdminStore();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { orders, isLoading, updatingOrderIds, fetchOrders, updateOrderStatus, ordersPagination, searchQuery, setSearchQuery, setOrdersItemsPerPage } = useAdminStore();
 
   useEffect(() => {
-    fetchOrders(1, 10);
-  }, [fetchOrders]);
+    const timer = setTimeout(() => {
+      fetchOrders(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchOrders]);
 
   const handleStatusChange = useCallback(async (orderId, newStatus) => {
     await updateOrderStatus(orderId, newStatus);
   }, [updateOrderStatus]);
-
-  // Client-side filter — preserves scroll, no API call
-  const filteredOrders = useMemo(() => {
-    if (!searchTerm.trim()) return orders;
-    const q = searchTerm.toLowerCase();
-    return orders.filter(
-      (o) =>
-        o.id?.toLowerCase().includes(q) ||
-        o.orderNumber?.toLowerCase().includes(q) ||
-        o.user?.name?.toLowerCase().includes(q) ||
-        o.user?.email?.toLowerCase().includes(q)
-    );
-  }, [orders, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -53,8 +42,8 @@ const AdminOrders = () => {
             <input
               type="text"
               placeholder="Search by order ID or customer..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
             />
           </div>
@@ -85,7 +74,7 @@ const AdminOrders = () => {
                     <td className="p-4"><SkeletonLoader className="h-8 w-28 rounded-lg" /></td>
                   </tr>
                 ))
-              ) : filteredOrders.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-12 text-center text-text-muted">
                     <div className="flex flex-col items-center justify-center">
@@ -93,16 +82,16 @@ const AdminOrders = () => {
                         <Inbox className="w-6 h-6 text-secondary-400" />
                       </div>
                       <p className="text-sm font-bold text-text-brand-600">
-                        {searchTerm ? 'No orders match your search' : 'No orders found'}
+                        {searchQuery ? 'No orders match your search.' : 'No orders found.'}
                       </p>
                       <p className="text-xs text-text-muted mt-1">
-                        {searchTerm ? 'Try a different order ID or customer name.' : 'There are currently no orders in the system.'}
+                        {searchQuery ? 'Try a different order ID or customer name.' : 'There are currently no orders in the system.'}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => {
+                orders.map((order) => {
                   const isUpdating = updatingOrderIds.has(order.id);
                   return (
                     <tr
@@ -153,7 +142,12 @@ const AdminOrders = () => {
             <Pagination 
               currentPage={ordersPagination.currentPage} 
               totalPages={ordersPagination.totalPages} 
-              onPageChange={(page) => fetchOrders(page, 10)} 
+              onPageChange={(page) => fetchOrders(page)} 
+              itemsPerPage={ordersPagination.itemsPerPage}
+              onItemsPerPageChange={(limit) => {
+                setOrdersItemsPerPage(limit);
+                fetchOrders(1, limit);
+              }}
             />
           </div>
         )}

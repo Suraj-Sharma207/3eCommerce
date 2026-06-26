@@ -85,13 +85,13 @@ class OrderService {
     return await orderRepository.updatePaymentStatus(orderId, status);
   }
 
-  async getAllOrders({ page = 1, limit = 10 }) {
+  async getAllOrders({ page = 1, limit = 10, search = '' }) {
     const skip = (page - 1) * limit;
     const take = parseInt(limit);
     
     const [orders, totalItems] = await Promise.all([
-      orderRepository.getAllOrders({ skip, take }),
-      orderRepository.countAllOrders()
+      orderRepository.getAllOrders({ skip, take, search }),
+      orderRepository.countAllOrders({ search })
     ]);
 
     return {

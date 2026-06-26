@@ -186,8 +186,18 @@ class OrderRepository {
     });
   }
 
-  async getAllOrders({ skip, take }) {
+  async getAllOrders({ skip, take, search }) {
+    const where = {};
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } }
+      ];
+    }
     return await prisma.order.findMany({
+      where,
       skip,
       take,
       include: {
@@ -200,8 +210,17 @@ class OrderRepository {
     });
   }
 
-  async countAllOrders() {
-    return await prisma.order.count();
+  async countAllOrders({ search } = {}) {
+    const where = {};
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } }
+      ];
+    }
+    return await prisma.order.count({ where });
   }
 }
 

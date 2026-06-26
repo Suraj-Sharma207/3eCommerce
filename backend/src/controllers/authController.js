@@ -19,7 +19,7 @@ class AuthController {
       const data = await authService.login(req.body);
       return successResponse(res, 'Login successful', data, 200);
     } catch (error) {
-      if (error.message === 'Invalid email or password') {
+      if (error.message === 'Invalid email or password.') {
         return errorResponse(res, error.message, [], 401);
       }
       next(error);

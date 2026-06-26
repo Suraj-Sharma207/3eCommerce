@@ -30,6 +30,12 @@ const useProductStore = create((set, get) => ({
     set({ searchQuery: query });
   },
 
+  setItemsPerPage: (limit) => {
+    set((state) => ({
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+    }));
+  },
+
   setFilters: (newFilters) => {
     set((state) => ({ 
       filters: { ...state.filters, ...newFilters },
@@ -57,12 +63,12 @@ const useProductStore = create((set, get) => ({
 
   fetchProducts: async (page = get().pagination.currentPage) => {
     set({ isLoading: true, error: null });
-    const { searchQuery, filters } = get();
+    const { searchQuery, filters, pagination } = get();
     
     try {
       const { data } = await productService.getProducts({
         page,
-        limit: 12,
+        limit: pagination.itemsPerPage,
         search: searchQuery,
         ...filters
       });
