@@ -27,8 +27,8 @@ export const validateProductInput = (data) => {
     const brandStr = String(data.brand).trim();
     if (brandStr.length < 2 || brandStr.length > 50) {
       errors.brand = 'Brand must be between 2 and 50 characters.';
-    } else if (!/^[A-Za-z\s]+$/.test(brandStr)) {
-      errors.brand = 'Please enter a valid brand name.';
+    } else if (!/^[A-Za-z0-9\s&'.,-]+$/.test(brandStr)) {
+      errors.brand = 'Please enter a valid brand name (letters, numbers, spaces, and & . , - \' allowed).';
     }
   }
 
@@ -70,9 +70,16 @@ export const validateProductInput = (data) => {
   if (data.thumbnail && typeof data.thumbnail === 'string' && data.thumbnail.trim() !== '') {
     const thumbStr = data.thumbnail.trim();
     try {
-      new URL(thumbStr);
-      if (!/\.(jpg|jpeg|png|webp|avif)(\?.*)?$/i.test(thumbStr)) {
-        errors.thumbnail = 'Please enter a valid image URL.';
+      const parsed = new URL(thumbStr);
+      // Check pathname for image extension, ignoring query params (handles Unsplash, Cloudinary, etc.)
+      const pathname = parsed.pathname.toLowerCase();
+      if (!/\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(pathname)) {
+        // Also accept URLs from known image CDNs even without extension in path
+        const knownImageDomains = ['unsplash.com', 'images.unsplash.com', 'cloudinary.com', 'imgix.net', 'imagekit.io', 'picsum.photos'];
+        const isKnownCDN = knownImageDomains.some(d => parsed.hostname.includes(d));
+        if (!isKnownCDN) {
+          errors.thumbnail = 'Please enter a valid image URL (.jpg, .png, .webp, .avif, .gif, .svg).';
+        }
       }
     } catch (_) {
       errors.thumbnail = 'Please enter a valid image URL.';

@@ -4,6 +4,7 @@ import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import { validateName, validatePhone, validatePassword, sanitizeNumeric } from '../../utils/validators';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PageContainer from '../../components/layout/PageContainer';
 import AvatarUploader from '../../components/common/AvatarUploader';
@@ -101,12 +102,8 @@ const ProfilePage = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    // Intercept phone input to prevent alphabets
-    if (name === 'phone') {
-      if (/[a-zA-Z]/.test(value)) return;
-      if (value.length > 15) return;
-    }
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 10) : value;
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: null }));
     }
@@ -120,20 +117,27 @@ const ProfilePage = () => {
 
   const validateProfile = () => {
     const errs = {};
-    if (!formData.name || formData.name.trim().length < 2 || formData.name.trim().length > 100) {
-      errs.name = 'Name must be between 2 and 100 characters';
+    
+    const nameErr = validateName(formData.name, 'Name');
+    if (nameErr) errs.name = nameErr;
+
+    if (formData.phone) {
+      const phoneErr = validatePhone(formData.phone);
+      if (phoneErr) errs.phone = phoneErr;
     }
-    if (formData.phone && !/^[+\-\s0-9]{7,15}$/.test(formData.phone)) {
-      errs.phone = 'Please enter a valid phone number (7-15 digits)';
-    }
+    
     if (formData.birthday) {
       const bday = new Date(formData.birthday);
       const today = new Date();
-      if (bday > today) errs.birthday = 'Birthday cannot be in the future';
-      
-      const minAgeDate = new Date();
-      minAgeDate.setFullYear(today.getFullYear() - 13);
-      if (bday > minAgeDate) errs.birthday = 'You must be at least 13 years old';
+      if (bday > today) {
+        errs.birthday = 'Birthday cannot be in the future.';
+      } else {
+        const minAgeDate = new Date();
+        minAgeDate.setFullYear(today.getFullYear() - 13);
+        if (bday > minAgeDate) {
+          errs.birthday = 'You must be at least 13 years old.';
+        }
+      }
     }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -175,9 +179,9 @@ const ProfilePage = () => {
       return;
     }
     
-    const pass = passwordData.newPassword;
-    if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[a-z]/.test(pass) || !/[0-9]/.test(pass) || !/[^A-Za-z0-9]/.test(pass)) {
-      setPassError('Password must be at least 8 chars, with uppercase, lowercase, number, and special character.');
+    const strengthErr = validatePassword(passwordData.newPassword);
+    if (strengthErr) {
+      setPassError(strengthErr);
       return;
     }
 

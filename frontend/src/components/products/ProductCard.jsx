@@ -7,22 +7,26 @@ import Button from '../ui/Button';
 import useCartStore from '../../store/cartStore';
 import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
+import useSettingsStore from '../../store/settingsStore';
 import { formatPrice } from '../../utils/currency';
 
 const ProductCard = ({ product }) => {
   if (!product) return null;
 
-  const { addToCart, isLoading: isCartLoading } = useCartStore();
+  const { addToCart, loadingProducts } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
+  const { publicConfig } = useSettingsStore();
   
+  const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
+  const isCartLoading = loadingProducts[product.id] || false;
   const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) return alert('Please login first');
-    addToCart(product.id, 1);
+    addToCart(product.id, 1, product.name);
   };
 
   const handleToggleWishlist = (e) => {
@@ -50,7 +54,7 @@ const ProductCard = ({ product }) => {
         
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {product.stock < 10 && product.stock > 0 && product.active && (
+          {product.stock <= lowStockThreshold && product.stock > 0 && product.active && (
             <span className="bg-warning text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Low Stock</span>
           )}
           {(!product.active || product.stock === 0) && (

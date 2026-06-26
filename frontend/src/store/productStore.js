@@ -5,6 +5,8 @@ const useProductStore = create((set, get) => ({
   products: [],
   product: null,
   isLoading: false,
+  // Per-product loading: Set of product IDs currently being updated/deleted
+  updatingProductIds: new Set(),
   error: null,
   searchQuery: '',
   filters: {
@@ -31,7 +33,6 @@ const useProductStore = create((set, get) => ({
   setFilters: (newFilters) => {
     set((state) => ({ 
       filters: { ...state.filters, ...newFilters },
-      // Reset to page 1 when filters change
       pagination: { ...state.pagination, currentPage: 1 } 
     }));
   },
@@ -95,8 +96,17 @@ const useProductStore = create((set, get) => ({
   createProduct: async (productData) => {
     set({ isLoading: true, error: null });
     try {
-      await productService.createProduct(productData);
-      set({ isLoading: false });
+      const { data } = await productService.createProduct(productData);
+      // Append new product to the list without refetching
+      const newProduct = data?.product || data?.data || data;
+      set((state) => ({
+        isLoading: false,
+        products: newProduct ? [newProduct, ...state.products] : state.products,
+        pagination: {
+          ...state.pagination,
+          totalItems: state.pagination.totalItems + 1,
+        },
+      }));
       return true;
     } catch (error) {
       set({ 
@@ -108,30 +118,79 @@ const useProductStore = create((set, get) => ({
   },
 
   updateProduct: async (id, productData) => {
-    set({ isLoading: true, error: null });
+    const prevProducts = get().products;
+
+    // Optimistically update the product
+    set((state) => ({
+      updatingProductIds: new Set([...state.updatingProductIds, id]),
+      error: null,
+      products: state.products.map((p) => (p.id === id ? { ...p, ...productData } : p)),
+    }));
+
     try {
-      await productService.updateProduct(id, productData);
-      set({ isLoading: false });
+      const { data } = await productService.updateProduct(id, productData);
+      const updatedProduct = data?.product || data?.data || { ...productData, id };
+      
+      // Patch with the final server-calculated product (e.g., dynamic finalPrice)
+      set((state) => {
+        const next = new Set(state.updatingProductIds);
+        next.delete(id);
+        return {
+          updatingProductIds: next,
+          products: state.products.map((p) => (p.id === id ? { ...p, ...updatedProduct } : p)),
+        };
+      });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to update product', 
-        isLoading: false 
+      // Rollback
+      set((state) => {
+        const next = new Set(state.updatingProductIds);
+        next.delete(id);
+        return {
+          updatingProductIds: next,
+          products: prevProducts,
+          error: error.response?.data?.message || 'Failed to update product',
+        };
       });
       return false;
     }
   },
 
   deleteProduct: async (id) => {
-    set({ isLoading: true, error: null });
+    const prevProducts = get().products;
+
+    // Optimistically remove the product from the list
+    set((state) => ({
+      products: state.products.filter((p) => p.id !== id),
+      updatingProductIds: new Set([...state.updatingProductIds, id]),
+      pagination: {
+        ...state.pagination,
+        totalItems: Math.max(0, state.pagination.totalItems - 1),
+      },
+    }));
+
     try {
       await productService.deleteProduct(id);
-      set({ isLoading: false });
+      set((state) => {
+        const next = new Set(state.updatingProductIds);
+        next.delete(id);
+        return { updatingProductIds: next };
+      });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to delete product', 
-        isLoading: false 
+      // Rollback
+      set((state) => {
+        const next = new Set(state.updatingProductIds);
+        next.delete(id);
+        return {
+          updatingProductIds: next,
+          products: prevProducts,
+          pagination: {
+            ...state.pagination,
+            totalItems: prevProducts.length,
+          },
+          error: error.response?.data?.message || 'Failed to delete product',
+        };
       });
       return false;
     }

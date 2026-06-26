@@ -9,9 +9,11 @@ import { formatPrice } from '../../utils/currency';
 import toast from 'react-hot-toast';
 import ProductModal from '../../components/admin/ProductModal';
 import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
+import useSettingsStore from '../../store/settingsStore';
+import Pagination from '../../components/ui/Pagination';
 
 const AdminProducts = () => {
-  const { products, isLoading, fetchProducts, createProduct, updateProduct, deleteProduct } = useProductStore();
+  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination } = useProductStore();
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,7 +22,9 @@ const AdminProducts = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const { publicConfig } = useSettingsStore();
+  const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
 
   useEffect(() => {
     fetchProducts(1);
@@ -46,24 +50,27 @@ const AdminProducts = () => {
   };
 
   const handleSaveProduct = async (productData) => {
-    setIsActionLoading(true);
-    let success = false;
-    
     if (selectedProduct) {
-      success = await updateProduct(selectedProduct.id, productData);
-      if (success) toast.success('Product updated successfully');
-      else toast.error(useProductStore.getState().error || 'Unable to update product.');
+      // Update: store handles optimistic patch, no refetch needed
+      const success = await updateProduct(selectedProduct.id, productData);
+      if (success) {
+        toast.success('Product updated successfully.');
+        handleCloseModal();
+      } else {
+        toast.error(useProductStore.getState().error || 'Unable to update product.');
+      }
     } else {
-      success = await createProduct(productData);
-      if (success) toast.success('Product created successfully');
-      else toast.error(useProductStore.getState().error || 'Unable to create product.');
+      // Create: store appends to list, no refetch needed
+      setIsCreating(true);
+      const success = await createProduct(productData);
+      setIsCreating(false);
+      if (success) {
+        toast.success('Product created successfully.');
+        handleCloseModal();
+      } else {
+        toast.error(useProductStore.getState().error || 'Unable to create product.');
+      }
     }
-    
-    if (success) {
-      fetchProducts(1);
-      handleCloseModal();
-    }
-    setIsActionLoading(false);
   };
 
   const handleOpenDelete = (product) => {
@@ -78,15 +85,14 @@ const AdminProducts = () => {
 
   const handleConfirmDelete = async () => {
     if (!productToDelete) return;
-    setIsActionLoading(true);
-    
+    // Store handles optimistic removal — no refetch needed
     const success = await deleteProduct(productToDelete.id);
     if (success) {
-      toast.success('Product deleted successfully');
-      fetchProducts(1);
+      toast.success('Product deleted successfully.');
       handleCloseDelete();
+    } else {
+      toast.error(useProductStore.getState().error || 'Unable to delete product.');
     }
-    setIsActionLoading(false);
   };
 
   return (
@@ -164,7 +170,7 @@ const AdminProducts = () => {
                     <td className="p-4">
                       {(() => {
                         const stock = product.stock || 0;
-                        if (stock > 10) {
+                        if (stock > lowStockThreshold) {
                           return (
                             <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-success-50 text-success-700 border border-success-200">
                               {stock} In Stock
@@ -188,13 +194,13 @@ const AdminProducts = () => {
                     <td className="p-4 pr-6 text-right space-x-2">
                       <button 
                         onClick={() => handleOpenModal(product)}
-                        className="p-2 text-text-muted hover:text-brand-600 bg-white hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-200 shadow-sm opacity-0 group-hover:opacity-100"
+                        className="p-2 text-text-muted hover:text-brand-600 bg-white hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-200 shadow-sm"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleOpenDelete(product)}
-                        className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 bg-white rounded-lg transition-colors border border-transparent hover:border-danger-600 shadow-sm opacity-0 group-hover:opacity-100"
+                        className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 bg-white rounded-lg transition-colors border border-transparent hover:border-danger-600 shadow-sm"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -205,6 +211,17 @@ const AdminProducts = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 0 && (
+          <div className="p-4 border-t border-border bg-surface-background">
+            <Pagination 
+              currentPage={pagination.currentPage} 
+              totalPages={pagination.totalPages} 
+              onPageChange={(page) => fetchProducts(page)} 
+            />
+          </div>
+        )}
       </div>
 
       <ProductModal
@@ -212,7 +229,7 @@ const AdminProducts = () => {
         onClose={handleCloseModal}
         product={selectedProduct}
         onSave={handleSaveProduct}
-        isLoading={isActionLoading}
+        isLoading={isCreating || (selectedProduct ? updatingProductIds.has(selectedProduct.id) : false)}
       />
 
       <ConfirmationDialog
@@ -222,7 +239,7 @@ const AdminProducts = () => {
         title="Delete Product?"
         message="This action cannot be undone. This will permanently delete the product and remove all associations."
         itemTitle={productToDelete?.name}
-        isLoading={isActionLoading}
+        isLoading={productToDelete ? updatingProductIds.has(productToDelete.id) : false}
       />
     </div>
   );

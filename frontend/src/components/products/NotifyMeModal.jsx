@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Bell } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import Button from '../ui/Button';
+import { sanitizeNumeric } from '../../utils/validators';
 
 const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) => {
   const { user } = useAuthStore();
@@ -32,7 +33,7 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
       setSuccess(true);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit request');
+      setError(err.response?.data?.message || 'Failed to submit request.');
     } finally {
       setIsLoading(false);
     }
@@ -109,9 +110,9 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(sanitizeNumeric(e.target.value).slice(0, 10))}
                     className="w-full px-4 py-3 rounded-[12px] border border-border focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-all bg-surface"
-                    placeholder="+1 234 567 8900"
+                    placeholder="Enter 10-digit phone number"
                   />
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import useAdminStore from '../../store/adminStore';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { DollarSign, ShoppingBag, Users, Package, Inbox } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, Inbox, PackageCheck, XCircle } from 'lucide-react';
 import ImageFallback from '../../components/ui/ImageFallback';
 import { formatPrice } from '../../utils/currency';
 
@@ -54,11 +54,13 @@ const Dashboard = () => {
     <div className="space-y-8 max-w-[1400px] mx-auto">
       
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard title="Total Revenue" value={formatPrice(kpis.revenue)} icon={DollarSign} color="bg-brand-50 text-brand-600" />
         <KPICard title="Total Orders" value={kpis.orders} icon={ShoppingBag} color="bg-success-50 text-success-600" />
         <KPICard title="Total Customers" value={kpis.customers} icon={Users} color="bg-accent-50 text-accent-600" />
         <KPICard title="Total Products" value={kpis.products} icon={Package} color="bg-warning-50 text-warning-600" />
+        <KPICard title="Delivered Orders" value={kpis.deliveredOrders || 0} icon={PackageCheck} color="bg-green-50 text-green-600" />
+        <KPICard title="Cancelled Orders" value={kpis.cancelledOrders || 0} icon={XCircle} color="bg-danger-50 text-danger-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

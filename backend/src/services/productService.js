@@ -36,7 +36,13 @@ class ProductService {
   }
 
   async getRelatedProducts(id, limit = 4) {
-    return await productRepository.findRelated(id, limit);
+    const products = await productRepository.findRelated(id, limit);
+    const activePromotions = await promotionService.getActivePromotions();
+    const dynamicProducts = await Promise.all(products.map(async (product) => {
+      const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(product, activePromotions);
+      return { ...product, finalPrice, discountPercentage };
+    }));
+    return dynamicProducts;
   }
 
   async getProductById(id) {
@@ -81,8 +87,8 @@ class ProductService {
       sku: generatedSku,
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
-      discountPercentage: 0,
-      finalPrice: parseFloat(data.price),
+      discountPercentage: parseFloat(data.discountPercentage) || 0,
+      finalPrice: parseFloat(data.price) - (parseFloat(data.price) * (parseFloat(data.discountPercentage) || 0) / 100),
     };
 
     return await productRepository.create(formattedData);
@@ -115,15 +121,19 @@ class ProductService {
     delete data.createdAt;
     delete data.createdBy; // Just in case
 
+    // Only pick fields that exist in the Prisma Product schema — prevents unknown-field crashes
     const formattedData = {
-      ...data,
       name: data.name.trim(),
       brand: data.brand.trim(),
       description: data.description.trim(),
+      category: data.category,
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
-      discountPercentage: 0,
-      finalPrice: parseFloat(data.price),
+      discountPercentage: parseFloat(data.discountPercentage) || 0,
+      finalPrice: parseFloat(data.price) - (parseFloat(data.price) * (parseFloat(data.discountPercentage) || 0) / 100),
+      thumbnail: data.thumbnail || null,
+      featured: Boolean(data.featured),
+      active: Boolean(data.active),
     };
 
     return await productRepository.update(id, formattedData);

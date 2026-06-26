@@ -11,6 +11,7 @@ const Input = forwardRef(({ label, error, isValid, className = '', inputClassNam
       {label && (
         <label className="text-sm font-semibold text-text-primary" htmlFor={id}>
           {label}
+          {props.required && <span className="text-danger-600 ml-0.5">*</span>}
         </label>
       )}
       <div className="relative">

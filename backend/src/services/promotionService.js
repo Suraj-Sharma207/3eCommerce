@@ -2,25 +2,35 @@ import prisma from '../lib/prisma.js';
 
 class PromotionService {
   async getActivePromotions() {
-    const now = new Date();
-    
-    // Fetch all ENABLED promotions where current date is within start/end dates
-    // Sorted by priority (highest first)
-    return await prisma.promotion.findMany({
-      where: {
-        status: 'ENABLED',
-        startDate: { lte: now },
-        endDate: { gte: now }
-      },
-      include: {
-        products: true,
-        categories: true,
-        brands: true
-      },
-      orderBy: {
-        priority: 'desc'
+    try {
+      if (!prisma.promotion) {
+        console.warn('[PromotionService] prisma.promotion is undefined. Promotions are unavailable.');
+        return [];
       }
-    });
+      
+      const now = new Date();
+      
+      // Fetch all ENABLED promotions where current date is within start/end dates
+      // Sorted by priority (highest first)
+      return await prisma.promotion.findMany({
+        where: {
+          status: 'ENABLED',
+          startDate: { lte: now },
+          endDate: { gte: now }
+        },
+        include: {
+          products: true,
+          categories: true,
+          brands: true
+        },
+        orderBy: {
+          priority: 'desc'
+        }
+      });
+    } catch (error) {
+      console.error('[PromotionService] Error fetching active promotions:', error);
+      return [];
+    }
   }
 
   // Calculate product price based on active promotions
@@ -28,7 +38,11 @@ class PromotionService {
     if (!product) return null;
     
     let finalPrice = product.price;
-    let appliedDiscount = 0;
+    let appliedDiscount = product.discountPercentage || 0;
+    
+    if (appliedDiscount > 0) {
+      finalPrice = product.price - (product.price * appliedDiscount / 100);
+    }
     
     // Evaluate promotions from highest to lowest priority
     for (const promo of activePromotions) {
@@ -36,24 +50,21 @@ class PromotionService {
       
       if (isApplicable) {
         if (promo.type === 'PERCENTAGE_DISCOUNT') {
-          const discount = (finalPrice * promo.discountValue) / 100;
-          finalPrice -= discount;
-          appliedDiscount += promo.discountValue;
+          const discountAmount = (product.price * promo.discountValue) / 100;
+          finalPrice = product.price - discountAmount;
+          appliedDiscount = promo.discountValue;
         } else if (promo.type === 'FLAT_DISCOUNT') {
-          finalPrice -= promo.discountValue;
+          finalPrice = product.price - promo.discountValue;
+          appliedDiscount = Math.round((promo.discountValue / product.price) * 100);
         }
         
-        // Stop evaluating if we only apply the highest priority?
-        // Or stack them? Assuming highest priority applies and we don't stack for simplicity,
-        // or stack but ensure final price > 0.
-        // The user asked for "priority-based conflict prevention". This means we only apply the highest priority one.
         break; // Conflict prevention: apply only the first match
       }
     }
     
     return {
       finalPrice: Math.max(0, finalPrice),
-      discountPercentage: appliedDiscount // Rough estimate if it's a flat discount, but usually we just return finalPrice
+      discountPercentage: appliedDiscount
     };
   }
 

@@ -14,25 +14,38 @@ const ProductList = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    const categoryParam = searchParams.get('category');
-    const saleParam = searchParams.get('sale');
-    const sortParam = searchParams.get('sort');
-    
-    let initialFilters = { ...filters };
+    const categoryParam = searchParams.get('category') || 'All';
+    const saleParam = searchParams.get('sale') === 'true';
+    const sortParam = searchParams.get('sort') || (saleParam ? 'price_asc' : 'newest');
+
+    let initialFilters = { 
+      ...filters, 
+      category: categoryParam,
+      sale: saleParam,
+      sort: sortParam
+    };
+
     let shouldUpdate = false;
 
-    if (categoryParam && categoryParam !== filters.category) {
-      initialFilters.category = categoryParam;
+    if (categoryParam !== filters.category) {
       shouldUpdate = true;
     }
-    if (saleParam === 'true') {
-      initialFilters.sale = true;
-      initialFilters.sort = 'price_asc';
+    if (saleParam !== filters.sale) {
       shouldUpdate = true;
     }
-    if (sortParam && sortParam !== filters.sort) {
-      initialFilters.sort = sortParam;
+    if (sortParam !== filters.sort) {
       shouldUpdate = true;
+    }
+
+    // Reset details if navigating to general /products from a filtered URL
+    if (!searchParams.get('category') && !searchParams.get('sale')) {
+      if (filters.minRating !== '' || filters.minPrice !== '' || filters.maxPrice !== '' || filters.inStock !== false) {
+        initialFilters.minRating = '';
+        initialFilters.minPrice = '';
+        initialFilters.maxPrice = '';
+        initialFilters.inStock = false;
+        shouldUpdate = true;
+      }
     }
 
     if (shouldUpdate) {
@@ -70,7 +83,7 @@ const ProductList = () => {
 
   return (
     <PageContainer className="py-8 lg:py-12">
-      
+
       {/* Header & Sort */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-border gap-4">
         <div>
@@ -104,18 +117,18 @@ const ProductList = () => {
             Showing {startItem}–{endItem} of {pagination.totalItems} Products
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
-          <button 
+          <button
             className="md:hidden flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-text-brand-600 font-medium"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
             <Filter className="w-4 h-4" />
             Filters
           </button>
-          
+
           <div className="relative group">
-            <select 
+            <select
               value={filters.sort}
               onChange={(e) => setFilters({ sort: e.target.value })}
               className="appearance-none bg-white border border-border text-text-brand-600 py-2 pl-4 pr-10 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-brand-600 cursor-pointer shadow-sm"
@@ -130,28 +143,27 @@ const ProductList = () => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
-        
+
         {/* Sidebar Filters */}
-        <div className={`w-full md:w-64 flex-shrink-0 space-y-8 ${isFilterOpen ? 'block' : 'hidden md:block'}`}>
+        <div className={`w-full md:w-64 flex-shrink-0 space-y-8 md:sticky md:top-28 h-fit ${isFilterOpen ? 'block' : 'hidden md:block'}`}>
           {/* Categories */}
           <div>
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Categories</h3>
             <div className="space-y-2">
               {categories.map(cat => (
                 <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                    filters.category === cat 
-                      ? 'bg-brand-600 border-brand-600' 
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.category === cat
+                      ? 'bg-brand-600 border-brand-600'
                       : 'border-border group-hover:border-brand-600-400'
-                  }`}>
+                    }`}>
                     {filters.category === cat && <Check className="w-3.5 h-3.5 text-white" />}
                   </div>
                   <span className={`text-sm ${filters.category === cat ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
                     {cat}
                   </span>
-                  <input 
-                    type="radio" 
-                    name="category" 
+                  <input
+                    type="radio"
+                    name="category"
                     className="sr-only"
                     checked={filters.category === cat}
                     onChange={() => setFilters({ category: cat })}
@@ -167,19 +179,18 @@ const ProductList = () => {
             <div className="space-y-2">
               {[4, 3, 2, 1].map(rating => (
                 <label key={rating} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                    filters.minRating == rating 
-                      ? 'bg-brand-600 border-brand-600' 
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.minRating == rating
+                      ? 'bg-brand-600 border-brand-600'
                       : 'border-border group-hover:border-brand-600-400'
-                  }`}>
+                    }`}>
                     {filters.minRating == rating && <Check className="w-3.5 h-3.5 text-white" />}
                   </div>
                   <span className={`text-sm ${filters.minRating == rating ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
                     {rating} Stars & Up
                   </span>
-                  <input 
-                    type="radio" 
-                    name="minRating" 
+                  <input
+                    type="radio"
+                    name="minRating"
                     className="sr-only"
                     checked={filters.minRating == rating}
                     onChange={() => setFilters({ minRating: rating })}
@@ -195,8 +206,8 @@ const ProductList = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs text-text-muted mb-1 block">Min (₹)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
                   placeholder="0"
                   value={filters.minPrice || ''}
@@ -205,8 +216,8 @@ const ProductList = () => {
               </div>
               <div>
                 <label className="text-xs text-text-muted mb-1 block">Max (₹)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
                   placeholder="2000"
                   value={filters.maxPrice || ''}
@@ -221,16 +232,15 @@ const ProductList = () => {
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Availability</h3>
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                  filters.inStock 
-                    ? 'bg-brand-600 border-brand-600' 
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.inStock
+                    ? 'bg-brand-600 border-brand-600'
                     : 'border-border group-hover:border-brand-600-400'
-                }`}>
+                  }`}>
                   {filters.inStock && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
                 <span className="text-sm text-text-secondary group-hover:text-text-brand-600">In Stock Only</span>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="sr-only"
                   checked={filters.inStock || false}
                   onChange={(e) => setFilters({ inStock: e.target.checked })}
@@ -238,16 +248,15 @@ const ProductList = () => {
               </label>
 
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                  filters.sale 
-                    ? 'bg-brand-600 border-brand-600' 
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.sale
+                    ? 'bg-brand-600 border-brand-600'
                     : 'border-border group-hover:border-brand-600-400'
-                }`}>
+                  }`}>
                   {filters.sale && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
                 <span className="text-sm text-text-secondary group-hover:text-text-brand-600">On Sale</span>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="sr-only"
                   checked={filters.sale || false}
                   onChange={(e) => setFilters({ sale: e.target.checked })}
@@ -256,7 +265,7 @@ const ProductList = () => {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={clearFilters}
             className="text-sm font-semibold text-text-secondary hover:text-danger-600 underline underline-offset-4"
           >
@@ -283,7 +292,7 @@ const ProductList = () => {
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-              <Pagination 
+              <Pagination
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
                 onPageChange={handlePageChange}
@@ -298,7 +307,7 @@ const ProductList = () => {
               <p className="text-text-secondary max-w-md mb-6">
                 We couldn't find any products matching your current filters. Try adjusting your search or category.
               </p>
-              <button 
+              <button
                 onClick={clearFilters}
                 className="px-6 py-2 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors"
               >

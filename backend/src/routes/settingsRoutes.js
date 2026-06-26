@@ -27,6 +27,7 @@ router.put('/payment', settingsController.updatePayment);
 router.get('/smtp', settingsController.getSmtp);
 router.put('/smtp', settingsController.updateSmtp);
 router.post('/smtp/test', settingsController.testSmtp);
+router.post('/smtp/diagnostics', settingsController.diagnosticSmtp);
 
 router.get('/security', settingsController.getSecurity);
 router.put('/security', settingsController.updateSecurity);

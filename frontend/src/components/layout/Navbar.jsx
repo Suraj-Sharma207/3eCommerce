@@ -17,12 +17,19 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchWishlist();
     }
   }, [isAuthenticated, fetchWishlist]);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   // Search Suggestions State
   const [suggestions, setSuggestions] = useState([]);
@@ -121,7 +128,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-border-light">
+    <nav className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-lg border-b border-border-light transition-shadow duration-300 ${isScrolled ? 'shadow-md' : 'shadow-none'}`}>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex justify-between items-center h-20">
           
@@ -137,7 +144,11 @@ const Navbar = () => {
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center justify-center md:justify-start">
-            <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight flex items-center gap-2">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })}
+              className="text-3xl font-extrabold text-brand-600 tracking-tight flex items-center gap-2"
+            >
               LuxeHome
             </Link>
           </div>

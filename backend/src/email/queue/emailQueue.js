@@ -84,6 +84,15 @@ class InMemoryEmailQueue extends Queue {
   async add(jobData) {
     const { recipient, subject, html, text, template, userId, idempotencyKey } = jobData;
 
+    // 0. Verify SMTP is healthy before accepting jobs
+    try {
+      await smtpProvider.verify();
+    } catch (verifyError) {
+      const reason = verifyError.message || 'Unknown SMTP error';
+      console.error(`[EMAIL QUEUE] SMTP verification failed. Rejecting email job. Reason: ${reason}`);
+      throw new Error(`SMTP configuration is invalid or unhealthy: ${reason}`);
+    }
+
     // 1. Enforce Idempotency to prevent duplicate transactional sends
     if (idempotencyKey) {
       const existingLog = await prisma.emailLog.findUnique({

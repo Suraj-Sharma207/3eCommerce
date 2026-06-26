@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useAuthStore from '../../store/authStore';
+import { validateName, validateEmail, validatePhone, sanitizeNumeric } from '../../utils/validators';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -13,11 +14,11 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: ''
   });
-  
+
   const [errors, setErrors] = useState({});
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [socialMessage, setSocialMessage] = useState('');
-  
+
   const { register, isLoading, error: backendError, clearError } = useAuthStore();
 
   useEffect(() => {
@@ -27,64 +28,64 @@ const RegisterPage = () => {
 
   const validateField = (name, value) => {
     let errorMsg = '';
-    
+
     switch (name) {
       case 'name':
-        if (!value) errorMsg = 'Name is required';
-        else if (value.length < 2 || value.length > 80) errorMsg = 'Name must be 2-80 characters';
-        else if (!/^[a-zA-Z\s]*$/.test(value)) errorMsg = 'Name can only contain letters';
+        errorMsg = validateName(value, 'Full Name');
         break;
       case 'email':
-        if (!value) errorMsg = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errorMsg = 'Invalid email';
+        errorMsg = validateEmail(value);
         break;
       case 'phone':
-        if (value && !/^\+?[1-9]\d{1,14}$/.test(value)) errorMsg = 'Invalid E.164 phone';
+        if (value) {
+          errorMsg = validatePhone(value);
+        }
         break;
-      // Password validation handled via UI inline logic for UX reasons
       default:
         break;
     }
-    
+
     return errorMsg;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value) : value;
+
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+
     // Only set standard field errors, password handled separately
     if (name !== 'password' && name !== 'confirmPassword') {
-      const errorMsg = validateField(name, value);
+      const errorMsg = validateField(name, sanitizedValue);
       setErrors(prev => ({ ...prev, [name]: errorMsg }));
     }
   };
 
   const isPasswordValid = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(?=.{8,})/.test(formData.password);
   const passwordTouched = formData.password.length > 0;
-  
+
   const confirmTouched = formData.confirmPassword.length > 0;
   const passwordsMatch = formData.confirmPassword === formData.password;
 
   const isFormValid = () => {
     const newErrors = {};
-    
+
     // Check standard fields
     ['name', 'email', 'phone'].forEach(key => {
       const err = validateField(key, formData[key]);
       if (err) newErrors[key] = err;
     });
-    
+
     if (!isPasswordValid) {
-      newErrors.password = 'Invalid password'; // Just to block submission
+      newErrors.password = 'Invalid password.'; // Just to block submission
     }
-    
+
     if (confirmTouched && !passwordsMatch) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwords do not match.';
     }
-    
+
     if (!termsAccepted) {
-      newErrors.terms = 'Please accept the terms';
+      newErrors.terms = 'Please accept the terms and conditions.';
     }
 
     setErrors(newErrors);
@@ -165,12 +166,12 @@ const RegisterPage = () => {
       <div className="mb-6">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
         <p className="mt-1 text-[16px] text-text-muted font-medium">
-          Join LuxeHome to experience premium shopping
+          Join LuxeHome to experience premium shopping.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        
+
         {backendError && (
           <div className="p-3 rounded-lg bg-danger-50 text-danger-700 text-[12px] font-medium flex items-start gap-2 border border-danger-200">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -265,7 +266,7 @@ const RegisterPage = () => {
           </div>
           <div className="ml-2 text-[12px] mt-[2px]">
             <label htmlFor="terms" className={`cursor-pointer font-medium ${errors.terms ? 'text-danger-600' : 'text-text-secondary'}`}>
-              I agree to the <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Terms of Service</a> and <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Privacy Policy</a>
+              I agree to the <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Terms of Service</a> and <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Privacy Policy.</a>
             </label>
             {errors.terms && <p className="mt-0.5 text-danger-600 font-medium">{errors.terms}</p>}
           </div>

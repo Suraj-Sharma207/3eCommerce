@@ -163,3 +163,5 @@ export const renderTemplate = (templateName, data = {}) => {
     text: plainText
   };
 };
+
+// Cache cleared on template updates

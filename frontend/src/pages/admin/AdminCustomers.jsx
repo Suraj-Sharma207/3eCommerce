@@ -129,7 +129,7 @@ const AdminCustomers = () => {
                       )}
                     </td>
                     <td className="p-4 pr-6 text-right">
-                      <button className="p-2 text-text-muted hover:text-brand-600 bg-white rounded-full transition-colors border border-transparent shadow-sm opacity-0 group-hover:opacity-100 group-hover:border-brand-200">
+                      <button className="p-2 text-text-muted hover:text-brand-600 bg-white rounded-full transition-colors border border-brand-200 shadow-sm">
                         <ChevronRight className="w-5 h-5" />
                       </button>
                     </td>
@@ -141,7 +141,7 @@ const AdminCustomers = () => {
         </div>
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {pagination.totalPages > 0 && (
           <div className="p-4 border-t border-border bg-surface-background">
             <Pagination 
               currentPage={pagination.currentPage} 

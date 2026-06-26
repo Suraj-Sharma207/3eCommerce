@@ -27,7 +27,7 @@ const NotificationsTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('notifications', formData);
     if (success) {
-      toast.success('Notification settings updated');
+      toast.success('Notification settings updated.');
       setIsEditing(false);
     }
   };

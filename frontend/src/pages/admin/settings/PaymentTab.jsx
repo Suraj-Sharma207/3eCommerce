@@ -28,7 +28,7 @@ const PaymentTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('payment', formData);
     if (success) {
-      toast.success('Payment settings updated');
+      toast.success('Payment settings updated.');
       setIsEditing(false);
     }
   };

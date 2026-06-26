@@ -202,12 +202,21 @@ class EmailService {
    */
   async sendOrderDelivered(userEmail, order, deliveredDateStr = null) {
     const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const deliveredDate = deliveredDateStr || new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    
+    let deliveredDate = deliveredDateStr;
+    try {
+      const parsedDate = deliveredDateStr ? new Date(deliveredDateStr) : new Date();
+      if (!isNaN(parsedDate.getTime())) {
+        deliveredDate = parsedDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
+    } catch (e) {
+      deliveredDate = deliveredDateStr || new Date().toLocaleDateString();
+    }
 
     return await this.sendTemplate(
       userEmail,

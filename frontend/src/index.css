@@ -3,9 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  html, body, #root {
-    @apply overflow-x-hidden;
-  }
+
   
   body {
     @apply bg-background-default text-text-primary antialiased font-sans;

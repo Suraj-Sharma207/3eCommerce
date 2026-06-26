@@ -29,12 +29,17 @@ class AdminService {
       value: status._count.orderStatus
     }));
 
+    const deliveredOrders = data.orderStatuses.find(s => s.orderStatus === 'DELIVERED')?._count?.orderStatus || 0;
+    const cancelledOrders = data.orderStatuses.find(s => s.orderStatus === 'CANCELLED')?._count?.orderStatus || 0;
+
     return {
       kpis: {
         revenue: data.revenue,
         orders: data.orders,
         customers: data.customers,
-        products: data.products
+        products: data.products,
+        deliveredOrders,
+        cancelledOrders
       },
       revenueTrend,
       statusDistribution,

@@ -12,7 +12,7 @@ const TwoFactorLogin = ({ isOpen, onClose, onVerify }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (code.length !== 6) {
-      toast.error('Please enter a valid 6-digit code');
+      toast.error('Please enter a valid 6-digit code.');
       return;
     }
     

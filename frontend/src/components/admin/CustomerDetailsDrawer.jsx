@@ -23,7 +23,7 @@ const CustomerDetailsDrawer = ({ isOpen, onClose, customerId }) => {
     const newStatus = !selectedCustomer.active;
     const success = await updateCustomerStatus(selectedCustomer.id, newStatus);
     if (success) {
-      toast.success(`Customer account ${newStatus ? 'enabled' : 'disabled'} successfully`);
+      toast.success(`Customer account ${newStatus ? 'enabled' : 'disabled'} successfully.`);
     }
   };
 

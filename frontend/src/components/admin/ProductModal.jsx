@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { PRODUCT_CATEGORIES } from '../../constants/productCategories';
 import { validateProductInput } from '../../utils/productValidation';
+import { sanitizeNumeric, sanitizeDecimal } from '../../utils/validators';
 
 const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
   const isEditing = !!product;
@@ -63,9 +64,29 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let finalValue = type === 'checkbox' ? checked : value;
+
+    if (name === 'price') {
+      finalValue = sanitizeDecimal(value);
+    } else if (name === 'stock') {
+      finalValue = sanitizeNumeric(value);
+    } else if (name === 'discountPercentage') {
+      const numericVal = sanitizeNumeric(value);
+      if (numericVal !== '') {
+        const intVal = parseInt(numericVal, 10);
+        if (intVal > 90) {
+          finalValue = '90';
+        } else {
+          finalValue = numericVal;
+        }
+      } else {
+        finalValue = '';
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: finalValue
     }));
   };
 
@@ -109,8 +130,18 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
       return;
     }
     
-    // Formatting is handled by backend, but we'll send strings/numbers properly
-    onSave({ ...formData });
+    // Transform form data to match backend schema:
+    // - price and stock must be numbers (backend Zod schema requires this)
+    // - strip `sku` (read-only, backend strips it but Zod middleware may reject unknown fields)
+    const { sku, ...rest } = formData;
+    const payload = {
+      ...rest,
+      price: parseFloat(formData.price) || 0,
+      stock: parseInt(formData.stock, 10) || 0,
+      discountPercentage: formData.discountPercentage !== '' ? parseInt(formData.discountPercentage, 10) : 0,
+    };
+
+    onSave(payload);
   };
 
   return (
@@ -162,7 +193,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                     <input
                       type="text"
                       disabled
-                      value={formData.sku}
+                      value={formData.sku || ''}
                       className="w-full h-[48px] px-4 pl-11 rounded-[12px] text-base border border-border bg-surface-background text-text-muted cursor-not-allowed"
                     />
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -179,6 +210,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-text-primary" htmlFor="product-category">
                   Category
+                  <span className="text-danger-600 ml-0.5">*</span>
                 </label>
                 <select
                   id="product-category"
@@ -264,7 +296,10 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary" htmlFor="product-description">Description</label>
+              <label className="text-sm font-semibold text-text-primary" htmlFor="product-description">
+                Description
+                <span className="text-danger-600 ml-0.5">*</span>
+              </label>
               <textarea
                 id="product-description"
                 name="description"
@@ -338,7 +373,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
             type="submit" 
             form="product-form"
             isLoading={isLoading}
-            disabled={(!isValid && Object.keys(touched).length > 0) || (isEditing && !isDirty)}
+            disabled={isLoading || (isEditing && !isDirty && isValid)}
           >
             {isLoading 
               ? (isEditing ? 'Saving Changes...' : 'Creating Product...') 

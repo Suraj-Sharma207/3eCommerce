@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { Plus, Edit2, Trash2, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import PageContainer from '../../components/layout/PageContainer';
 import { COUNTRIES } from '../../utils/constants';
+import { validateName, validatePhone, validateRequired, sanitizeNumeric } from '../../utils/validators';
 
 const AddressBook = () => {
   const { addresses, fetchAddresses, addAddress, updateAddress, deleteAddress, isLoading, error: backendError } = useAddressStore();
@@ -56,49 +57,63 @@ const AddressBook = () => {
   };
 
   const validateField = (name, value, allData) => {
-    let err = null;
+    let err = '';
     const val = value || '';
     switch(name) {
       case 'recipientName':
-        if (!val.trim()) err = 'Full Name is required';
-        else if (val.length < 2) err = 'Minimum 2 characters';
-        else if (val.length > 100) err = 'Maximum 100 characters';
-        else if (!/^[A-Za-z\s'\-]+$/.test(val)) err = 'Only letters, spaces, hyphens, and apostrophes allowed';
+        err = validateName(val, 'Full Name');
         break;
       case 'phoneNumber':
-        if (!val.trim()) err = 'Phone Number is required';
-        else if (!/^[+\-\s0-9]{7,15}$/.test(val)) err = 'Enter a valid phone number (7-15 digits)';
+        err = validatePhone(val);
         break;
       case 'street':
-        if (!val.trim()) err = 'Address Line 1 is required';
-        else if (val.length < 5) err = 'Minimum 5 characters';
-        else if (val.length > 200) err = 'Maximum 200 characters';
+        if (!val.trim()) {
+          err = 'Address Line 1 is required.';
+        } else if (val.trim().length < 5) {
+          err = 'Address Line 1 must be at least 5 characters.';
+        } else if (val.trim().length > 200) {
+          err = 'Address Line 1 cannot exceed 200 characters.';
+        }
         break;
       case 'city':
-        if (!val.trim()) err = 'City is required';
-        else if (val.length < 2) err = 'Minimum 2 characters';
-        else if (val.length > 80) err = 'Maximum 80 characters';
-        else if (!/^[A-Za-z\s]+$/.test(val)) err = 'Only letters and spaces allowed';
+        if (!val.trim()) {
+          err = 'City is required.';
+        } else if (val.trim().length < 2 || val.trim().length > 80) {
+          err = 'City must be between 2 and 80 characters.';
+        } else if (!/^[A-Za-z\s]+$/.test(val.trim())) {
+          err = 'City must contain only letters.';
+        }
         break;
       case 'state':
-        if (!val.trim()) err = 'State is required';
-        else if (val.length < 2) err = 'Minimum 2 characters';
-        else if (val.length > 80) err = 'Maximum 80 characters';
-        else if (!/^[A-Za-z\s]+$/.test(val)) err = 'Only letters and spaces allowed';
+        if (!val.trim()) {
+          err = 'State is required.';
+        } else if (val.trim().length < 2 || val.trim().length > 80) {
+          err = 'State must be between 2 and 80 characters.';
+        } else if (!/^[A-Za-z\s]+$/.test(val.trim())) {
+          err = 'State must contain only letters.';
+        }
         break;
       case 'country':
-        if (!val.trim()) err = 'Country is required';
+        err = validateRequired(val, 'Country');
         break;
       case 'zipCode':
-        if (!val.trim()) err = 'Postal Code is required';
-        else if (val.length > 20) err = 'Maximum 20 characters';
-        else if (allData.country === 'India' && !/^\d{6}$/.test(val)) err = 'India requires a valid 6-digit PIN code';
+        if (!val.trim()) {
+          err = 'Postal Code is required.';
+        } else if (val.trim().length > 20) {
+          err = 'Postal Code cannot exceed 20 characters.';
+        } else if (allData.country === 'India' && !/^\d{6}$/.test(val.trim())) {
+          err = 'India requires a valid 6-digit PIN code.';
+        }
         break;
       case 'addressLine2':
-        if (val && val.length > 200) err = 'Maximum 200 characters';
+        if (val.trim() && val.trim().length > 200) {
+          err = 'Address Line 2 cannot exceed 200 characters.';
+        }
         break;
       case 'landmark':
-        if (val && val.length > 100) err = 'Maximum 100 characters';
+        if (val.trim() && val.trim().length > 100) {
+          err = 'Landmark cannot exceed 100 characters.';
+        }
         break;
       default:
         break;
@@ -172,10 +187,19 @@ const AddressBook = () => {
     const { name, value, type, checked } = e.target;
     
     let sanitizedValue = value;
-    if (name === 'phoneNumber') sanitizedValue = value.replace(/[^\d+\-\s]/g, '');
-    if (name === 'city' || name === 'state') sanitizedValue = value.replace(/[^A-Za-z\s]/g, '');
-    if (name === 'recipientName') sanitizedValue = value.replace(/[^A-Za-z\s'\-]/g, '');
-    if (name === 'zipCode' && currentAddress.country === 'India') sanitizedValue = value.replace(/[^\d]/g, '').slice(0, 6);
+    if (name === 'phoneNumber') {
+      sanitizedValue = sanitizeNumeric(value);
+    } else if (name === 'city' || name === 'state') {
+      sanitizedValue = value.replace(/[^A-Za-z\s]/g, '');
+    } else if (name === 'recipientName') {
+      sanitizedValue = value.replace(/[^A-Za-z\s'\-]/g, '');
+    } else if (name === 'zipCode') {
+      if (currentAddress.country === 'India') {
+        sanitizedValue = sanitizeNumeric(value).slice(0, 6);
+      } else {
+        sanitizedValue = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
+      }
+    }
 
     setCurrentAddress(prev => {
       const next = {

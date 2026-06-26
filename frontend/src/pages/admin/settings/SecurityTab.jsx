@@ -27,7 +27,7 @@ const SecurityTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('security', formData);
     if (success) {
-      toast.success('Security settings updated');
+      toast.success('Security settings updated.');
       setIsEditing(false);
     }
   };

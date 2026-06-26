@@ -55,7 +55,7 @@ const useAuthStore = create(
         
         // Clear all other stores using dynamic imports to avoid circular deps
         import('./userStore').then(module => module.default.getState().clearProfile());
-        import('./cartStore').then(module => module.default.getState().clearCart());
+        import('./cartStore').then(module => module.default.getState().resetCart());
         import('./wishlistStore').then(module => module.default.getState().clearWishlist());
       },
 

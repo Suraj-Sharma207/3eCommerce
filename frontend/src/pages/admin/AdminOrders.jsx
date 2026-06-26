@@ -1,27 +1,42 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import useAdminStore from '../../store/adminStore';
-import { Search, ChevronDown, Inbox } from 'lucide-react';
+import { Search, Inbox } from 'lucide-react';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import StatusDropdown from '../../components/ui/StatusDropdown';
 import { formatPrice } from '../../utils/currency';
+import Pagination from '../../components/ui/Pagination';
+
+const PAYMENT_COLORS = {
+  PAID:    'bg-green-50 text-green-700 border-green-200',
+  PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+  FAILED:  'bg-red-50 text-red-700 border-red-200',
+  REFUNDED:'bg-gray-100 text-gray-600 border-gray-200',
+};
 
 const AdminOrders = () => {
-  const { orders, isLoading, fetchOrders, updateOrderStatus } = useAdminStore();
+  const { orders, isLoading, updatingOrderIds, fetchOrders, updateOrderStatus, ordersPagination } = useAdminStore();
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchOrders(1, 50); // Fetch first 50 for simplicity
+    fetchOrders(1, 10);
   }, [fetchOrders]);
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = useCallback(async (orderId, newStatus) => {
     await updateOrderStatus(orderId, newStatus);
-  };
+  }, [updateOrderStatus]);
 
-  const statusColors = {
-    PENDING: 'bg-warning text-white',
-    PROCESSING: 'bg-accent-500 text-white',
-    SHIPPED: 'bg-brand-600 text-white',
-    DELIVERED: 'bg-success-100 text-success-700',
-    CANCELLED: 'bg-danger-50 text-danger-700'
-  };
+  // Client-side filter — preserves scroll, no API call
+  const filteredOrders = useMemo(() => {
+    if (!searchTerm.trim()) return orders;
+    const q = searchTerm.toLowerCase();
+    return orders.filter(
+      (o) =>
+        o.id?.toLowerCase().includes(q) ||
+        o.orderNumber?.toLowerCase().includes(q) ||
+        o.user?.name?.toLowerCase().includes(q) ||
+        o.user?.email?.toLowerCase().includes(q)
+    );
+  }, [orders, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -30,14 +45,16 @@ const AdminOrders = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-        
+
         {/* Toolbar */}
         <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input 
-              type="text" 
-              placeholder="Search by order ID or customer..." 
+            <input
+              type="text"
+              placeholder="Search by order ID or customer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
             />
           </div>
@@ -65,66 +82,81 @@ const AdminOrders = () => {
                     <td className="p-4"><SkeletonLoader className="h-4 w-32" /></td>
                     <td className="p-4"><SkeletonLoader className="h-4 w-20" /></td>
                     <td className="p-4"><SkeletonLoader className="h-6 w-16 rounded" /></td>
-                    <td className="p-4"><SkeletonLoader className="h-8 w-28 rounded" /></td>
+                    <td className="p-4"><SkeletonLoader className="h-8 w-28 rounded-lg" /></td>
                   </tr>
                 ))
-              ) : orders.length === 0 ? (
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-12 text-center text-text-muted">
                     <div className="flex flex-col items-center justify-center">
                       <div className="w-12 h-12 bg-border-light rounded-full flex items-center justify-center mb-3">
                         <Inbox className="w-6 h-6 text-secondary-400" />
                       </div>
-                      <p className="text-sm font-bold text-text-brand-600">No orders found</p>
-                      <p className="text-xs text-text-muted mt-1">There are currently no orders in the system.</p>
+                      <p className="text-sm font-bold text-text-brand-600">
+                        {searchTerm ? 'No orders match your search' : 'No orders found'}
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">
+                        {searchTerm ? 'Try a different order ID or customer name.' : 'There are currently no orders in the system.'}
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-surface-background transition-colors">
-                    <td className="p-4 pl-6 font-bold text-text-brand-600 text-sm uppercase">
-                      {order.id.split('-')[0]}
-                    </td>
-                    <td className="p-4 text-sm text-text-secondary">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 text-sm text-text-brand-600 font-medium">
-                      {order.user.name}
-                    </td>
-                    <td className="p-4 font-bold text-text-brand-600">
-                      {formatPrice(order.totalAmount)}
-                    </td>
-                    <td className="p-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-bold rounded ${
-                        order.paymentStatus === 'PAID' ? 'bg-success-100 text-success-700' : 'bg-warning text-white'
-                      }`}>
-                        {order.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="relative group/select">
-                        <select 
+                filteredOrders.map((order) => {
+                  const isUpdating = updatingOrderIds.has(order.id);
+                  return (
+                    <tr
+                      key={order.id}
+                      className={`hover:bg-surface-background transition-colors ${isUpdating ? 'opacity-70' : ''}`}
+                    >
+                      <td className="p-4 pl-6 font-bold text-text-brand-600 text-sm uppercase font-mono">
+                        #{order.orderNumber || order.id.split('-')[0]}
+                      </td>
+                      <td className="p-4 text-sm text-text-secondary">
+                        {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric', month: 'short', year: 'numeric'
+                        })}
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm font-semibold text-text-brand-600">{order.user?.name}</div>
+                        {order.user?.email && (
+                          <div className="text-xs text-text-muted">{order.user.email}</div>
+                        )}
+                      </td>
+                      <td className="p-4 font-bold text-text-brand-600">
+                        {formatPrice(order.totalAmount)}
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-md border ${PAYMENT_COLORS[order.paymentStatus] || PAYMENT_COLORS.PENDING}`}>
+                          {order.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <StatusDropdown
                           value={order.orderStatus}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                          className={`appearance-none pl-3 pr-8 py-1.5 text-xs font-bold rounded cursor-pointer border-none focus:ring-2 focus:ring-brand-600 outline-none ${statusColors[order.orderStatus]}`}
-                        >
-                          <option value="PENDING">PENDING</option>
-                          <option value="PROCESSING">PROCESSING</option>
-                          <option value="SHIPPED">SHIPPED</option>
-                          <option value="DELIVERED">DELIVERED</option>
-                          <option value="CANCELLED">CANCELLED</option>
-                        </select>
-                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-current opacity-70" />
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          onChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                          isLoading={isUpdating}
+                          disabled={isUpdating}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
+        {/* Pagination */}
+        {ordersPagination && ordersPagination.totalPages > 0 && (
+          <div className="p-4 border-t border-border bg-surface-background">
+            <Pagination 
+              currentPage={ordersPagination.currentPage} 
+              totalPages={ordersPagination.totalPages} 
+              onPageChange={(page) => fetchOrders(page, 10)} 
+            />
+          </div>
+        )}
       </div>
     </div>
   );

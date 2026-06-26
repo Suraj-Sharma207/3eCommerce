@@ -5,13 +5,15 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useAuthStore from '../../store/authStore';
 
+import { validateEmail as sharedValidateEmail } from '../../utils/validators';
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [socialMessage, setSocialMessage] = useState('');
-  
+
   const { login, isLoading, error, clearError } = useAuthStore();
 
   useEffect(() => {
@@ -24,13 +26,7 @@ const LoginPage = () => {
 
   const validateEmail = (val) => {
     setEmail(val);
-    if (!val) {
-      setEmailError('Email is required');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
-    }
+    setEmailError(sharedValidateEmail(val));
   };
 
   const handleSubmit = async (e) => {
@@ -64,7 +60,7 @@ const LoginPage = () => {
       <div className="mb-6">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Welcome Back</h2>
         <p className="mt-1 text-[16px] text-text-muted">
-          Sign in to your account to continue
+          Sign in to your account to continue.
         </p>
       </div>
 

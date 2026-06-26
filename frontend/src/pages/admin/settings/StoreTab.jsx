@@ -27,7 +27,7 @@ const StoreTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('store', formData);
     if (success) {
-      toast.success('Store settings updated');
+      toast.success('Store settings updated.');
       setIsEditing(false);
     }
   };

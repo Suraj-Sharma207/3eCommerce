@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const ALGORITHM = 'aes-256-gcm';
-// Ensure the secret key is exactly 32 bytes for AES-256
+// Ensure the secret key is exactly 32 bytes for AES-256.
 const SECRET_KEY = Buffer.from(process.env.AES_SECRET_KEY || 'your-32-byte-aes-secret-key-here-!', 'utf8').slice(0, 32);
 
 export const encrypt = (text) => {

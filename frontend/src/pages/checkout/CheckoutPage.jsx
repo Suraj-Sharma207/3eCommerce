@@ -93,27 +93,27 @@ const CheckoutPage = () => {
     const errors = {};
     if (paymentMethod === 'UPI') {
       if (paymentDetails.upiProvider === 'OTHER') {
-        if (!paymentDetails.upiId) errors.upiId = "UPI ID is required";
-        else if (!/^[\w.-]+@[\w.-]+$/.test(paymentDetails.upiId)) errors.upiId = "Invalid UPI ID format";
+        if (!paymentDetails.upiId) errors.upiId = "UPI ID is required.";
+        else if (!/^[\w.-]+@[\w.-]+$/.test(paymentDetails.upiId)) errors.upiId = "Invalid UPI ID format.";
       }
     } else if (paymentMethod === 'CREDIT_CARD') {
-      if (!paymentDetails.nameOnCard || paymentDetails.nameOnCard.trim().length < 2) errors.nameOnCard = "Name on card is required";
+      if (!paymentDetails.nameOnCard || paymentDetails.nameOnCard.trim().length < 2) errors.nameOnCard = "Name on card is required.";
       
       const cleanNumber = paymentDetails.cardNumber.replace(/\s/g, '');
-      if (cleanNumber.length < 13 || cleanNumber.length > 19) errors.cardNumber = "Must be 13-19 digits";
-      else if (!isValidLuhn(cleanNumber)) errors.cardNumber = "Invalid card number";
+      if (cleanNumber.length < 13 || cleanNumber.length > 19) errors.cardNumber = "Must be 13-19 digits.";
+      else if (!isValidLuhn(cleanNumber)) errors.cardNumber = "Invalid card number.";
       
-      if (!paymentDetails.expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentDetails.expiry)) errors.expiry = "Use MM/YY format";
+      if (!paymentDetails.expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentDetails.expiry)) errors.expiry = "Use MM/YY format.";
       else {
         const [month, year] = paymentDetails.expiry.split('/');
         const expiryDate = new Date(`20${year}`, parseInt(month, 10) - 1);
         const today = new Date();
         today.setDate(1);
         today.setHours(0,0,0,0);
-        if (expiryDate < today) errors.expiry = "Card has expired";
+        if (expiryDate < today) errors.expiry = "Card has expired.";
       }
       
-      if (!paymentDetails.cvc || paymentDetails.cvc.length < 3) errors.cvc = "Invalid CVC";
+      if (!paymentDetails.cvc || paymentDetails.cvc.length < 3) errors.cvc = "Invalid CVC.";
     }
     setPaymentErrors(errors);
     return Object.keys(errors).length === 0;

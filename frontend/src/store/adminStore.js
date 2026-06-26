@@ -7,8 +7,16 @@ const useAdminStore = create((set, get) => ({
   cachedAt: null,
   activeRequest: null,
   orders: [],
+  ordersPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  },
   products: [],
   isLoading: false,
+  // Per-row loading: Set of order IDs currently being updated
+  updatingOrderIds: new Set(),
   error: null,
 
   fetchAnalytics: async ({ force = false } = {}) => {
@@ -46,10 +54,8 @@ const useAdminStore = create((set, get) => ({
       });
     } catch (error) {
       if (error.name === 'CanceledError' || error.name === 'AbortError') {
-        // Request was aborted, do nothing
         return;
       }
-      // Show toast if we failed a background refresh
       if (state.analytics) {
         toast.error("Unable to refresh dashboard data.");
       }
@@ -65,25 +71,95 @@ const useAdminStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/admin/orders?page=${page}&limit=${limit}`);
-      set({ orders: response.data.data.orders, isLoading: false });
+      set({ 
+        orders: response.data.data.orders, 
+        ordersPagination: response.data.data.pagination || {
+          currentPage: page,
+          totalPages: 1,
+          totalItems: response.data.data.orders.length,
+          itemsPerPage: limit
+        },
+        isLoading: false 
+      });
     } catch (error) {
       set({ error: error.response?.data?.message || 'Failed to fetch admin orders', isLoading: false });
     }
   },
 
   updateOrderStatus: async (orderId, status) => {
-    set({ isLoading: true, error: null });
+    const prevOrders = get().orders;
+    const prevAnalytics = get().analytics;
+    const prevOrder = prevOrders.find(o => o.id === orderId);
+    const prevStatus = prevOrder ? prevOrder.orderStatus : null;
+
+    // 1. Optimistic update — patch only the changed row immediately
+    set((state) => {
+      let nextAnalytics = state.analytics;
+      if (nextAnalytics && prevStatus && prevStatus !== status) {
+        nextAnalytics = {
+          ...nextAnalytics,
+          kpis: {
+            ...nextAnalytics.kpis,
+            deliveredOrders: (nextAnalytics.kpis.deliveredOrders || 0) + (status === 'DELIVERED' ? 1 : 0) - (prevStatus === 'DELIVERED' ? 1 : 0),
+            cancelledOrders: (nextAnalytics.kpis.cancelledOrders || 0) + (status === 'CANCELLED' ? 1 : 0) - (prevStatus === 'CANCELLED' ? 1 : 0),
+          },
+          statusDistribution: [...nextAnalytics.statusDistribution]
+        };
+        
+        const prevSdIndex = nextAnalytics.statusDistribution.findIndex(sd => sd.name === prevStatus);
+        if (prevSdIndex > -1) {
+          nextAnalytics.statusDistribution[prevSdIndex] = { 
+            ...nextAnalytics.statusDistribution[prevSdIndex], 
+            value: Math.max(0, nextAnalytics.statusDistribution[prevSdIndex].value - 1) 
+          };
+        }
+        
+        const newSdIndex = nextAnalytics.statusDistribution.findIndex(sd => sd.name === status);
+        if (newSdIndex > -1) {
+          nextAnalytics.statusDistribution[newSdIndex] = { 
+            ...nextAnalytics.statusDistribution[newSdIndex], 
+            value: nextAnalytics.statusDistribution[newSdIndex].value + 1 
+          };
+        } else {
+          nextAnalytics.statusDistribution.push({ name: status, value: 1 });
+        }
+      }
+
+      return {
+        orders: state.orders.map((o) =>
+          o.id === orderId ? { ...o, orderStatus: status } : o
+        ),
+        analytics: nextAnalytics,
+        updatingOrderIds: new Set([...state.updatingOrderIds, orderId]),
+        error: null,
+      };
+    });
+
     try {
       await api.put(`/admin/orders/${orderId}/status`, { status });
-      // Refetch orders after update to reflect changes
-      const response = await api.get(`/admin/orders?page=1&limit=10`);
-      set({ orders: response.data.data.orders, isLoading: false });
+      // Success — just clear the loading indicator for this row
+      set((state) => {
+        const next = new Set(state.updatingOrderIds);
+        next.delete(orderId);
+        return { updatingOrderIds: next };
+      });
       return true;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to update order status', isLoading: false });
+      // Rollback to previous state on failure
+      set((state) => {
+        const next = new Set(state.updatingOrderIds);
+        next.delete(orderId);
+        return {
+          orders: prevOrders,
+          analytics: prevAnalytics,
+          updatingOrderIds: next,
+          error: error.response?.data?.message || 'Failed to update order status',
+        };
+      });
+      toast.error('Failed to update order status. Change has been reverted.');
       return false;
     }
-  }
+  },
 }));
 
 export default useAdminStore;

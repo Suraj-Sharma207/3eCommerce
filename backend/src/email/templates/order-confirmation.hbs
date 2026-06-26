@@ -1,92 +1,626 @@
-<h1>Thank You for Your Order!</h1>
-<p>Hello {{name}},</p>
-<p>Your order <strong>#{{orderNumber}}</strong> has been successfully placed. We are processing your items and will send a shipment notification as soon as they are on their way.</p>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+{{!-- <!-- Success Hero -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
   <tr>
-    <td style="font-size: 14px; color: #6B7280; padding-bottom: 8px;">Order Date: <strong>{{orderDate}}</strong></td>
-    <td align="right" style="font-size: 14px; color: #6B7280; padding-bottom: 8px;">Payment Method: <strong>{{paymentMethod}}</strong></td>
+    <td align="center" style="padding-bottom: 24px;">
+      <!-- Checkmark badge: use nested table for cross-client circle rendering -->
+
+      <h1 class="main-heading"
+        style="font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; line-height: 1.2;">
+        Thank You for Your Order!
+      </h1>
+      <p
+        style="font-size: 16px; line-height: 1.7; font-weight: 700; color: #5B5CEB; margin: 0 0 8px 0; font-family: Helvetica, Arial, sans-serif;">
+        Hi {{name}},
+      </p>
+      <p
+        style="font-size: 16px; line-height: 1.7; color: #4B5563; margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif;">
+        We've received your order and it's now being processed.
+      </p>
+      <p
+        style="font-size: 16px; line-height: 1.7; color: #4B5563; margin: 0 0 24px 0; font-family: Helvetica, Arial, sans-serif;">
+        You'll receive a confirmation email shortly once your order ships.
+      </p>
+
+      <!-- Order ID Pill -->
+      <table cellpadding="0" cellspacing="0" border="0" align="center"
+        style="background-color: #F5F3FF; border-radius: 8px;">
+        <tr>
+          <td
+            style="padding: 12px 24px; font-size: 14px; color: #111827; font-weight: 600; font-family: Helvetica, Arial, sans-serif;">
+            Order ID: <span style="color: #5B5CEB;">#{{orderNumber}}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
   </tr>
 </table>
 
-<div class="divider"></div>
-
-<h3>Shipping Address</h3>
-<p style="background-color: #FAFAFC; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.5; color: #4B5563; margin-bottom: 24px;">
-  <strong>{{shippingAddress.recipientName}}</strong><br>
-  {{shippingAddress.street}}<br>
-  {{#if shippingAddress.addressLine2}}{{shippingAddress.addressLine2}}<br>{{/if}}
-  {{shippingAddress.city}}, {{shippingAddress.state}} {{shippingAddress.zipCode}}<br>
-  {{shippingAddress.country}}<br>
-  Phone: {{shippingAddress.phoneNumber}}
-</p>
-
-<h3>Order Summary</h3>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-  <thead>
-    <tr style="border-bottom: 2px solid #E5E7EB;">
-      <th align="left" style="padding: 8px 0; font-size: 13px; text-transform: uppercase; color: #9CA3AF;">Item</th>
-      <th align="center" style="padding: 8px 0; font-size: 13px; text-transform: uppercase; color: #9CA3AF;">Qty</th>
-      <th align="right" style="padding: 8px 0; font-size: 13px; text-transform: uppercase; color: #9CA3AF;">Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each items}}
-    <tr style="border-bottom: 1px solid #F3F4F6;">
-      <td style="padding: 12px 0;">
-        <table cellpadding="0" cellspacing="0">
-          <tr>
-            {{#if product.thumbnail}}
-            <td style="padding-right: 12px;">
-              <img src="{{product.thumbnail}}" alt="{{product.name}}" width="48" height="48" style="border-radius: 8px; object-fit: cover; border: 1px solid #E5E7EB;">
-            </td>
-            {{/if}}
-            <td>
-              <span style="font-size: 14px; font-weight: 600; color: #111827;">{{product.name}}</span><br>
-              <span style="font-size: 12px; color: #9CA3AF;">SKU: {{product.sku}}</span>
-            </td>
-          </tr>
-        </table>
-      </td>
-      <td align="center" style="padding: 12px 0; font-size: 14px; color: #4B5563;">{{quantity}}</td>
-      <td align="right" style="padding: 12px 0; font-size: 14px; font-weight: 600; color: #111827;">{{formattedPrice}}</td>
-    </tr>
-    {{/each}}
-  </tbody>
-</table>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px; font-size: 14px; color: #4B5563;">
+<!-- Spacer -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td style="padding: 6px 0;">Subtotal</td>
-    <td align="right" style="padding: 6px 0; font-weight: 600;">{{formattedSubtotal}}</td>
-  </tr>
-  {{#if discountAmount}}
-  <tr>
-    <td style="padding: 6px 0; color: #DC2626;">Discount</td>
-    <td align="right" style="padding: 6px 0; font-weight: 600; color: #DC2626;">-{{formattedDiscount}}</td>
-  </tr>
-  {{/if}}
-  <tr>
-    <td style="padding: 6px 0;">Shipping</td>
-    <td align="right" style="padding: 6px 0; font-weight: 600;">{{formattedShipping}}</td>
-  </tr>
-  <tr>
-    <td style="padding: 6px 0;">GST / Tax</td>
-    <td align="right" style="padding: 6px 0; font-weight: 600;">{{formattedTax}}</td>
-  </tr>
-  <tr style="font-size: 16px; color: #111827; font-weight: 800; border-top: 2px solid #E5E7EB;">
-    <td style="padding: 16px 0 0 0;">Grand Total</td>
-    <td align="right" style="padding: 16px 0 0 0; color: #4C4DDC;">{{formattedTotal}}</td>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
   </tr>
 </table>
 
-{{> button url=trackUrl text="Track Your Order"}}
-
-<table width="100%" cellpadding="0" cellspacing="0" style="text-align: center; margin-top: 12px;">
+<!-- Order Summary Table -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: Helvetica, Arial, sans-serif;">
   <tr>
     <td>
-      <a href="{{shopUrl}}" style="color: #6B7280; font-size: 14px; font-weight: 600; text-decoration: none; margin: 0 16px;">Continue Shopping</a>
-      <a href="{{invoiceUrl}}" style="color: #6B7280; font-size: 14px; font-weight: 600; text-decoration: none; margin: 0 16px;">Download Invoice</a>
+      <h3
+        style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif;">
+        Order Items
+      </h3>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <!-- Header row (Desktop only) -->
+        <tr class="mobile-hide">
+          <th align="left"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #9CA3AF; border-bottom: 1px solid #E5E7EB;">
+            Item</th>
+          <th align="center"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #9CA3AF; border-bottom: 1px solid #E5E7EB; width: 80px; text-align: center;">
+            Qty</th>
+          <th align="right"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #9CA3AF; border-bottom: 1px solid #E5E7EB; width: 100px; text-align: right;">
+            Price</th>
+        </tr>
+
+        {{#each items}}
+        <!-- Separator Above Row (Desktop only, mobile will use bottom border on stack) -->
+        <tr class="mobile-hide">
+          <td colspan="3" style="border-top: 1px solid #E5E7EB; padding-top: 12px;"></td>
+        </tr>
+
+        <tr class="item-row">
+          <!-- Image + Product Name + SKU -->
+          <td class="mobile-stack" valign="middle" style="padding: 12px 0; vertical-align: middle; text-align: left;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" class="mobile-center-table">
+              <tr>
+                {{#if product.thumbnail}}
+                <td width="88" style="padding-right: 16px; vertical-align: middle;" class="mobile-stack">
+                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72"
+                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0;" />
+                </td>
+                {{/if}}
+                <td valign="middle" style="vertical-align: middle; text-align: left;" class="mobile-stack">
+                  <p
+                    style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif;">
+                    {{product.name}}</p>
+                  <p style="margin: 0; font-size: 14px; color: #9CA3AF; font-family: Helvetica, Arial, sans-serif;">SKU:
+                    {{product.sku}}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <!-- Qty -->
+          <td class="mobile-stack" valign="middle" align="center"
+            style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #111827; vertical-align: middle; width: 80px; text-align: center;">
+            <span class="mobile-label"
+              style="display: none; color: #9CA3AF; font-size: 14px; font-weight: 400; margin-right: 4px;">Qty:
+            </span>{{quantity}}
+          </td>
+
+          <!-- Price -->
+          <td class="mobile-stack" valign="middle" align="right"
+            style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #5B5CEB; vertical-align: middle; width: 100px; text-align: right;">
+            <span class="mobile-label"
+              style="display: none; color: #9CA3AF; font-size: 14px; font-weight: 400; margin-right: 4px;">Price:
+            </span>{{formattedPrice}}
+          </td>
+        </tr>
+
+        <!-- Separator Below Row (Mobile only, separates stacked items) -->
+        <tr style="display: none;" class="mobile-stack">
+          <td colspan="3" style="border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;"></td>
+        </tr>
+        {{/each}}
+
+        <!-- Final Divider below all rows (Desktop only) -->
+        <tr class="mobile-hide">
+          <td colspan="3" style="border-top: 1px solid #E5E7EB;"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Spacer -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<!-- Totals Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="font-family: Helvetica, Arial, sans-serif; background-color: #F9FAFB; border-radius: 12px;">
+  <tr>
+    <td style="padding: 24px;" class="shipping-card">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 14px; line-height: 1.6;">
+        <tr>
+          <td style="color: #9CA3AF; font-weight: 700; padding-bottom: 8px;">Subtotal</td>
+          <td align="right" style="color: #111827; font-weight: 700; padding-bottom: 8px;">{{formattedSubtotal}}</td>
+        </tr>
+        {{#if discountAmount}}
+        <tr>
+          <td style="color: #9CA3AF; font-weight: 700; padding-bottom: 8px;">Discount</td>
+          <td align="right" style="color: #DC2626; font-weight: 700; padding-bottom: 8px;">-{{formattedDiscount}}</td>
+        </tr>
+        {{/if}}
+        <tr>
+          <td style="color: #9CA3AF; font-weight: 700; padding-bottom: 8px;">Shipping</td>
+          <td align="right" style="color: #111827; font-weight: 700; padding-bottom: 8px;">{{formattedShipping}}</td>
+        </tr>
+        <tr>
+          <td style="color: #9CA3AF; font-weight: 700; padding-bottom: 16px; border-bottom: 1px solid #E5E7EB;">GST /
+            Tax</td>
+          <td align="right"
+            style="color: #111827; font-weight: 700; padding-bottom: 16px; border-bottom: 1px solid #E5E7EB;">
+            {{formattedTax}}</td>
+        </tr>
+
+        <!-- Grand Total Card nested -->
+        <tr>
+          <td colspan="2" style="padding-top: 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+              style="background-color: #0B1533; border-radius: 8px;" class="grand-total-card">
+              <tr>
+                <td class="mobile-stack"
+                  style="padding: 16px 20px; font-size: 14px; color: #9CA3AF; font-weight: 700; text-align: left; font-family: Helvetica, Arial, sans-serif;">
+                  Grand Total
+                </td>
+                <td class="mobile-stack" align="right"
+                  style="padding: 16px 20px; font-size: 18px; color: #ffffff; font-weight: 800; text-align: right; font-family: Helvetica, Arial, sans-serif;">
+                  {{formattedTotal}}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Spacer -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<!-- Shipping Address Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td>
+      <!-- Outer card wrapper: dark navy, rounded corners via nested table -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="background-color: #0F1D3E; border-radius: 12px; border: 1px solid #1E3A5F;">
+        <tr>
+          <td style="padding: 24px;" class="shipping-card">
+
+            <!-- Label row with icon -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 14px;">
+              <tr>
+                <td width="20" valign="top" style="padding-right: 8px; vertical-align: top; padding-top: 1px;">
+                  <!-- Location pin inline SVG -->
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="#5B5CEB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="display:block; margin-top:2px;">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </td>
+                <td valign="top"
+                  style="font-size: 13px; font-weight: 700; color: #9CA3AF; font-family: Helvetica, Arial, sans-serif; letter-spacing: 0.5px; text-transform: uppercase; vertical-align: top; padding-top: 1px;">
+                  Shipping Address
+                </td>
+              </tr>
+            </table>
+
+            <!-- Address rows — each on its own table row for proper spacing -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              {{#if shippingAddress.recipientName}}
+              <tr>
+                <td
+                  style="font-size: 16px; font-weight: 700; color: #ffffff; font-family: Helvetica, Arial, sans-serif; padding-bottom: 6px; line-height: 1.4;">
+                  {{shippingAddress.recipientName}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.street}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #D1D5DB; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.street}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.addressLine2}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #D1D5DB; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.addressLine2}}
+                </td>
+              </tr>
+              {{/if}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #D1D5DB; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{#if shippingAddress.city}}{{shippingAddress.city}},&nbsp;{{/if}}{{#if
+                  shippingAddress.state}}{{shippingAddress.state}}&nbsp;{{/if}}{{#if
+                  shippingAddress.zipCode}}{{shippingAddress.zipCode}}{{/if}}
+                </td>
+              </tr>
+              {{#if shippingAddress.country}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #D1D5DB; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.country}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.phoneNumber}}
+              <tr>
+                <td
+                  style="font-size: 13px; color: #9CA3AF; font-family: Helvetica, Arial, sans-serif; padding-top: 6px; line-height: 1.5;">
+                  {{shippingAddress.phoneNumber}}
+                </td>
+              </tr>
+              {{/if}}
+            </table>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Spacer -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<!-- Primary CTA -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td align="center">
+      <!-- Email safe button -->
+      <table border="0" cellspacing="0" cellpadding="0" width="240" class="cta-button-table"
+        style="width: 240px; margin: 0 auto;">
+        <tr>
+          <td align="center" style="border-radius: 12px; background-color: #5B5CEB;">
+            <a href="{{trackUrl}}" target="_blank"
+              style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 12px; padding: 14px 0; border: 1px solid #5B5CEB; display: block; font-weight: 600; text-align: center;">
+              View My Orders
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Spacer -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<!-- Help Section -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td align="center" style="font-size: 14px; color: #6B7280; padding-top: 24px; border-top: 1px solid #E5E7EB;">
+      Need help? <a href="mailto:{{supportEmail}}" style="color: #5B5CEB; text-decoration: underline;">Contact our
+        support team.</a>
+    </td>
+  </tr>
+</table> --}}
+
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td align="center" style="padding-bottom: 24px;">
+      <h1 class="main-heading"
+        style="font-size: 32px; font-weight: 700; color: #111827; margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; line-height: 1.2;">
+        Thank You for Your Order!
+      </h1>
+      <p
+        style="font-size: 16px; line-height: 1.7; font-weight: 700; color: #111827; margin: 0 0 8px 0; font-family: Helvetica, Arial, sans-serif;">
+        Hi {{name}},
+      </p>
+      <p
+        style="font-size: 16px; line-height: 1.7; color: #4B5563; margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif;">
+        We've received your order and it's now being processed.
+      </p>
+      <p
+        style="font-size: 16px; line-height: 1.7; color: #4B5563; margin: 0 0 24px 0; font-family: Helvetica, Arial, sans-serif;">
+        You'll receive a confirmation email shortly once your order ships.
+      </p>
+
+      <table cellpadding="0" cellspacing="0" border="0" align="center"
+        style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px;">
+        <tr>
+          <td
+            style="padding: 10px 20px; font-size: 14px; color: #4B5563; font-weight: 600; font-family: Helvetica, Arial, sans-serif;">
+            Order ID: <span style="color: #111827;">#{{orderNumber}}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td>
+      <h3
+        style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif;">
+        Order Items
+      </h3>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr class="mobile-hide">
+          <th align="left"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #6B7280; border-bottom: 1px solid #E5E7EB;">
+            Item
+          </th>
+          <th align="center"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #6B7280; border-bottom: 1px solid #E5E7EB; width: 80px; text-align: center;">
+            Qty
+          </th>
+          <th align="right"
+            style="padding: 12px 0; font-size: 14px; font-weight: 700; color: #6B7280; border-bottom: 1px solid #E5E7EB; width: 100px; text-align: right;">
+            Price
+          </th>
+        </tr>
+
+        {{#each items}}
+        <tr class="mobile-hide">
+          <td colspan="3" style="border-top: 1px solid #E5E7EB; padding-top: 12px;"></td>
+        </tr>
+
+        <tr class="item-row">
+          <td class="mobile-stack" valign="middle" style="padding: 12px 0; vertical-align: middle; text-align: left;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" class="mobile-center-table">
+              <tr>
+                {{#if product.thumbnail}}
+                <td width="88" style="padding-right: 16px; vertical-align: middle;" class="mobile-stack">
+                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72"
+                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0;" />
+                </td>
+                {{/if}}
+                <td valign="middle" style="vertical-align: middle; text-align: left;" class="mobile-stack">
+                  <p
+                    style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif;">
+                    {{product.name}}
+                  </p>
+                  <p style="margin: 0; font-size: 14px; color: #6B7280; font-family: Helvetica, Arial, sans-serif;">
+                    SKU: {{product.sku}}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <td class="mobile-stack" valign="middle" align="center"
+            style="padding: 12px 0; font-size: 16px; font-weight: 600; color: #111827; vertical-align: middle; width: 80px; text-align: center;">
+            <span class="mobile-label"
+              style="display: none; color: #6B7280; font-size: 14px; font-weight: 400; margin-right: 4px;">Qty:</span>
+            {{quantity}}
+          </td>
+
+          <td class="mobile-stack" valign="middle" align="right"
+            style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #111827; vertical-align: middle; width: 100px; text-align: right;">
+            <span class="mobile-label"
+              style="display: none; color: #6B7280; font-size: 14px; font-weight: 400; margin-right: 4px;">Price:</span>
+            {{formattedPrice}}
+          </td>
+        </tr>
+
+        <tr style="display: none;" class="mobile-stack">
+          <td colspan="3" style="border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;"></td>
+        </tr>
+        {{/each}}
+
+        <tr class="mobile-hide">
+          <td colspan="3" style="border-top: 1px solid #E5E7EB;"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="font-family: Helvetica, Arial, sans-serif; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px;">
+  <tr>
+    <td style="padding: 24px;" class="shipping-card">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 14px; line-height: 1.6;">
+        <tr>
+          <td style="color: #6B7280; font-weight: 600; padding-bottom: 8px;">Subtotal</td>
+          <td align="right" style="color: #111827; font-weight: 600; padding-bottom: 8px;">{{formattedSubtotal}}</td>
+        </tr>
+        {{#if discountAmount}}
+        <tr>
+          <td style="color: #6B7280; font-weight: 600; padding-bottom: 8px;">Discount</td>
+          <td align="right" style="color: #111827; font-weight: 600; padding-bottom: 8px;">-{{formattedDiscount}}</td>
+        </tr>
+        {{/if}}
+        <tr>
+          <td style="color: #6B7280; font-weight: 600; padding-bottom: 8px;">Shipping</td>
+          <td align="right" style="color: #111827; font-weight: 600; padding-bottom: 8px;">{{formattedShipping}}</td>
+        </tr>
+        <tr>
+          <td style="color: #6B7280; font-weight: 600; padding-bottom: 16px; border-bottom: 1px solid #E5E7EB;">GST /
+            Tax</td>
+          <td align="right"
+            style="color: #111827; font-weight: 600; padding-bottom: 16px; border-bottom: 1px solid #E5E7EB;">
+            {{formattedTax}}</td>
+        </tr>
+
+        <tr>
+          <td colspan="2" style="padding-top: 16px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+              style="background-color: #F9FAFB; border-radius: 8px;" class="grand-total-card">
+              <tr>
+                <td class="mobile-stack"
+                  style="padding: 16px 20px; font-size: 14px; color: #4B5563; font-weight: 700; text-align: left; font-family: Helvetica, Arial, sans-serif;">
+                  Grand Total
+                </td>
+                <td class="mobile-stack" align="right"
+                  style="padding: 16px 20px; font-size: 18px; color: #111827; font-weight: 800; text-align: right; font-family: Helvetica, Arial, sans-serif;">
+                  {{formattedTotal}}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB;">
+        <tr>
+          <td style="padding: 24px;" class="shipping-card">
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 14px;">
+              <tr>
+                <td width="20" valign="top" style="padding-right: 8px; vertical-align: top; padding-top: 1px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="#111827" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="display:block; margin-top:2px;">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </td>
+                <td valign="top"
+                  style="font-size: 13px; font-weight: 700; color: #4B5563; font-family: Helvetica, Arial, sans-serif; letter-spacing: 0.5px; text-transform: uppercase; vertical-align: top; padding-top: 1px;">
+                  Shipping Address
+                </td>
+              </tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              {{#if shippingAddress.recipientName}}
+              <tr>
+                <td
+                  style="font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif; padding-bottom: 6px; line-height: 1.4;">
+                  {{shippingAddress.recipientName}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.street}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #4B5563; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.street}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.addressLine2}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #4B5563; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.addressLine2}}
+                </td>
+              </tr>
+              {{/if}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #4B5563; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{#if shippingAddress.city}}{{shippingAddress.city}},&nbsp;{{/if}}{{#if
+                  shippingAddress.state}}{{shippingAddress.state}}&nbsp;{{/if}}{{#if
+                  shippingAddress.zipCode}}{{shippingAddress.zipCode}}{{/if}}
+                </td>
+              </tr>
+              {{#if shippingAddress.country}}
+              <tr>
+                <td
+                  style="font-size: 14px; color: #4B5563; font-family: Helvetica, Arial, sans-serif; padding-bottom: 3px; line-height: 1.5;">
+                  {{shippingAddress.country}}
+                </td>
+              </tr>
+              {{/if}}
+              {{#if shippingAddress.phoneNumber}}
+              <tr>
+                <td
+                  style="font-size: 13px; color: #6B7280; font-family: Helvetica, Arial, sans-serif; padding-top: 6px; line-height: 1.5;">
+                  {{shippingAddress.phoneNumber}}
+                </td>
+              </tr>
+              {{/if}}
+            </table>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="32" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+{{!-- <table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td align="center">
+      <a href="{{trackUrl}}" target="_blank"
+        style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #111827; text-decoration: underline; font-weight: 700; padding: 12px 24px; display: inline-block;">
+        View My Orders &rarr;
+      </a>
+    </td>
+  </tr>
+</table> --}}
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td height="24" class="section-spacer" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+  </tr>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
+  <tr>
+    <td align="center" style="font-size: 14px; color: #6B7280; padding-top: 24px; border-top: 1px solid #E5E7EB;">
+      Need help? <a href="mailto:{{supportEmail}}"
+        style="color: #111827; text-decoration: underline; font-weight: 600;">Contact our support team.</a>
     </td>
   </tr>
 </table>

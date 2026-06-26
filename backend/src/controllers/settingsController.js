@@ -9,7 +9,19 @@ class SettingsController {
   async handleGet(req, res, domain) {
     try {
       const data = await settingsService.getSettingsByKeys([domain]);
-      return successResponse(res, 'Settings fetched successfully', data[domain] || {});
+      let responseData = data[domain] || {};
+      
+      // Never expose passwords or secrets to frontend
+      if (domain === 'smtp') {
+        if (responseData.password) {
+          responseData.passwordConfigured = true;
+          delete responseData.password;
+        } else {
+          responseData.passwordConfigured = false;
+        }
+      }
+      
+      return successResponse(res, 'Settings fetched successfully', responseData);
     } catch (error) {
       console.error(`Error fetching ${domain} settings:`, error);
       return errorResponse(res, `Failed to fetch ${domain} settings`);
@@ -22,7 +34,10 @@ class SettingsController {
       const oldDataRaw = await settingsService.getSettingsByKeys([domain]);
       const oldData = oldDataRaw[domain] || {};
 
-      const newData = await settingsService.updateSettings(domain, req.body);
+      const dataToSave = { ...req.body };
+      // Settings service will natively preserve existing encrypted password if dataToSave.password is omitted/empty.
+
+      const newData = await settingsService.updateSettings(domain, dataToSave);
 
       // Log Audit
       await logAudit({
@@ -33,7 +48,17 @@ class SettingsController {
         ipAddress: req.ip || req.connection.remoteAddress
       });
 
-      return successResponse(res, 'Settings updated successfully', newData[domain]);
+      let responseData = newData[domain] || {};
+      if (domain === 'smtp') {
+        if (responseData.password) {
+          responseData.passwordConfigured = true;
+          delete responseData.password;
+        } else {
+          responseData.passwordConfigured = false;
+        }
+      }
+
+      return successResponse(res, 'Settings updated successfully', responseData);
     } catch (error) {
       console.error(`Error updating ${domain} settings:`, error);
       return errorResponse(res, `Failed to update ${domain} settings`);
@@ -61,30 +86,119 @@ class SettingsController {
 
   // Test SMTP connection
   async testSmtp(req, res) {
+    let { host, port, secure, user, password, fromEmail } = req.body;
+    const toEmail = req.user?.email;
+
+    // Use DB password if it's omitted
+    if (!password || password.trim() === '') {
+      const dbSettings = await settingsService.getSettingsByKeys(['smtp']);
+      if (dbSettings.smtp?.password) {
+        password = dbSettings.smtp.password;
+      }
+    }
+
+    // Validation
+    if (!host) return errorResponse(res, 'SMTP configuration incomplete: missing host', [], 400);
+    if (!port) return errorResponse(res, 'SMTP configuration incomplete: missing port', [], 400);
+    if (!user) return errorResponse(res, 'SMTP configuration incomplete: missing username', [], 400);
+    if (!password) return res.status(400).json({ success: false, message: 'SMTP password has not been configured.' });
+    if (!fromEmail) return errorResponse(res, 'SMTP configuration incomplete: missing sender email', [], 400);
+    if (!toEmail) return errorResponse(res, 'Recipient email missing', [], 400);
+
+    let transporter;
     try {
-      const { host, port, secure, user, password, fromEmail } = req.body;
-      
-      const transporter = nodemailer.createTransport({
+      transporter = nodemailer.createTransport({
         host,
         port: parseInt(port),
         secure: secure === 'true' || secure === true,
         auth: { user, pass: password }
       });
+    } catch (err) {
+      console.error('[SMTP TEST] Failed to create transporter:', err);
+      return errorResponse(res, 'Failed to create SMTP transporter', [], 400);
+    }
 
+    try {
       await transporter.verify();
+    } catch (verifyError) {
+      console.error(`[SMTP TEST] Verification failed. Host: ${host}:${port}, Secure: ${secure}, User: ${user}, PassLength: ${password?.length || 0}`);
+      
+      let reason = verifyError.message;
+      if (verifyError.responseCode === 535 || reason.includes('535') || reason.includes('Username and Password not accepted')) {
+        reason = 'Invalid Gmail App Password or Username and Password not accepted';
+      } else if (verifyError.code === 'ETIMEDOUT') {
+        reason = 'Connection timeout';
+      }
+      
+      return errorResponse(res, reason, [], 400);
+    }
 
-      // Optionally send a test email
+    try {
       await transporter.sendMail({
         from: `"${fromEmail}" <${user}>`,
-        to: req.user.email,
+        to: toEmail,
         subject: 'SMTP Test Successful',
         text: 'Your SMTP configuration is working correctly.'
       });
-
       return successResponse(res, 'SMTP connection verified successfully', null);
+    } catch (sendError) {
+      console.error(`[SMTP TEST] Send failed. Host: ${host}:${port}, User: ${user}, PassLength: ${password?.length || 0}`, sendError);
+      return errorResponse(res, `Failed to send test email: ${sendError.message}`, [], 400);
+    }
+  }
+
+  // Diagnostic Endpoint
+  async diagnosticSmtp(req, res) {
+    try {
+      const { default: smtpProvider } = await import('../email/providers/smtpProvider.js');
+      
+      const config = await smtpProvider.getLatestSmtpConfig();
+      const isFallback = config.source === 'env';
+      
+      const diagnostics = {
+        configurationLoaded: true,
+        configurationSource: isFallback ? 'Environment Variables (.env)' : 'Database (SystemSettings)',
+        passwordExists: !!config.password,
+        passwordDecryptsSuccessfully: !!config.password && !isFallback, // Decrypted successfully if it exists in DB
+        transporterCreation: false,
+        smtpConnection: false,
+        gmailAuthentication: false,
+        testEmailDelivery: false
+      };
+
+      try {
+        const transporter = nodemailer.createTransport({
+          host: config.host,
+          port: config.port,
+          secure: config.secure,
+          auth: { user: config.user, pass: config.password }
+        });
+        diagnostics.transporterCreation = true;
+
+        await transporter.verify();
+        diagnostics.smtpConnection = true;
+        diagnostics.gmailAuthentication = true;
+
+        const toEmail = req.user?.email || 'admin@luxehome.com';
+        await transporter.sendMail({
+          from: `"${config.fromEmail}" <${config.user}>`,
+          to: toEmail,
+          subject: 'LuxeHome SMTP Diagnostics Test',
+          text: 'This is a diagnostic email from the LuxeHome SMTP test suite.'
+        });
+        diagnostics.testEmailDelivery = true;
+        
+        return successResponse(res, 'SMTP Diagnostics completed successfully', diagnostics);
+      } catch (err) {
+        let reason = err.message;
+        if (err.responseCode === 535 || reason.includes('535') || reason.includes('Username and Password not accepted')) {
+          reason = 'Invalid Gmail App Password or Username and Password not accepted';
+          diagnostics.gmailAuthentication = false;
+        }
+        return errorResponse(res, `SMTP Diagnostics failed: ${reason}`, diagnostics, 400);
+      }
     } catch (error) {
-      console.error('SMTP test failed:', error);
-      return errorResponse(res, `SMTP test failed: ${error.message}`, [], 400);
+      return errorResponse(res, `Diagnostics system error: ${error.message}`, null, 500);
     }
   }
 
@@ -102,6 +216,7 @@ class SettingsController {
         currency: storeConfig.currency,
         currencySymbol: storeConfig.currencySymbol,
         stripePublicKey: paymentConfig.stripePublicKey,
+        lowStockThreshold: storeConfig.lowStockThreshold || 5,
       };
 
       return successResponse(res, 'Public config fetched', publicConfig);

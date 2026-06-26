@@ -20,9 +20,11 @@ import { formatPrice } from '../../utils/currency';
 const ProductDetail = () => {
   const { id } = useParams();
   const { product, isLoading, error, fetchProductById } = useProductStore();
-  const { addToCart, isLoading: isCartLoading } = useCartStore();
+  const { addToCart, loadingProducts } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
+  
+  const isCartLoading = product ? (loadingProducts[product.id] || false) : false;
   
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -33,7 +35,7 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!isAuthenticated) return alert('Please login first');
-    addToCart(product.id, quantity);
+    addToCart(product.id, quantity, product.name);
   };
 
   const handleToggleWishlist = () => {
@@ -117,7 +119,21 @@ const ProductDetail = () => {
           </h1>
           
           <div className="flex items-center gap-4 mb-6">
-            <span className="text-2xl font-extrabold text-text-brand-600">{formatPrice(product.finalPrice || product.price)}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-extrabold text-text-brand-600">
+                {formatPrice(product.finalPrice || product.price)}
+              </span>
+              {product.discountPercentage > 0 && (
+                <>
+                  <span className="text-lg text-text-muted line-through font-medium">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="bg-danger-50 text-danger-700 border border-danger-200 text-xs font-bold px-2 py-1 rounded">
+                    {product.discountPercentage}% OFF
+                  </span>
+                </>
+              )}
+            </div>
             <div className="w-1 h-1 rounded-full bg-secondary-300"></div>
             <RatingDisplay rating={rating} count={reviewsCount} />
           </div>

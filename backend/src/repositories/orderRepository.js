@@ -75,13 +75,11 @@ class OrderRepository {
       for (const item of cart.items) {
         const product = productMap.get(item.productId);
         const newStock = product.stock - item.quantity;
-        const isSoldOut = newStock <= 0;
 
         await tx.product.update({
           where: { id: product.id },
           data: {
-            stock: newStock,
-            active: isSoldOut ? false : product.active
+            stock: Math.max(0, newStock)
           }
         });
       }

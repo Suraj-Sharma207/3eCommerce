@@ -11,7 +11,7 @@ import { Trash2, ArrowRight, ShieldCheck, CreditCard, AlertTriangle } from 'luci
 import { formatPrice } from '../../utils/currency';
 
 const CartPage = () => {
-  const { cart, isLoading, fetchCart, updateQuantity, removeFromCart } = useCartStore();
+  const { cart, isLoading, updatingItemIds, fetchCart, updateQuantity, removeFromCart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
@@ -93,14 +93,14 @@ const CartPage = () => {
               <div className="col-span-1 text-center"></div>
             </div>
 
-            <div className="divide-y divide-secondary-100">
-              {validItems.map((item) => {
+            <div className="divide-y divide-secondary-100">              {validItems.map((item) => {
                 const product = item.product;
                 const itemPrice = product.finalPrice || product.price;
                 const isUnavailable = !product.active || product.stock === 0;
+                const isItemUpdating = updatingItemIds?.has(item.productId);
                 
                 return (
-                <div key={item.id} className={`p-4 sm:p-6 flex flex-col sm:grid sm:grid-cols-12 gap-4 items-center group ${isUnavailable ? 'opacity-60 bg-surface-background' : ''}`}>
+                <div key={item.id} className={`p-4 sm:p-6 flex flex-col sm:grid sm:grid-cols-12 gap-4 items-center group ${isUnavailable ? 'opacity-60 bg-surface-background' : ''} ${isItemUpdating ? 'opacity-70 pointer-events-none' : ''} transition-opacity duration-150`}>
                   
                   {/* Product Info */}
                   <div className="col-span-6 flex items-center gap-4 w-full">
@@ -127,6 +127,7 @@ const CartPage = () => {
                       quantity={item.quantity} 
                       setQuantity={(q) => updateQuantity(item.productId, q)} 
                       max={product.stock}
+                      disabled={isItemUpdating}
                     />
                   </div>
 
@@ -142,7 +143,8 @@ const CartPage = () => {
                   <div className="col-span-1 w-full sm:w-auto flex justify-end">
                     <button 
                       onClick={() => removeFromCart(item.productId)}
-                      className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+                      disabled={isItemUpdating}
+                      className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label="Remove item"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -150,7 +152,7 @@ const CartPage = () => {
                   </div>
 
                 </div>
-              )})}
+                )})}
             </div>
           </div>
         </div>

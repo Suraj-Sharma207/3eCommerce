@@ -34,20 +34,35 @@ class SettingsService {
 
   async updateSettings(domain, data) {
     let finalData = { ...data };
+    
+    // Fetch existing raw record from DB to preserve encrypted values
+    const existingRecord = await prisma.systemSettings.findUnique({
+      where: { key: domain }
+    });
+    const existingRawValue = existingRecord ? existingRecord.value : {};
 
-    // Encrypt sensitive fields
+    // Encrypt sensitive fields only if they are new (plain text)
     if (domain === 'payment') {
-      if (finalData.stripeSecretKey) {
+      if (finalData.stripeSecretKey && finalData.stripeSecretKey !== existingRawValue.stripeSecretKey) {
         finalData.stripeSecretKey = encrypt(finalData.stripeSecretKey);
+      } else if (!finalData.stripeSecretKey && existingRawValue.stripeSecretKey) {
+        finalData.stripeSecretKey = existingRawValue.stripeSecretKey;
       }
-      if (finalData.razorpayKeySecret) {
+      
+      if (finalData.razorpayKeySecret && finalData.razorpayKeySecret !== existingRawValue.razorpayKeySecret) {
         finalData.razorpayKeySecret = encrypt(finalData.razorpayKeySecret);
+      } else if (!finalData.razorpayKeySecret && existingRawValue.razorpayKeySecret) {
+        finalData.razorpayKeySecret = existingRawValue.razorpayKeySecret;
       }
     }
     
     if (domain === 'smtp') {
-      if (finalData.password) {
+      if (finalData.password && finalData.password !== existingRawValue.password) {
+        // Assume it's a plain text new password
         finalData.password = encrypt(finalData.password);
+      } else if (!finalData.password && existingRawValue.password) {
+        // Keep original encrypted password
+        finalData.password = existingRawValue.password;
       }
     }
 

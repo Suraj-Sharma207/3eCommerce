@@ -27,7 +27,7 @@ const ShippingTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('shipping', formData);
     if (success) {
-      toast.success('Shipping settings updated');
+      toast.success('Shipping settings updated.');
       setIsEditing(false);
     }
   };

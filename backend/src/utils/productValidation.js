@@ -8,7 +8,7 @@ export const validateProductInput = (data) => {
     const nameStr = String(data.name).trim();
     if (nameStr.length < 2 || nameStr.length > 100) {
       errors.name = 'Product name must be between 2 and 100 characters.';
-    } else if (!/^[A-Za-z0-9\s&'-]+$/.test(nameStr)) {
+    } else if (!/^[A-Za-z0-9\s&'.,()-]+$/.test(nameStr)) {
       errors.name = 'Please enter a valid product name.';
     }
   }
@@ -28,14 +28,14 @@ export const validateProductInput = (data) => {
     errors.category = 'Please select a valid category from the list.';
   }
 
-  // 3. Brand
+  // 3. Brand — allow letters, numbers, spaces, and common punctuation
   if (!data.brand) {
     errors.brand = 'Please enter a valid brand name.';
   } else {
     const brandStr = String(data.brand).trim();
     if (brandStr.length < 2 || brandStr.length > 50) {
       errors.brand = 'Brand must be between 2 and 50 characters.';
-    } else if (!/^[A-Za-z\s]+$/.test(brandStr)) {
+    } else if (!/^[A-Za-z0-9\s&'.,_-]+$/.test(brandStr)) {
       errors.brand = 'Please enter a valid brand name.';
     }
   }
@@ -68,19 +68,25 @@ export const validateProductInput = (data) => {
   if (!data.description) {
     errors.description = 'Description must be between 20 and 1000 characters.';
   } else {
-    const descStr = String(data.description).trim().replace(/<[^>]*>?/gm, ''); // remove html tags
+    const descStr = String(data.description).trim().replace(/<[^>]*>?/gm, '');
     if (descStr.length < 20 || descStr.length > 1000) {
       errors.description = 'Description must be between 20 and 1000 characters.';
     }
   }
 
-  // 8. Thumbnail URL
-  if (data.thumbnail && typeof data.thumbnail === 'string' && data.thumbnail.trim() !== '') {
-    const thumbStr = data.thumbnail.trim();
+  // 8. Thumbnail URL — check `thumbnail` field (Prisma schema field name)
+  const imageUrl = data.thumbnail;
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') {
+    const thumbStr = imageUrl.trim();
     try {
-      new URL(thumbStr);
-      if (!/\.(jpg|jpeg|png|webp|avif)(\?.*)?$/i.test(thumbStr)) {
-        errors.thumbnail = 'Please enter a valid image URL.';
+      const parsed = new URL(thumbStr);
+      const pathname = parsed.pathname.toLowerCase();
+      if (!/\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(pathname)) {
+        const knownImageDomains = ['unsplash.com', 'images.unsplash.com', 'cloudinary.com', 'imgix.net', 'imagekit.io', 'picsum.photos'];
+        const isKnownCDN = knownImageDomains.some(d => parsed.hostname.includes(d));
+        if (!isKnownCDN) {
+          errors.thumbnail = 'Please enter a valid image URL (.jpg, .png, .webp, .avif, .gif, .svg).';
+        }
       }
     } catch (_) {
       errors.thumbnail = 'Please enter a valid image URL.';

@@ -5,6 +5,26 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
+import Pagination from '../../components/ui/Pagination';
+
+const getLocalDateString = (daysToAdd = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + daysToAdd);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getNextDayString = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + 1);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const AdminOffers = () => {
   const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion } = usePromotionStore();
@@ -17,8 +37,8 @@ const AdminOffers = () => {
     type: 'PERCENTAGE_DISCOUNT',
     status: 'DRAFT',
     priority: 0,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
+    startDate: getLocalDateString(1),
+    endDate: getLocalDateString(31),
     applyTo: 'STORE',
     discountValue: 0,
     categories: '',
@@ -26,12 +46,19 @@ const AdminOffers = () => {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(promotions.length / itemsPerPage);
+  const paginatedPromotions = promotions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
     fetchPromotions();
   }, [fetchPromotions]);
 
   const handleOpenModal = (promo = null) => {
+    setErrors({});
     if (promo) {
       setEditingId(promo.id);
       setFormData({
@@ -50,6 +77,30 @@ const AdminOffers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Date validations
+    const errs = {};
+    const localToday = getLocalDateString(0);
+
+    if (!formData.startDate) {
+      errs.startDate = 'Start date is required.';
+    } else if (!editingId && formData.startDate <= localToday) {
+      errs.startDate = 'Start date must be in the future.';
+    }
+
+    if (!formData.endDate) {
+      errs.endDate = 'End date is required.';
+    } else if (formData.endDate <= localToday) {
+      errs.endDate = 'End date must be in the future.';
+    } else if (formData.startDate && formData.endDate <= formData.startDate) {
+      errs.endDate = 'End date must be after the start date.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
     const payload = {
       ...formData,
       categories: formData.categories ? formData.categories.split(',').map(c => c.trim()) : [],
@@ -61,7 +112,7 @@ const AdminOffers = () => {
       : await createPromotion(payload);
       
     if (success) {
-      toast.success(`Campaign ${editingId ? 'updated' : 'created'} successfully`);
+      toast.success(`Campaign ${editingId ? 'updated' : 'created'} successfully.`);
       setIsModalOpen(false);
     }
   };
@@ -69,7 +120,7 @@ const AdminOffers = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this campaign?')) {
       const success = await deletePromotion(id);
-      if (success) toast.success('Campaign deleted');
+      if (success) toast.success('Campaign deleted.');
     }
   };
 
@@ -107,7 +158,7 @@ const AdminOffers = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {promotions.map((promo) => (
+                {paginatedPromotions.map((promo) => (
                   <tr key={promo.id} className="hover:bg-surface-background transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-bold text-text-primary">{promo.name}</div>
@@ -144,6 +195,17 @@ const AdminOffers = () => {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        {totalPages > 0 && (
+          <div className="p-4 border-t border-border bg-surface-background">
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={(page) => setCurrentPage(page)} 
+            />
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? 'Edit Campaign' : 'Create Campaign'}>
@@ -178,8 +240,30 @@ const AdminOffers = () => {
             </div>
             <Input label="Priority (Higher = applied first)" type="number" value={formData.priority} onChange={(e) => setFormData({...formData, priority: e.target.value})} />
 
-            <Input label="Start Date" type="date" value={formData.startDate} onChange={(e) => setFormData({...formData, startDate: e.target.value})} required />
-            <Input label="End Date" type="date" value={formData.endDate} onChange={(e) => setFormData({...formData, endDate: e.target.value})} required />
+            <Input 
+              label="Start Date" 
+              type="date" 
+              value={formData.startDate} 
+              onChange={(e) => {
+                setFormData({...formData, startDate: e.target.value});
+                if (errors.startDate) setErrors(prev => ({ ...prev, startDate: '' }));
+              }} 
+              error={errors.startDate}
+              min={!editingId ? getLocalDateString(1) : undefined}
+              required 
+            />
+            <Input 
+              label="End Date" 
+              type="date" 
+              value={formData.endDate} 
+              onChange={(e) => {
+                setFormData({...formData, endDate: e.target.value});
+                if (errors.endDate) setErrors(prev => ({ ...prev, endDate: '' }));
+              }} 
+              error={errors.endDate}
+              min={formData.startDate ? getNextDayString(formData.startDate) : getLocalDateString(1)}
+              required 
+            />
             
             {formData.applyTo === 'CATEGORY' && (
               <div className="col-span-2">

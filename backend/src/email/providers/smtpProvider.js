@@ -15,24 +15,50 @@ class SmtpProvider extends EmailProvider {
    */
   async getLatestSmtpConfig() {
     try {
+      const { default: prisma } = await import('../../lib/prisma.js');
+      const rawRecord = await prisma.systemSettings.findUnique({ where: { key: 'smtp' } });
+      const encryptedLength = rawRecord?.value?.password ? rawRecord.value.password.length : 0;
+      
       const settings = await settingsService.getSettingsByKeys(['smtp']);
       const dbSmtp = settings.smtp;
 
-      if (dbSmtp && dbSmtp.host && dbSmtp.user) {
+      if (dbSmtp && dbSmtp.host && dbSmtp.user && dbSmtp.password) {
         return {
+          source: 'db',
           host: dbSmtp.host,
           port: parseInt(dbSmtp.port, 10),
           secure: dbSmtp.secure === true || dbSmtp.secure === 'true',
           user: dbSmtp.user,
           password: dbSmtp.password, // Decrypted automatically by SettingsService
-          fromEmail: dbSmtp.fromEmail || dbSmtp.user
+          fromEmail: dbSmtp.fromEmail || dbSmtp.user,
+          encryptedLength
         };
       }
     } catch (error) {
-      console.error('[SMTP PROVIDER] Failed to read SMTP configuration from database:', error);
+      console.error('[SMTP PROVIDER] Failed to read SMTP configuration from database:', error.message);
     }
 
-    return emailConfig.fallbackSmtp;
+    console.log('[SMTP PROVIDER] Database SMTP configuration incomplete or missing. Falling back to .env');
+    
+    const fallback = emailConfig.fallbackSmtp;
+    
+    // Extract actual email address from SMTP_FROM if formatted as "Name <email@domain.com>"
+    let parsedFrom = fallback.fromEmail;
+    if (parsedFrom.includes('<') && parsedFrom.includes('>')) {
+      const match = parsedFrom.match(/<([^>]+)>/);
+      if (match) parsedFrom = match[1];
+    }
+    
+    return {
+      source: 'env',
+      host: fallback.host,
+      port: fallback.port,
+      secure: fallback.secure,
+      user: fallback.user,
+      password: fallback.password,
+      fromEmail: parsedFrom,
+      encryptedLength: 0
+    };
   }
 
   /**
@@ -61,6 +87,15 @@ class SmtpProvider extends EmailProvider {
       }
     }
 
+    console.log(`[SMTP PROVIDER] Source: ${latestConfig.source === 'db' ? 'Database' : '.env'}`);
+    console.log(`[SMTP PROVIDER] Host: ${latestConfig.host}`);
+    console.log(`[SMTP PROVIDER] Port: ${latestConfig.port}`);
+    console.log(`[SMTP PROVIDER] Secure: ${latestConfig.secure}`);
+    console.log(`[SMTP PROVIDER] Username: ${latestConfig.user}`);
+    console.log(`[SMTP PROVIDER] Password Exists: ${latestConfig.password ? 'Yes' : 'No'}`);
+    console.log(`[SMTP PROVIDER] Encrypted Password Length: ${latestConfig.encryptedLength}`);
+    console.log(`[SMTP PROVIDER] Decrypted Password Length: ${latestConfig.password ? latestConfig.password.length : 0}`);
+    
     console.log(`[SMTP PROVIDER] Establishing new pooled SMTP transporter for ${latestConfig.host}:${latestConfig.port}`);
     
     const transporter = nodemailer.createTransport({
@@ -79,9 +114,10 @@ class SmtpProvider extends EmailProvider {
 
     try {
       await transporter.verify();
-      console.log('[SMTP PROVIDER] SMTP Connection pool verified successfully.');
+      console.log('[SMTP PROVIDER] Transport Verification Result: SUCCESS');
     } catch (verifyError) {
-      console.error('[SMTP PROVIDER] SMTP Connection pool verification failed:', verifyError.message);
+      console.error('[SMTP PROVIDER] Transport Verification Result: FAILED');
+      console.error('[SMTP PROVIDER] Reason:', verifyError.message);
       this.transporter = null;
       this.cachedConfigHash = null;
       throw verifyError;

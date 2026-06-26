@@ -5,6 +5,8 @@ const useCustomerStore = create((set, get) => ({
   customers: [],
   selectedCustomer: null,
   isLoading: false,
+  // Per-customer loading: Set of customer IDs currently being updated
+  updatingCustomerIds: new Set(),
   error: null,
   searchQuery: '',
   pagination: {
@@ -56,23 +58,40 @@ const useCustomerStore = create((set, get) => ({
   },
 
   updateCustomerStatus: async (id, active) => {
-    set({ isLoading: true, error: null });
+    const prevCustomers = get().customers;
+    const prevSelected = get().selectedCustomer;
+
+    // Optimistic update — patch only the matching customer row, no global loading
+    set((state) => ({
+      updatingCustomerIds: new Set([...state.updatingCustomerIds, id]),
+      customers: state.customers.map((c) => (c.id === id ? { ...c, active } : c)),
+      selectedCustomer:
+        state.selectedCustomer?.id === id
+          ? { ...state.selectedCustomer, active }
+          : state.selectedCustomer,
+      error: null,
+    }));
+
     try {
       await customerService.updateCustomerStatus(id, active);
-      
-      // Update local state optimistic UI
-      set((state) => ({
-        customers: state.customers.map(c => c.id === id ? { ...c, active } : c),
-        selectedCustomer: state.selectedCustomer?.id === id 
-          ? { ...state.selectedCustomer, active } 
-          : state.selectedCustomer,
-        isLoading: false
-      }));
+      // Success — clear loading indicator for this customer
+      set((state) => {
+        const next = new Set(state.updatingCustomerIds);
+        next.delete(id);
+        return { updatingCustomerIds: next };
+      });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to update customer status', 
-        isLoading: false 
+      // Rollback
+      set((state) => {
+        const next = new Set(state.updatingCustomerIds);
+        next.delete(id);
+        return {
+          updatingCustomerIds: next,
+          customers: prevCustomers,
+          selectedCustomer: prevSelected,
+          error: error.response?.data?.message || 'Failed to update customer status',
+        };
       });
       return false;
     }

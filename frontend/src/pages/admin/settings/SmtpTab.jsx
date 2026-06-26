@@ -9,6 +9,7 @@ const SmtpTab = () => {
   const { domains, fetchDomainSettings, updateDomainSettings, testSmtpConnection, isTestingSmtp } = useSettingsStore();
   const { data, isLoading, isSaving } = domains.smtp;
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [formData, setFormData] = useState({});
   const [testSuccess, setTestSuccess] = useState(false);
 
@@ -30,7 +31,7 @@ const SmtpTab = () => {
     e.preventDefault();
     const success = await updateDomainSettings('smtp', formData);
     if (success) {
-      toast.success('SMTP settings updated');
+      toast.success('SMTP settings updated.');
       setIsEditing(false);
     }
   };
@@ -38,13 +39,14 @@ const SmtpTab = () => {
   const handleCancel = () => {
     setFormData(data || {});
     setIsEditing(false);
+    setIsChangingPassword(false);
     setTestSuccess(false);
   };
 
   const handleTest = async () => {
     const res = await testSmtpConnection(formData);
     if (res.success) {
-      toast.success('SMTP connection verified successfully!');
+      toast.success('SMTP connection verified successfully.');
       setTestSuccess(true);
     } else {
       toast.error(res.message);
@@ -73,26 +75,62 @@ const SmtpTab = () => {
         <Input label="SMTP Port" name="port" type="number" value={formData.port || ''} onChange={handleChange} disabled={!isEditing} placeholder="587" />
         <div className="sm:col-span-2">
           <label className="flex items-center gap-3 cursor-pointer mt-2">
-            <input 
-              type="checkbox" name="secure" 
-              checked={formData.secure || false} onChange={handleChange} 
+            <input
+              type="checkbox" name="secure"
+              checked={formData.secure || false} onChange={handleChange}
               disabled={!isEditing}
-              className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50" 
+              className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50"
             />
-            <div className="font-semibold text-text-primary text-sm">Use Secure Connection (SSL/TLS)</div>
+            <div className="font-semibold text-text-primary text-sm">Use Secure Connection (SSL/TLS).</div>
           </label>
         </div>
         <Input label="From Email" name="fromEmail" type="email" value={formData.fromEmail || ''} onChange={handleChange} disabled={!isEditing} placeholder="noreply@yourstore.com" />
         <Input label="SMTP Username" name="user" value={formData.user || ''} onChange={handleChange} disabled={!isEditing} placeholder="user@example.com" />
-        <Input label="SMTP Password" name="password" type="password" value={formData.password || ''} onChange={handleChange} disabled={!isEditing} placeholder="••••••••" />
+
+        <div className="sm:col-span-1">
+          <label className="block text-sm font-semibold text-text-primary mb-1">SMTP Password</label>
+          {data.passwordConfigured && !isChangingPassword ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-green-600 text-sm font-bold bg-green-50 w-fit px-3 py-1 rounded border border-green-200">
+                <CheckCircle className="w-4 h-4" /> SMTP Password Configured.
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="bg-bg-input px-3 py-2 rounded border border-border text-text-primary flex-1 font-mono">
+                  ••••••••••••••
+                </div>
+                {isEditing && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsChangingPassword(true)}>
+                    Change Password
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Input
+                name="password"
+                type="password"
+                value={formData.password || ''}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder={data.passwordConfigured ? "Leave blank to keep existing password." : "Enter SMTP Password."}
+              />
+              {isEditing && data.passwordConfigured && isChangingPassword && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsChangingPassword(false)} className="w-fit">
+                  Cancel Password Change
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="pt-4 border-t border-border mt-6">
         <div className="flex items-center gap-4">
           <Button type="button" variant="outline" onClick={handleTest} isLoading={isTestingSmtp} disabled={!formData.host || !formData.user}>
-            Send Test Email
+            {isTestingSmtp ? 'Testing SMTP Connection...' : 'Send Test Email'}
           </Button>
-          {testSuccess && <span className="text-green-600 flex items-center text-sm font-bold"><CheckCircle className="w-4 h-4 mr-1"/> Connection verified</span>}
+          {testSuccess && <span className="text-green-600 flex items-center text-sm font-bold"><CheckCircle className="w-4 h-4 mr-1" /> Connection verified</span>}
         </div>
       </div>
 
@@ -111,3 +149,5 @@ const SmtpTab = () => {
 };
 
 export default SmtpTab;
+
+// trigger rebuild
