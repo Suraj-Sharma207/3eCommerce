@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Bell } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import Button from '../ui/Button';
-import { sanitizeNumeric } from '../../utils/validators';
+import { sanitizeNumeric, validateEmail, validatePhone } from '../../utils/validators';
 
 const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) => {
   const { user } = useAuthStore();
@@ -110,9 +110,10 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(sanitizeNumeric(e.target.value).slice(0, 10))}
+                    onChange={(e) => setPhone(sanitizeNumeric(e.target.value).slice(0, 15))}
                     className="w-full px-4 py-3 rounded-[12px] border border-border focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition-all bg-surface"
-                    placeholder="Enter 10-digit phone number"
+                    placeholder="Enter phone number"
+                    maxLength={15}
                   />
                 </div>
               </div>
@@ -121,7 +122,7 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                 <Button
                   type="submit"
                   isLoading={isLoading}
-                  disabled={!email}
+                  disabled={!email || !!validateEmail(email) || (phone && !!validatePhone(phone))}
                   fullWidth
                 >
                   Notify Me When Available

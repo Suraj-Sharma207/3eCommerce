@@ -29,7 +29,7 @@ export const validateConfirmPassword = (password, confirmPassword) => {
 export const validatePhone = (phone) => {
   if (!phone) return 'Phone number is required.';
   const cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.length !== 10) return 'Enter a valid 10-digit phone number.';
+  if (cleanPhone.length < 10 || cleanPhone.length > 15) return 'Enter a valid 10 to 15-digit phone number.';
   return '';
 };
 
@@ -93,3 +93,16 @@ export const sanitizeDecimal = (val) => {
   }
   return cleaned;
 };
+
+/**
+ * Checks if a form is valid based on its fields and errors.
+ * @param {Object} errors - An object containing error messages for each field (e.g., { email: '', password: 'Error' }).
+ * @param {Object} requiredFields - An object containing the current values of required fields to ensure they are not empty (e.g., { email: 'test@test.com' }).
+ * @returns {boolean} True if the form is valid, false otherwise.
+ */
+export const isFormValid = (errors, requiredFields) => {
+  const hasErrors = Object.values(errors).some((error) => error !== '');
+  const hasEmptyRequiredFields = Object.values(requiredFields).some((value) => value === undefined || value === null || String(value).trim() === '');
+  return !hasErrors && !hasEmptyRequiredFields;
+};
+

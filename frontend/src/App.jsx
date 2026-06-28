@@ -5,16 +5,19 @@ import SessionTimeoutProvider from './providers/SessionTimeoutProvider';
 import useAuthStore from './store/authStore';
 import useUserStore from './store/userStore';
 import useSettingsStore from './store/settingsStore';
+import { useBrandingStore } from './store/brandingStore';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { checkAuth, token, user } = useAuthStore();
   const { fetchProfile } = useUserStore();
   const { fetchPublicConfig } = useSettingsStore();
+  const { fetchBranding } = useBrandingStore();
 
   useEffect(() => {
     fetchPublicConfig();
-  }, [fetchPublicConfig]);
+    fetchBranding();
+  }, [fetchPublicConfig, fetchBranding]);
 
   useEffect(() => {
     // If we have a token but haven't checked auth yet, check it on load

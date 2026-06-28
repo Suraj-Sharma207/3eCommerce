@@ -188,7 +188,7 @@ const AddressBook = () => {
     
     let sanitizedValue = value;
     if (name === 'phoneNumber') {
-      sanitizedValue = sanitizeNumeric(value);
+      sanitizedValue = sanitizeNumeric(value).slice(0, 15);
     } else if (name === 'city' || name === 'state') {
       sanitizedValue = value.replace(/[^A-Za-z\s]/g, '');
     } else if (name === 'recipientName') {
@@ -295,7 +295,7 @@ const AddressBook = () => {
                 <Input 
                   label="Phone Number" name="phoneNumber" 
                   value={currentAddress.phoneNumber} onChange={handleChange} 
-                  {...getFieldStatus('phoneNumber')} required placeholder="+1 234 567 8900" 
+                  {...getFieldStatus('phoneNumber')} required placeholder="+1 234 567 8900" maxLength={15} 
                 />
                 
                 <div className="space-y-1">

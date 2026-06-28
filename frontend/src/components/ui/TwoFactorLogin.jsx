@@ -51,7 +51,7 @@ const TwoFactorLogin = ({ isOpen, onClose, onVerify }) => {
           />
         </div>
 
-        <Button type="submit" className="w-full" isLoading={isLoading}>
+        <Button type="submit" className="w-full" isLoading={isLoading} disabled={code.length !== 6}>
           Verify Identity
         </Button>
       </form>

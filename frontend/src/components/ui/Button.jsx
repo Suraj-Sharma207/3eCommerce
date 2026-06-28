@@ -41,6 +41,7 @@ const Button = ({
     <Component 
       className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[finalSize] || sizes.md} ${fullWidth ? 'w-full' : ''} ${className}`}
       disabled={disabled || isLoading}
+      aria-disabled={disabled || isLoading}
       {...props}
     >
       {/* Invisible content wrapper maintains width while loading */}

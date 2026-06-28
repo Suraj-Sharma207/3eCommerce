@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Store, CreditCard, Mail, Shield, Bell, FileText, Truck } from 'lucide-react';
+import { Settings, Store, CreditCard, Mail, Shield, Bell, FileText, Truck, Image as ImageIcon } from 'lucide-react';
 
+import BrandingTab from './settings/BrandingTab';
 import StoreTab from './settings/StoreTab';
 import ShippingTab from './settings/ShippingTab';
 import PaymentTab from './settings/PaymentTab';
@@ -10,16 +11,16 @@ import NotificationsTab from './settings/NotificationsTab';
 import AuditLogsTab from './settings/AuditLogsTab';
 
 const STORAGE_KEY = 'admin_settings_active_tab';
-const VALID_TABS = ['store', 'shipping', 'payment', 'email', 'security', 'notifications', 'audit'];
+const VALID_TABS = ['branding', 'store', 'shipping', 'payment', 'email', 'security', 'notifications', 'audit'];
 
 const AdminSettings = () => {
   // Restore last active tab from sessionStorage — persists across saves without page reload
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      return saved && VALID_TABS.includes(saved) ? saved : 'store';
+      return saved && VALID_TABS.includes(saved) ? saved : 'branding';
     } catch {
-      return 'store';
+      return 'branding';
     }
   });
 
@@ -33,6 +34,7 @@ const AdminSettings = () => {
   }, []);
 
   const tabs = [
+    { id: 'branding',      label: 'Branding',        icon: <ImageIcon className="w-4 h-4 mr-2" />, component: <BrandingTab /> },
     { id: 'store',         label: 'Store',           icon: <Store className="w-4 h-4 mr-2" />,    component: <StoreTab /> },
     { id: 'shipping',      label: 'Shipping',         icon: <Truck className="w-4 h-4 mr-2" />,    component: <ShippingTab /> },
     { id: 'payment',       label: 'Payment & Tax',    icon: <CreditCard className="w-4 h-4 mr-2" />, component: <PaymentTab /> },

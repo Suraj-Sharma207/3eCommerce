@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 class AdminRepository {
   async getDashboardMetrics() {
     const isDev = process.env.NODE_ENV === 'development';
-    
+
     if (isDev) console.time('Total Revenue Query');
     const totalRevenuePromise = prisma.order.aggregate({
       where: { paymentStatus: 'PAID' },
@@ -41,7 +41,7 @@ class AdminRepository {
 
     if (isDev) console.time('Revenue Trend Query');
     const recentPaidOrdersPromise = prisma.order.findMany({
-      where: { 
+      where: {
         paymentStatus: 'PAID',
         createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) }
       },
@@ -83,7 +83,7 @@ class AdminRepository {
         where: { id: { in: productIds } },
         select: { id: true, name: true, thumbnail: true }
       });
-      
+
       const productMap = products.reduce((acc, p) => {
         acc[p.id] = p;
         return acc;
@@ -111,9 +111,9 @@ class AdminRepository {
 
   async getAllCustomers({ page = 1, limit = 10, search = '' }) {
     const skip = (page - 1) * limit;
-    
+
     let whereClause = { role: 'CUSTOMER' };
-    
+
     if (search) {
       whereClause = {
         ...whereClause,
@@ -124,7 +124,7 @@ class AdminRepository {
         ]
       };
     }
-    
+
     const customers = await prisma.user.findMany({
       where: whereClause,
       skip,
@@ -148,9 +148,9 @@ class AdminRepository {
       if (c.wishlist) {
         wishlistCount = await prisma.wishlistItem.count({ where: { wishlistId: c.wishlist.id } });
       }
-      
+
       const totalSpend = c.orders.reduce((sum, order) => sum + order.totalAmount, 0);
-      
+
       return {
         ...c,
         totalSpend,
@@ -185,12 +185,12 @@ class AdminRepository {
         }
       }
     });
-    
+
     if (!customer) return null;
     customer.password = undefined;
-    
+
     const totalSpend = customer.orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    
+
     return {
       ...customer,
       totalSpend,

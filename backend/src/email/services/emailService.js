@@ -1,6 +1,7 @@
 import { renderTemplate } from '../utils/templateCompiler.js';
 import emailQueue from '../queue/emailQueue.js';
 import settingsService from '../../services/settingsService.js';
+import { brandingService } from '../../services/brandingService.js';
 
 class EmailService {
   /**
@@ -41,7 +42,7 @@ class EmailService {
    * Render template and enqueue sending
    */
   async sendTemplate(to, subject, templateName, data = {}, options = {}) {
-    const { html, text } = renderTemplate(templateName, data);
+    const { html, text } = await renderTemplate(templateName, data);
     return await emailQueue.add({
       recipient: to,
       subject,
@@ -57,10 +58,11 @@ class EmailService {
    * Send Welcome Email
    */
   async sendWelcome(user) {
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
     return await this.sendTemplate(
       user.email,
-      'Welcome to LuxeHome!',
+      `Welcome to ${branding.platformName}!`,
       'welcome',
       {
         name: user.name,
@@ -77,10 +79,11 @@ class EmailService {
    * Send Email Verification
    */
   async sendEmailVerification(user, verificationUrl) {
+    const branding = await brandingService.getBranding();
     const token = verificationUrl.split('token=').pop() || '';
     return await this.sendTemplate(
       user.email,
-      'Verify Your LuxeHome Email',
+      `Verify Your ${branding.platformName} Email`,
       'verify-email',
       {
         name: user.name,
@@ -97,10 +100,11 @@ class EmailService {
    * Send Password Reset Link
    */
   async sendPasswordReset(user, resetUrl) {
+    const branding = await brandingService.getBranding();
     const token = resetUrl.split('token=').pop() || '';
     return await this.sendTemplate(
       user.email,
-      'Reset Your LuxeHome Password',
+      `Reset Your ${branding.platformName} Password`,
       'password-reset',
       {
         name: user.name,
@@ -118,7 +122,8 @@ class EmailService {
    */
   async sendOrderConfirmation(userEmail, order) {
     const symbol = await this.getCurrencySymbol();
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
 
     const formattedItems = order.items.map(item => ({
       ...item,
@@ -128,7 +133,7 @@ class EmailService {
 
     return await this.sendTemplate(
       userEmail,
-      `LuxeHome Order Confirmed - #${order.orderNumber}`,
+      `${branding.platformName} Order Confirmed - #${order.orderNumber}`,
       'order-confirmation',
       {
         name: order.user?.name || 'Valued Customer',
@@ -161,9 +166,10 @@ class EmailService {
    * Send Order Shipped Email to Customer
    */
   async sendOrderShipped(userEmail, order, courierInfo = {}) {
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
     
-    const courier = courierInfo.courier || 'LuxeHome Express (DHL)';
+    const courier = courierInfo.courier || `${branding.platformName} Express (DHL)`;
     const trackingNumber = courierInfo.trackingNumber || `LH-${Math.floor(100000 + Math.random() * 900000)}-IN`;
     
     let estDelivery = courierInfo.estimatedDelivery;
@@ -180,7 +186,7 @@ class EmailService {
 
     return await this.sendTemplate(
       userEmail,
-      `Your LuxeHome Order Shipped! - #${order.orderNumber}`,
+      `Your ${branding.platformName} Order Shipped! - #${order.orderNumber}`,
       'order-shipped',
       {
         name: order.user?.name || 'Valued Customer',
@@ -188,7 +194,7 @@ class EmailService {
         courier,
         trackingNumber,
         estimatedDelivery: estDelivery,
-        trackingUrl: `https://track.luxehome.com?num=${trackingNumber}`
+        trackingUrl: `https://track.${branding.platformName.toLowerCase()}.com?num=${trackingNumber}`
       },
       {
         userId: order.userId,
@@ -201,7 +207,8 @@ class EmailService {
    * Send Order Delivered Email to Customer
    */
   async sendOrderDelivered(userEmail, order, deliveredDateStr = null) {
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
     
     let deliveredDate = deliveredDateStr;
     try {
@@ -220,7 +227,7 @@ class EmailService {
 
     return await this.sendTemplate(
       userEmail,
-      `LuxeHome Order Delivered! - #${order.orderNumber}`,
+      `${branding.platformName} Order Delivered! - #${order.orderNumber}`,
       'order-delivered',
       {
         name: order.user?.name || 'Valued Customer',
@@ -240,11 +247,12 @@ class EmailService {
    * Send Order Cancelled Email to Customer
    */
   async sendOrderCancelled(userEmail, order, cancellationReason = 'Customer requested cancellation') {
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
 
     return await this.sendTemplate(
       userEmail,
-      `LuxeHome Order Cancelled - #${order.orderNumber}`,
+      `${branding.platformName} Order Cancelled - #${order.orderNumber}`,
       'order-cancelled',
       {
         name: order.user?.name || 'Valued Customer',
@@ -264,7 +272,8 @@ class EmailService {
    */
   async sendRefund(userEmail, order, refundAmountRaw = null) {
     const symbol = await this.getCurrencySymbol();
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
     
     const refundAmount = refundAmountRaw 
       ? this.formatPrice(refundAmountRaw, symbol) 
@@ -272,7 +281,7 @@ class EmailService {
 
     return await this.sendTemplate(
       userEmail,
-      `LuxeHome Refund Processed - #${order.orderNumber}`,
+      `${branding.platformName} Refund Processed - #${order.orderNumber}`,
       'refund',
       {
         name: order.user?.name || 'Valued Customer',
@@ -297,11 +306,12 @@ class EmailService {
    * Send Low Stock Alert Email to Admin
    */
   async sendLowStockAlert(adminEmail, product, threshold) {
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const branding = await brandingService.getBranding();
+    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
 
     return await this.sendTemplate(
       adminEmail,
-      `🚨 LuxeHome Low Stock Alert: ${product.name}`,
+      `🚨 ${branding.platformName} Low Stock Alert: ${product.name}`,
       'low-stock',
       {
         productName: product.name,

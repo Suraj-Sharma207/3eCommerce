@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import AvatarUploader from '../../components/common/AvatarUploader';
 import toast from 'react-hot-toast';
+import { validateName, validatePhone, validatePassword, validateConfirmPassword, sanitizeNumeric, isFormValid } from '../../utils/validators';
 
 const AdminProfile = () => {
   const { fetchProfile, updateProfile, changePassword, isLoading } = useUserStore();
@@ -21,6 +22,7 @@ const AdminProfile = () => {
   const [formErrors, setFormErrors] = useState({});
   
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passErrors, setPassErrors] = useState({});
   const [passError, setPassError] = useState('');
 
   useEffect(() => {
@@ -56,20 +58,35 @@ const AdminProfile = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    // Prevent non-numeric characters for phone
-    if (name === 'phone') {
-      if (/[a-zA-Z]/.test(value)) return;
-      if (value.length > 15) return;
-    }
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: null }));
-    }
+    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+    
+    let errorMsg = '';
+    if (name === 'name') errorMsg = validateName(sanitizedValue, 'Name');
+    if (name === 'phone' && sanitizedValue) errorMsg = validatePhone(sanitizedValue);
+    setFormErrors(prev => ({ ...prev, [name]: errorMsg }));
   };
 
   const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
     setPassError('');
+
+    let errorMsg = '';
+    if (name === 'currentPassword' && !value) errorMsg = 'Required';
+    if (name === 'newPassword') errorMsg = validatePassword(value);
+    
+    setPassErrors(prev => {
+      const next = { ...prev, [name]: errorMsg };
+      if (name === 'newPassword' || name === 'confirmPassword') {
+        const confirmVal = name === 'confirmPassword' ? value : passwordData.confirmPassword;
+        const newPassVal = name === 'newPassword' ? value : passwordData.newPassword;
+        if (confirmVal) {
+          next.confirmPassword = validateConfirmPassword(newPassVal, confirmVal);
+        }
+      }
+      return next;
+    });
   };
 
   const validateProfile = () => {
@@ -341,6 +358,7 @@ const AdminProfile = () => {
                         onChange={handleProfileChange} 
                         error={formErrors.phone}
                         placeholder="+1 234 567 8900"
+                        maxLength={15}
                       />
                       <Input 
                         label="Birthday" 
@@ -390,7 +408,13 @@ const AdminProfile = () => {
                       <Button type="button" variant="outline" onClick={cancelProfileEdit} className="w-full sm:w-auto">
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={!isProfileDirty || Object.keys(formErrors).length > 0} isLoading={isSaving} className="w-full sm:w-auto min-w-[140px]">
+                      <Button 
+                        type="submit" 
+                        disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })} 
+                        aria-disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })}
+                        isLoading={isSaving} 
+                        className="w-full sm:w-auto min-w-[140px]"
+                      >
                         Save Changes
                       </Button>
                     </div>
@@ -429,6 +453,8 @@ const AdminProfile = () => {
                       required 
                       value={passwordData.currentPassword} 
                       onChange={handlePasswordChange} 
+                      error={passErrors.currentPassword}
+                      aria-invalid={!!passErrors.currentPassword}
                     />
                     
                     <Input 
@@ -438,7 +464,8 @@ const AdminProfile = () => {
                       required 
                       value={passwordData.newPassword} 
                       onChange={handlePasswordChange} 
-                      minLength="8"
+                      error={passErrors.newPassword}
+                      aria-invalid={!!passErrors.newPassword}
                     />
                     
                     <Input 
@@ -448,14 +475,21 @@ const AdminProfile = () => {
                       required 
                       value={passwordData.confirmPassword} 
                       onChange={handlePasswordChange} 
-                      minLength="8"
+                      error={passErrors.confirmPassword}
+                      aria-invalid={!!passErrors.confirmPassword}
                     />
                     
                     <div className="pt-6 border-t border-border flex items-center justify-end gap-4">
                       <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
                         Cancel
                       </Button>
-                      <Button type="submit" isLoading={isSaving} disabled={!passwordData.newPassword} className="min-w-[140px]">
+                      <Button 
+                        type="submit" 
+                        isLoading={isSaving} 
+                        disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })} 
+                        aria-disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })}
+                        className="min-w-[140px]"
+                      >
                         Update Password
                       </Button>
                     </div>

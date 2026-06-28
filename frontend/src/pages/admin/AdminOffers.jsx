@@ -6,6 +6,7 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/ui/Pagination';
+import { isFormValid } from '../../utils/validators';
 
 const getLocalDateString = (daysToAdd = 0) => {
   const d = new Date();
@@ -279,7 +280,7 @@ const AdminOffers = () => {
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit" isLoading={isLoading}>Save Campaign</Button>
+            <Button type="submit" isLoading={isLoading} disabled={!isFormValid(errors, { name: formData.name, discountValue: formData.discountValue, startDate: formData.startDate, endDate: formData.endDate })}>Save Campaign</Button>
           </div>
         </form>
       </Modal>

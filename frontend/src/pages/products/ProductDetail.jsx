@@ -11,6 +11,7 @@ import useProductStore from '../../store/productStore';
 import useCartStore from '../../store/cartStore';
 import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
+import { useBrandingStore } from '../../store/brandingStore';
 import ImageFallback from '../../components/ui/ImageFallback';
 import ProductCard from '../../components/products/ProductCard';
 import NotifyMeModal from '../../components/products/NotifyMeModal';
@@ -23,6 +24,7 @@ const ProductDetail = () => {
   const { addToCart, loadingProducts } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
+  const { branding } = useBrandingStore();
   
   const isCartLoading = product ? (loadingProducts[product.id] || false) : false;
   
@@ -283,7 +285,7 @@ const ProductDetail = () => {
               </div>
               <div className="flex justify-between py-3 border-b border-border-light">
                 <span className="font-medium text-text-brand-600">Brand</span>
-                <span>{product.brand || 'LuxeHome'}</span>
+                <span>{product.brand || branding?.platformName || 'LuxeHome'}</span>
               </div>
               <div className="flex justify-between py-3 border-b border-border-light">
                 <span className="font-medium text-text-brand-600">SKU</span>

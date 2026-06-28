@@ -4,7 +4,8 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useAuthStore from '../../store/authStore';
-import { validateName, validateEmail, validatePhone, sanitizeNumeric } from '../../utils/validators';
+import { useBrandingStore } from '../../store/brandingStore';
+import { validateName, validateEmail, validatePhone, sanitizeNumeric, validatePassword, validateConfirmPassword, isFormValid as checkFormValid } from '../../utils/validators';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const RegisterPage = () => {
   const [socialMessage, setSocialMessage] = useState('');
 
   const { register, isLoading, error: backendError, clearError } = useAuthStore();
+  const { branding } = useBrandingStore();
 
   useEffect(() => {
     clearError();
@@ -41,6 +43,12 @@ const RegisterPage = () => {
           errorMsg = validatePhone(value);
         }
         break;
+      case 'password':
+        errorMsg = validatePassword(value);
+        break;
+      case 'confirmPassword':
+        errorMsg = validateConfirmPassword(formData.password, value);
+        break;
       default:
         break;
     }
@@ -50,46 +58,45 @@ const RegisterPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value) : value;
+    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
 
     setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
 
-    // Only set standard field errors, password handled separately
-    if (name !== 'password' && name !== 'confirmPassword') {
-      const errorMsg = validateField(name, sanitizedValue);
-      setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    const errorMsg = validateField(name, sanitizedValue);
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    
+    // Re-validate confirm password if password changes
+    if (name === 'password' && formData.confirmPassword) {
+       setErrors(prev => ({ ...prev, confirmPassword: validateConfirmPassword(sanitizedValue, formData.confirmPassword) }));
     }
   };
 
-  const isPasswordValid = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(?=.{8,})/.test(formData.password);
+  const isPasswordValid = formData.password.length > 0 && validatePassword(formData.password) === '';
   const passwordTouched = formData.password.length > 0;
 
   const confirmTouched = formData.confirmPassword.length > 0;
-  const passwordsMatch = formData.confirmPassword === formData.password;
+  const passwordsMatch = formData.confirmPassword.length > 0 && validateConfirmPassword(formData.password, formData.confirmPassword) === '';
 
   const isFormValid = () => {
     const newErrors = {};
 
-    // Check standard fields
-    ['name', 'email', 'phone'].forEach(key => {
+    ['name', 'email', 'phone', 'password', 'confirmPassword'].forEach(key => {
       const err = validateField(key, formData[key]);
       if (err) newErrors[key] = err;
     });
-
-    if (!isPasswordValid) {
-      newErrors.password = 'Invalid password.'; // Just to block submission
-    }
-
-    if (confirmTouched && !passwordsMatch) {
-      newErrors.confirmPassword = 'Passwords do not match.';
-    }
 
     if (!termsAccepted) {
       newErrors.terms = 'Please accept the terms and conditions.';
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0 && isPasswordValid && passwordsMatch;
+    
+    return checkFormValid(newErrors, { 
+      name: formData.name, 
+      email: formData.email, 
+      password: formData.password, 
+      confirmPassword: formData.confirmPassword 
+    }) && termsAccepted;
   };
 
   const handleSubmit = async (e) => {
@@ -162,11 +169,11 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col justify-center py-2">
-      <div className="mb-6">
+    <div className="w-full flex flex-col justify-center py-2">
+      <div className="mb-6 stagger-1">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
-        <p className="mt-1 text-[16px] text-text-muted font-medium">
-          Join LuxeHome to experience premium shopping.
+        <p className="mt-1 text-[16px] text-text-muted font-medium stagger-2">
+          Join {branding?.platformName || 'LuxeHome'} to experience premium shopping.
         </p>
       </div>
 
@@ -179,7 +186,7 @@ const RegisterPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-3">
           <div className="space-y-1">
             <Input
               label={<span className="font-medium text-[14px] text-text-primary">Full Name</span>}
@@ -201,14 +208,15 @@ const RegisterPage = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="+1234567890"
+              placeholder="+911234567890"
+              maxLength={15}
               error={errors.phone}
               className={errors.phone ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
             />
           </div>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1 stagger-3">
           <Input
             label={<span className="font-medium text-[14px] text-text-primary">Email Address</span>}
             type="email"
@@ -222,7 +230,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        <div className="relative">
+        <div className="relative stagger-3">
           <Input
             label={<span className="font-medium text-[14px] text-text-primary">Password</span>}
             type="password"
@@ -232,11 +240,12 @@ const RegisterPage = () => {
             onChange={handleChange}
             placeholder="Create a strong password"
             className={passwordBorderClass}
+            aria-invalid={!isPasswordValid && passwordTouched}
           />
           <PasswordHelper />
         </div>
 
-        <div className="relative">
+        <div className="relative stagger-3">
           <Input
             label={<span className="font-medium text-[14px] text-text-primary">Confirm Password</span>}
             type="password"
@@ -246,11 +255,12 @@ const RegisterPage = () => {
             onChange={handleChange}
             placeholder="Confirm your password"
             className={confirmBorderClass}
+            aria-invalid={!passwordsMatch && confirmTouched}
           />
           <ConfirmHelper />
         </div>
 
-        <div className="flex items-start pt-1">
+        <div className="flex items-start pt-1 stagger-4">
           <div className="flex items-center h-5">
             <input
               id="terms"
@@ -272,11 +282,13 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 stagger-4">
           <Button
             type="submit"
             fullWidth
             isLoading={isLoading}
+            disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
+            aria-disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
             className="rounded-[12px] h-[48px] text-[16px] font-bold shadow-sm"
           >
             Create Account
@@ -284,7 +296,7 @@ const RegisterPage = () => {
         </div>
       </form>
 
-      <div className="mt-6">
+      <div className="mt-6 stagger-5">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border-light" />
@@ -325,7 +337,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      <div className="mt-6 text-center">
+      <div className="mt-6 text-center stagger-6">
         <p className="text-[14px] text-text-secondary font-medium">
           Already have an account?{' '}
           <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">

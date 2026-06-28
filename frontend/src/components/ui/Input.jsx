@@ -1,7 +1,25 @@
 import React, { forwardRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-const Input = forwardRef(({ label, error, isValid, className = '', inputClassName = '', type = 'text', disabled, id, icon, ...props }, ref) => {
+const Input = forwardRef(({ 
+  label, 
+  error, 
+  isValid, 
+  className = '', 
+  inputClassName = '', 
+  type = 'text', 
+  disabled, 
+  id, 
+  icon,
+  helperText,
+  leftIcon,
+  rightIcon,
+  description,
+  loading,
+  variant,
+  fullWidth,
+  ...props 
+}, ref) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
@@ -26,24 +44,41 @@ const Input = forwardRef(({ label, error, isValid, className = '', inputClassNam
             focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600
             disabled:bg-surface-background disabled:text-text-muted disabled:cursor-not-allowed
             ${error ? 'border-danger-600 focus:ring-danger-600 focus:border-danger-600' : ''}
-            ${icon ? 'pl-11' : ''}
-            ${isPassword ? 'pr-12' : ''}
+            ${icon || leftIcon ? 'pl-11' : ''}
+            ${isPassword || rightIcon ? 'pr-12' : ''}
             ${inputClassName}
           `}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id || 'input'}-error` : undefined}
           {...props}
         />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary focus:outline-none"
-          >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-          </button>
+        {(icon || leftIcon) && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+            {icon || leftIcon}
+          </div>
+        )}
+        {(isPassword || rightIcon) && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+            {isPassword ? (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="hover:text-text-secondary focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            ) : rightIcon}
+          </div>
         )}
       </div>
+      {helperText && !error && (
+        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
+      )}
+      {description && !helperText && !error && (
+        <p className="text-xs text-gray-500 mt-1">{description}</p>
+      )}
       {error && (
-        <span className="text-xs text-danger-600 mt-1">{error}</span>
+        <span id={`${id || 'input'}-error`} className="text-xs text-danger-600 mt-1">{error}</span>
       )}
     </div>
   );

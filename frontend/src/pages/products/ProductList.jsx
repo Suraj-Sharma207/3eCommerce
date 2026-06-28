@@ -1,74 +1,167 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ProductCard from '../../components/products/ProductCard';
 import Pagination from '../../components/ui/Pagination';
-import EmptyState from '../../components/ui/EmptyState';
 import { ProductCardSkeleton } from '../../components/ui/SkeletonLoader';
 import useProductStore from '../../store/productStore';
 import { Filter, ChevronDown, Check } from 'lucide-react';
 
+const ALL_CATEGORIES = ['Living Room', 'Bedroom', 'Dining Room', 'Office', 'Lighting', 'Decor'];
+const ALL_RATINGS = [4, 3, 2, 1];
+
 const ProductList = () => {
-  const [searchParams] = useSearchParams();
-  const { products, isLoading, error, fetchProducts, pagination, filters, setFilters, clearFilters, searchQuery } = useProductStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { products, isLoading, error, fetchProducts, pagination, filters, setFilters, clearFilters: clearStoreFilters, searchQuery } = useProductStore();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  useEffect(() => {
-    const categoryParam = searchParams.get('category') || 'All';
-    const saleParam = searchParams.get('sale') === 'true';
-    const sortParam = searchParams.get('sort') || (saleParam ? 'price_asc' : 'newest');
+  // Read local arrays from URL
+  const selectedCategories = searchParams.get('categories') ? searchParams.get('categories').split(',') : [];
+  const selectedRatings = searchParams.get('ratings') ? searchParams.get('ratings').split(',').map(Number) : [];
+  const selectedAvailability = searchParams.get('availability') ? searchParams.get('availability').split(',') : [];
 
-    let initialFilters = { 
-      ...filters, 
-      category: categoryParam,
-      sale: saleParam,
-      sort: sortParam
-    };
+  // Setup initial store filters from URL only for things that still hit the backend (sort, price)
+  useEffect(() => {
+    const sortParam = searchParams.get('sort') || 'newest';
+    const minPriceParam = searchParams.get('minPrice') || '';
+    const maxPriceParam = searchParams.get('maxPrice') || '';
 
     let shouldUpdate = false;
+    let initialFilters = { ...filters, sort: sortParam };
 
-    if (categoryParam !== filters.category) {
+    if (sortParam !== filters.sort) shouldUpdate = true;
+    if (minPriceParam !== filters.minPrice) {
+      initialFilters.minPrice = minPriceParam;
       shouldUpdate = true;
     }
-    if (saleParam !== filters.sale) {
+    if (maxPriceParam !== filters.maxPrice) {
+      initialFilters.maxPrice = maxPriceParam;
       shouldUpdate = true;
-    }
-    if (sortParam !== filters.sort) {
-      shouldUpdate = true;
-    }
-
-    // Reset details if navigating to general /products from a filtered URL
-    if (!searchParams.get('category') && !searchParams.get('sale')) {
-      if (filters.minRating !== '' || filters.minPrice !== '' || filters.maxPrice !== '' || filters.inStock !== false) {
-        initialFilters.minRating = '';
-        initialFilters.minPrice = '';
-        initialFilters.maxPrice = '';
-        initialFilters.inStock = false;
-        shouldUpdate = true;
-      }
     }
 
     if (shouldUpdate) {
       setFilters(initialFilters);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
-  // Debounced fetch on search or filters change
+  // Sync store changes (price, sort) to URL so they persist too
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    let changed = false;
+    
+    if (filters.sort && filters.sort !== 'newest') {
+      if (newParams.get('sort') !== filters.sort) { newParams.set('sort', filters.sort); changed = true; }
+    } else {
+      if (newParams.has('sort')) { newParams.delete('sort'); changed = true; }
+    }
+    
+    if (filters.minPrice) {
+      if (newParams.get('minPrice') !== filters.minPrice.toString()) { newParams.set('minPrice', filters.minPrice); changed = true; }
+    } else {
+      if (newParams.has('minPrice')) { newParams.delete('minPrice'); changed = true; }
+    }
+
+    if (filters.maxPrice) {
+      if (newParams.get('maxPrice') !== filters.maxPrice.toString()) { newParams.set('maxPrice', filters.maxPrice); changed = true; }
+    } else {
+      if (newParams.has('maxPrice')) { newParams.delete('maxPrice'); changed = true; }
+    }
+
+    if (changed) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [filters.sort, filters.minPrice, filters.maxPrice]);
+
+  // Debounced fetch on search or STORE filters change (price, sort)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchProducts(1);
     }, 400); // 400ms debounce
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters.minPrice, filters.maxPrice, filters.sort]);
 
   const handlePageChange = (newPage) => {
     fetchProducts(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const categories = ['All', 'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Lighting', 'Decor'];
+  const updateUrlParam = (key, values) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (values && values.length > 0) {
+      newParams.set(key, values.join(','));
+    } else {
+      newParams.delete(key);
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleCategoryToggle = (cat) => {
+    if (cat === 'All') {
+      updateUrlParam('categories', []);
+      return;
+    }
+    
+    let newCats = [...selectedCategories];
+    // If "All" was active, clicking a category implies unchecking it
+    if (selectedCategories.length === 0) {
+      newCats = ALL_CATEGORIES.filter(c => c !== cat);
+    } else {
+      if (newCats.includes(cat)) {
+        newCats = newCats.filter(c => c !== cat);
+      } else {
+        newCats.push(cat);
+      }
+    }
+
+    // Auto-check All if everything is selected, or if nothing is selected
+    if (newCats.length === ALL_CATEGORIES.length || newCats.length === 0) {
+      newCats = [];
+    }
+
+    updateUrlParam('categories', newCats);
+  };
+
+  const handleRatingToggle = (rating) => {
+    if (rating === 'All') {
+      updateUrlParam('ratings', []);
+      return;
+    }
+
+    let newRatings = [...selectedRatings];
+    if (selectedRatings.length === 0) {
+      newRatings = ALL_RATINGS.filter(r => r !== rating);
+    } else {
+      if (newRatings.includes(rating)) {
+        newRatings = newRatings.filter(r => r !== rating);
+      } else {
+        newRatings.push(rating);
+      }
+    }
+
+    if (newRatings.length === ALL_RATINGS.length || newRatings.length === 0) {
+      newRatings = [];
+    }
+
+    updateUrlParam('ratings', newRatings);
+  };
+
+  const handleAvailabilityToggle = (value) => {
+    let newAvail = [...selectedAvailability];
+    if (newAvail.includes(value)) {
+      newAvail = newAvail.filter(v => v !== value);
+    } else {
+      newAvail.push(value);
+    }
+    updateUrlParam('availability', newAvail);
+  };
+
+  const handleClearAllFilters = () => {
+    clearStoreFilters(); // resets search, minPrice, maxPrice, sort
+    setSearchParams(new URLSearchParams()); // clears URL params for local filters
+  };
+
   const sortOptions = [
     { value: 'newest', label: 'Newest Arrivals' },
     { value: 'price_asc', label: 'Price: Low to High' },
@@ -78,12 +171,29 @@ const ProductList = () => {
     { value: 'discount', label: 'Largest Discount' },
   ];
 
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(product => {
+      // Category (OR logic for array items)
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+      
+      // Rating (OR logic for array items)
+      const matchesRating = selectedRatings.length === 0 || selectedRatings.some(r => product.rating >= r);
+      
+      // Availability (OR logic for array items)
+      const inStockMatch = selectedAvailability.includes('inStock') && product.stock > 0;
+      const saleMatch = selectedAvailability.includes('sale') && product.sale === true;
+      const matchesAvailability = selectedAvailability.length === 0 || inStockMatch || saleMatch;
+
+      return matchesCategory && matchesRating && matchesAvailability;
+    });
+  }, [products, selectedCategories, selectedRatings, selectedAvailability]);
+
   const startItem = pagination.totalItems > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0;
   const endItem = Math.min(startItem + pagination.itemsPerPage - 1, pagination.totalItems);
 
   return (
     <PageContainer className="py-8 lg:py-12">
-
       {/* Header & Sort */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-border gap-4">
         <div>
@@ -99,19 +209,11 @@ const ProductList = () => {
                   <a href="/products" className="hover:text-brand-600 transition-colors">Products</a>
                 </div>
               </li>
-              {filters.category !== 'All' && (
-                <li aria-current="page">
-                  <div className="flex items-center">
-                    <span className="mx-2">/</span>
-                    <span className="text-text-brand-600 font-medium">{filters.category}</span>
-                  </div>
-                </li>
-              )}
             </ol>
           </nav>
 
           <h1 className="text-3xl lg:text-4xl font-extrabold text-text-brand-600 tracking-tight mb-2">
-            {filters.category === 'All' ? 'All Furniture' : filters.category}
+            All Furniture
           </h1>
           <p className="text-text-secondary">
             Showing {startItem}–{endItem} of {pagination.totalItems} Products
@@ -150,26 +252,46 @@ const ProductList = () => {
           <div>
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Categories</h3>
             <div className="space-y-2">
-              {categories.map(cat => (
-                <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.category === cat
-                      ? 'bg-brand-600 border-brand-600'
-                      : 'border-border group-hover:border-brand-600-400'
-                    }`}>
-                    {filters.category === cat && <Check className="w-3.5 h-3.5 text-white" />}
-                  </div>
-                  <span className={`text-sm ${filters.category === cat ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
-                    {cat}
-                  </span>
-                  <input
-                    type="radio"
-                    name="category"
-                    className="sr-only"
-                    checked={filters.category === cat}
-                    onChange={() => setFilters({ category: cat })}
-                  />
-                </label>
-              ))}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategories.length === 0
+                    ? 'bg-brand-600 border-brand-600'
+                    : 'border-border group-hover:border-brand-600-400'
+                  }`}>
+                  {selectedCategories.length === 0 && <Check className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span className={`text-sm ${selectedCategories.length === 0 ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                  All
+                </span>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selectedCategories.length === 0}
+                  onChange={() => handleCategoryToggle('All')}
+                />
+              </label>
+
+              {ALL_CATEGORIES.map(cat => {
+                const isChecked = selectedCategories.length === 0 || selectedCategories.includes(cat);
+                return (
+                  <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked
+                        ? 'bg-brand-600 border-brand-600'
+                        : 'border-border group-hover:border-brand-600-400'
+                      }`}>
+                      {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                    <span className={`text-sm ${isChecked ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                      {cat}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={isChecked}
+                      onChange={() => handleCategoryToggle(cat)}
+                    />
+                  </label>
+                );
+              })}
             </div>
           </div>
 
@@ -177,26 +299,46 @@ const ProductList = () => {
           <div>
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Rating</h3>
             <div className="space-y-2">
-              {[4, 3, 2, 1].map(rating => (
-                <label key={rating} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.minRating == rating
-                      ? 'bg-brand-600 border-brand-600'
-                      : 'border-border group-hover:border-brand-600-400'
-                    }`}>
-                    {filters.minRating == rating && <Check className="w-3.5 h-3.5 text-white" />}
-                  </div>
-                  <span className={`text-sm ${filters.minRating == rating ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
-                    {rating} Stars & Up
-                  </span>
-                  <input
-                    type="radio"
-                    name="minRating"
-                    className="sr-only"
-                    checked={filters.minRating == rating}
-                    onChange={() => setFilters({ minRating: rating })}
-                  />
-                </label>
-              ))}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedRatings.length === 0
+                    ? 'bg-brand-600 border-brand-600'
+                    : 'border-border group-hover:border-brand-600-400'
+                  }`}>
+                  {selectedRatings.length === 0 && <Check className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <span className={`text-sm ${selectedRatings.length === 0 ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                  All Ratings
+                </span>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selectedRatings.length === 0}
+                  onChange={() => handleRatingToggle('All')}
+                />
+              </label>
+
+              {ALL_RATINGS.map(rating => {
+                const isChecked = selectedRatings.length === 0 || selectedRatings.includes(rating);
+                return (
+                  <label key={rating} className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked
+                        ? 'bg-brand-600 border-brand-600'
+                        : 'border-border group-hover:border-brand-600-400'
+                      }`}>
+                      {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                    <span className={`text-sm ${isChecked ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                      {rating} Stars & Up
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={isChecked}
+                      onChange={() => handleRatingToggle(rating)}
+                    />
+                  </label>
+                );
+              })}
             </div>
           </div>
 
@@ -227,46 +369,50 @@ const ProductList = () => {
             </div>
           </div>
 
-          {/* Availability & Discount */}
+          {/* Availability */}
           <div>
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Availability</h3>
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.inStock
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedAvailability.includes('inStock')
                     ? 'bg-brand-600 border-brand-600'
                     : 'border-border group-hover:border-brand-600-400'
                   }`}>
-                  {filters.inStock && <Check className="w-3.5 h-3.5 text-white" />}
+                  {selectedAvailability.includes('inStock') && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
-                <span className="text-sm text-text-secondary group-hover:text-text-brand-600">In Stock Only</span>
+                <span className={`text-sm ${selectedAvailability.includes('inStock') ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                  In Stock
+                </span>
                 <input
                   type="checkbox"
                   className="sr-only"
-                  checked={filters.inStock || false}
-                  onChange={(e) => setFilters({ inStock: e.target.checked })}
+                  checked={selectedAvailability.includes('inStock')}
+                  onChange={() => handleAvailabilityToggle('inStock')}
                 />
               </label>
 
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${filters.sale
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedAvailability.includes('sale')
                     ? 'bg-brand-600 border-brand-600'
                     : 'border-border group-hover:border-brand-600-400'
                   }`}>
-                  {filters.sale && <Check className="w-3.5 h-3.5 text-white" />}
+                  {selectedAvailability.includes('sale') && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
-                <span className="text-sm text-text-secondary group-hover:text-text-brand-600">On Sale</span>
+                <span className={`text-sm ${selectedAvailability.includes('sale') ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                  On Sale
+                </span>
                 <input
                   type="checkbox"
                   className="sr-only"
-                  checked={filters.sale || false}
-                  onChange={(e) => setFilters({ sale: e.target.checked })}
+                  checked={selectedAvailability.includes('sale')}
+                  onChange={() => handleAvailabilityToggle('sale')}
                 />
               </label>
             </div>
           </div>
 
           <button
-            onClick={clearFilters}
+            onClick={handleClearAllFilters}
             className="text-sm font-semibold text-text-secondary hover:text-danger-600 underline underline-offset-4"
           >
             Clear all filters
@@ -285,10 +431,10 @@ const ProductList = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {[...Array(6)].map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
-          ) : products.length > 0 ? (
+          ) : filteredProducts.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -308,7 +454,7 @@ const ProductList = () => {
                 We couldn't find any products matching your current filters. Try adjusting your search or category.
               </p>
               <button
-                onClick={clearFilters}
+                onClick={handleClearAllFilters}
                 className="px-6 py-2 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors"
               >
                 Clear Filters

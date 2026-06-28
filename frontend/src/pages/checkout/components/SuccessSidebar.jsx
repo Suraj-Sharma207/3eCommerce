@@ -2,8 +2,11 @@ import React from 'react';
 import AddressCard from './AddressCard';
 import PaymentCard from './PaymentCard';
 import { Package, MessageCircle, Mail } from 'lucide-react';
+import { useBrandingStore } from '../../../store/brandingStore';
 
 const SuccessSidebar = ({ order }) => {
+  const { branding } = useBrandingStore();
+  const supportEmail = branding?.supportEmail || `support@${(branding?.platformName || 'luxehome').toLowerCase().replace(/\s+/g, '')}.com`;
   return (
     <div className="w-full space-y-6 animate-in fade-in slide-in-from-right-8 duration-500 delay-400">
       
@@ -47,7 +50,7 @@ const SuccessSidebar = ({ order }) => {
             <MessageCircle className="w-4 h-4 mr-2 text-indigo-600" />
             Chat
           </button>
-          <a href="mailto:support@luxehome.com" className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow font-medium text-text-brand-700">
+          <a href={`mailto:${supportEmail}`} className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow font-medium text-text-brand-700">
             <Mail className="w-4 h-4 mr-2 text-indigo-600" />
             Email
           </a>

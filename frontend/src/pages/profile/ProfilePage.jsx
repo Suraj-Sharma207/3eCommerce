@@ -4,7 +4,7 @@ import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
-import { validateName, validatePhone, validatePassword, sanitizeNumeric } from '../../utils/validators';
+import { validateName, validatePhone, validatePassword, validateConfirmPassword, sanitizeNumeric, isFormValid } from '../../utils/validators';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PageContainer from '../../components/layout/PageContainer';
 import AvatarUploader from '../../components/common/AvatarUploader';
@@ -62,6 +62,7 @@ const ProfilePage = () => {
   const [formErrors, setFormErrors] = useState({});
   
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passErrors, setPassErrors] = useState({});
   const [passError, setPassError] = useState('');
   const [passSuccess, setPassSuccess] = useState('');
 
@@ -102,17 +103,35 @@ const ProfilePage = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 10) : value;
+    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
     setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: null }));
-    }
+    
+    let errorMsg = '';
+    if (name === 'name') errorMsg = validateName(sanitizedValue, 'Name');
+    if (name === 'phone' && sanitizedValue) errorMsg = validatePhone(sanitizedValue);
+    setFormErrors(prev => ({ ...prev, [name]: errorMsg }));
   };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
     setPassError('');
+
+    let errorMsg = '';
+    if (name === 'currentPassword' && !value) errorMsg = 'Required';
+    if (name === 'newPassword') errorMsg = validatePassword(value);
+    
+    setPassErrors(prev => {
+      const next = { ...prev, [name]: errorMsg };
+      if (name === 'newPassword' || name === 'confirmPassword') {
+        const confirmVal = name === 'confirmPassword' ? value : passwordData.confirmPassword;
+        const newPassVal = name === 'newPassword' ? value : passwordData.newPassword;
+        if (confirmVal) {
+          next.confirmPassword = validateConfirmPassword(newPassVal, confirmVal);
+        }
+      }
+      return next;
+    });
   };
 
   const validateProfile = () => {
@@ -430,6 +449,7 @@ const ProfilePage = () => {
                     onChange={handleProfileChange} 
                     error={formErrors.phone}
                     placeholder="+1 234 567 8900"
+                    maxLength={15}
                   />
                   <Input 
                     label="Birthday" 
@@ -461,7 +481,13 @@ const ProfilePage = () => {
                   <Button type="button" variant="outline" onClick={cancelProfileEdit}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!isProfileDirty} isLoading={isLoading} className="min-w-[140px]">
+                  <Button 
+                    type="submit" 
+                    disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })} 
+                    aria-disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })}
+                    isLoading={isLoading} 
+                    className="min-w-[140px]"
+                  >
                     Save Changes
                   </Button>
                 </div>
@@ -501,6 +527,8 @@ const ProfilePage = () => {
                   value={passwordData.currentPassword} 
                   onChange={handlePasswordChange} 
                   required 
+                  error={passErrors.currentPassword}
+                  aria-invalid={!!passErrors.currentPassword}
                 />
                 
                 <div className="space-y-1">
@@ -511,7 +539,8 @@ const ProfilePage = () => {
                     value={passwordData.newPassword} 
                     onChange={handlePasswordChange} 
                     required 
-                    minLength="8" 
+                    error={passErrors.newPassword}
+                    aria-invalid={!!passErrors.newPassword}
                   />
                   <PasswordStrengthMeter password={passwordData.newPassword} />
                 </div>
@@ -523,14 +552,21 @@ const ProfilePage = () => {
                   value={passwordData.confirmPassword} 
                   onChange={handlePasswordChange} 
                   required 
-                  minLength="8" 
+                  error={passErrors.confirmPassword}
+                  aria-invalid={!!passErrors.confirmPassword}
                 />
                 
                 <div className="flex items-center gap-4 pt-6 justify-end">
                   <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!passwordData.newPassword} isLoading={isLoading} className="min-w-[160px]">
+                  <Button 
+                    type="submit" 
+                    disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })} 
+                    aria-disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })}
+                    isLoading={isLoading} 
+                    className="min-w-[160px]"
+                  >
                     Update Password
                   </Button>
                 </div>

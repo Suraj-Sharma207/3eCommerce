@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { useBrandingStore } from '../../store/brandingStore';
 import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X } from 'lucide-react';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { branding } = useBrandingStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -44,9 +46,13 @@ const AdminLayout = () => {
         `}
       >
         <div className="h-20 flex items-center justify-between px-8 border-b border-border-light flex-shrink-0">
-          <span className="text-2xl font-black tracking-tighter text-text-brand-600">
-            Luxe<span className="text-brand-600">Admin</span>
-          </span>
+          <NavLink to="/" className="text-2xl font-black tracking-tighter text-text-brand-600 flex items-center gap-2">
+            {branding?.logoUrl ? (
+              <img src={branding.logoUrl} alt={branding?.platformName || 'Admin'} className="h-10 w-auto" />
+            ) : (
+              <span>{branding?.platformName || 'Luxe'}<span className="text-brand-600">Admin</span></span>
+            )}
+          </NavLink>
           <button 
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden p-2 -mr-2 rounded-xl text-text-secondary hover:bg-surface-background transition-colors"

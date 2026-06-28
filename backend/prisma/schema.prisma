@@ -363,3 +363,17 @@ model EmailLog {
   @@index([createdAt])
 }
 
+model BrandingSettings {
+  id           String   @id @default(uuid())
+  platformName String   @default("LuxeHome")
+  logoUrl      String?
+  logoPublicId String?
+  faviconUrl   String?
+  primaryColor String?
+  supportEmail String?
+  supportPhone String?
+  websiteUrl   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

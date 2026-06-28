@@ -170,7 +170,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto no-scrollbar flex-1">
+        <div className="p-6 overflow-y-auto flex-1">
           <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
             
             <div className={`grid grid-cols-1 ${isEditing ? 'sm:grid-cols-2' : ''} gap-4`}>
@@ -373,7 +373,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
             type="submit" 
             form="product-form"
             isLoading={isLoading}
-            disabled={isLoading || (isEditing && !isDirty && isValid)}
+            disabled={isLoading || !isValid || (isEditing && !isDirty)}
           >
             {isLoading 
               ? (isEditing ? 'Saving Changes...' : 'Creating Product...') 

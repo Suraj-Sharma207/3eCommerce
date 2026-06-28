@@ -5,12 +5,13 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useAuthStore from '../../store/authStore';
 
-import { validateEmail as sharedValidateEmail } from '../../utils/validators';
+import { validateEmail as sharedValidateEmail, validatePassword as sharedValidatePassword, isFormValid } from '../../utils/validators';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [socialMessage, setSocialMessage] = useState('');
 
@@ -29,9 +30,14 @@ const LoginPage = () => {
     setEmailError(sharedValidateEmail(val));
   };
 
+  const validatePassword = (val) => {
+    setPassword(val);
+    setPasswordError(sharedValidatePassword(val));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (emailError || !email || !password) return;
+    if (!isFormValid({ email: emailError, password: passwordError }, { email, password })) return;
     setSocialMessage('');
     const success = await login(email, password);
     if (success) {
@@ -56,10 +62,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col justify-center py-4">
-      <div className="mb-6">
+    <div className="w-full flex flex-col justify-center py-4">
+      <div className="mb-6 stagger-1">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Welcome Back</h2>
-        <p className="mt-1 text-[16px] text-text-muted">
+        <p className="mt-1 text-[16px] text-text-muted stagger-2">
           Sign in to your account to continue.
         </p>
       </div>
@@ -72,7 +78,7 @@ const LoginPage = () => {
           </div>
         )}
 
-        <div className="space-y-1">
+        <div className="space-y-1 stagger-3">
           <Input
             label={<span className="font-medium text-[14px] text-text-primary">Email Address</span>}
             type="email"
@@ -85,18 +91,21 @@ const LoginPage = () => {
           />
         </div>
 
-        <div className="space-y-1 relative">
+        <div className="space-y-1 relative stagger-3">
           <Input
             label={<span className="font-medium text-[14px] text-text-primary">Password</span>}
             type="password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => validatePassword(e.target.value)}
             placeholder="Enter your password"
+            error={passwordError}
+            aria-invalid={!!passwordError}
+            className={passwordError ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
           />
         </div>
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-1 stagger-4">
           <div className="flex items-center">
             <input
               id="remember-me"
@@ -118,12 +127,13 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 stagger-4">
           <Button
             type="submit"
             fullWidth
             isLoading={isLoading}
-            disabled={!!emailError || !email || !password}
+            disabled={!isFormValid({ email: emailError, password: passwordError }, { email, password })}
+            aria-disabled={!isFormValid({ email: emailError, password: passwordError }, { email, password })}
             className="rounded-[12px] h-[48px] text-[16px] font-bold shadow-sm"
           >
             Sign in
@@ -131,7 +141,7 @@ const LoginPage = () => {
         </div>
       </form>
 
-      <div className="mt-6">
+      <div className="mt-6 stagger-5">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border-light" />
@@ -172,7 +182,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <div className="mt-6 text-center">
+      <div className="mt-6 text-center stagger-6">
         <p className="text-[14px] text-text-secondary font-medium">
           Don't have an account?{' '}
           <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">

@@ -1,25 +1,33 @@
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
+import { useBrandingStore } from '../../store/brandingStore';
+
+import AuthTransition from './AuthTransition';
 
 const AuthLayout = () => {
   const [imageError, setImageError] = useState(false);
+  const { branding } = useBrandingStore();
 
   return (
     <div className="flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden bg-surface-background font-sans">
-      
+
       {/* Left side - Form Area */}
       <div className="flex-1 flex flex-col lg:w-1/2 bg-white relative border-r border-border-light shadow-2xl z-10 overflow-y-auto">
-        
+
         {/* Header inside the form area */}
         <div className="p-6 sm:p-8 shrink-0">
-          <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight">
-            LuxeHome
+          <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight stagger-1 flex items-center gap-2">
+            {branding?.logoUrl ? (
+              <img src={branding.logoUrl} alt={branding?.platformName} className="h-10 w-auto" />
+            ) : (
+              branding?.platformName || 'LuxeHome'
+            )}
           </Link>
         </div>
 
-        <main className="flex-1 w-full max-w-[540px] mx-auto py-12 flex flex-col justify-center no-scrollbar">
-          <Outlet />
+        <main className="flex-1 w-full max-w-[540px] mx-auto py-12 flex flex-col justify-center">
+          <AuthTransition />
         </main>
       </div>
 
@@ -33,15 +41,15 @@ const AuthLayout = () => {
             onError={() => setImageError(true)}
           />
         )}
-        
+
         {/* Gradient Overlay - Subtle dark gradient */}
         <div className="absolute inset-0 bg-secondary-900/40 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/20 to-transparent" />
-        
+
         {/* Value Prop Overlay - Centered vertically */}
         <div className="absolute inset-0 flex flex-col justify-center p-12 lg:p-16 text-white max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
           <h3 className="text-4xl lg:text-5xl font-extrabold mb-8 tracking-tight leading-tight drop-shadow-sm">
-            Elevate your living space with LuxeHome.
+            Elevate your living space with {branding?.platformName || 'LuxeHome'}.
           </h3>
           <div className="flex flex-wrap gap-4">
             {[

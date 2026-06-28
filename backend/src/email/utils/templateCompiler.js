@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Handlebars from 'handlebars';
+import { brandingService } from '../../services/brandingService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -118,7 +119,7 @@ export const initializeTemplates = () => {
 };
 
 // Render template and return { html, text }
-export const renderTemplate = (templateName, data = {}) => {
+export const renderTemplate = async (templateName, data = {}) => {
   // Ensure initialized
   if (!isInitialized) {
     initializeTemplates();
@@ -131,15 +132,20 @@ export const renderTemplate = (templateName, data = {}) => {
     throw new Error(`Email template "${templateName}" not found in cache.`);
   }
 
+  // Fetch dynamic branding
+  const branding = await brandingService.getBranding();
+
   // Inject defaults (branding variables)
   const defaults = {
-    websiteUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-    supportEmail: 'support@luxehome.com',
-    supportPhone: '+1 (800) 555-LUXE',
+    websiteUrl: branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173',
+    supportEmail: branding.supportEmail || 'support@luxehome.com',
+    supportPhone: branding.supportPhone || '+1 (800) 555-LUXE',
     facebookUrl: 'https://facebook.com/luxehome',
     instagramUrl: 'https://instagram.com/luxehome',
     twitterUrl: 'https://twitter.com/luxehome',
-    currentYear: new Date().getFullYear().toString()
+    currentYear: new Date().getFullYear().toString(),
+    logoUrl: branding.logoUrl || null,
+    platformName: branding.platformName || 'LuxeHome'
   };
 
   // Merge and sanitize data to prevent HTML injection

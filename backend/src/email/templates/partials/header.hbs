@@ -2,9 +2,15 @@
   <tr>
     <td align="center" style="padding: 40px 20px;">
       <a href="{{shopUrl}}" style="text-decoration: none;">
-        <h1 class="main-heading" style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0; font-family: Helvetica, Arial, sans-serif; letter-spacing: -0.5px;">
-          Luxe<span style="color: #5B5CEB;">Home</span>
+        {{#if logoUrl}}
+        <img src="{{logoUrl}}" alt="{{platformName}}" style="max-height: 50px; width: auto; max-width: 250px;"
+          border="0" />
+        {{else}}
+        <h1 class="main-heading"
+          style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0; font-family: Helvetica, Arial, sans-serif; letter-spacing: -0.5px;">
+          {{platformName}}
         </h1>
+        {{/if}}
       </a>
     </td>
   </tr>
