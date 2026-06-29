@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatPrice } from '../../../utils/currency';
+import { getOptimizedUrl } from '../../../utils/cloudinary';
 
 const ProductListCard = ({ items }) => {
   if (!items || items.length === 0) return null;
@@ -11,7 +12,8 @@ const ProductListCard = ({ items }) => {
       <div className="space-y-6">
         {items.map((item, index) => {
           const product = item.product || {};
-          const imageSrc = product.thumbnail || product.galleryImages?.[0] || 'https://via.placeholder.com/80';
+          const rawImage = product.thumbnail || product.galleryImages?.[0];
+          const imageSrc = rawImage ? getOptimizedUrl(rawImage, 'thumbnail') : 'https://via.placeholder.com/80';
           
           return (
             <div key={item.id || index} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center py-4 border-b border-gray-100 last:border-0 last:pb-0">

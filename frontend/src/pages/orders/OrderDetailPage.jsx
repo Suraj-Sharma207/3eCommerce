@@ -4,8 +4,10 @@ import useOrderStore from '../../store/orderStore';
 import { ChevronLeft, Truck, Package, CreditCard, CheckCircle2, Circle } from 'lucide-react';
 
 import PageContainer from '../../components/layout/PageContainer';
-import { formatPrice } from '../../utils/currency';
+import EmptyState from '../../components/ui/EmptyState';
 import ImageFallback from '../../components/ui/ImageFallback';
+import { getOptimizedUrl } from '../../utils/cloudinary';
+import { formatPrice } from '../../utils/currency';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -106,7 +108,7 @@ const OrderDetailPage = () => {
               {currentOrder.items.map((item) => (
                 <div key={item.id} className="p-6 flex gap-6 items-center hover:bg-surface-background transition-colors">
                   <Link to={`/products/${item.productId}`} className="shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-border-light">
-                    <ImageFallback src={item.product.thumbnail} alt={item.product.name} className="w-full h-full object-cover" />
+                    <ImageFallback src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" />
                   </Link>
                   <div className="flex-1">
                     <Link to={`/products/${item.productId}`} className="text-base font-medium text-text-primary hover:text-brand-600 transition-colors line-clamp-1 mb-1">

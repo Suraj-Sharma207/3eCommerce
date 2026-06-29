@@ -20,9 +20,25 @@ class WishlistService {
     if (existingItem) {
       // Remove it if it exists
       await wishlistRepository.removeWishlistItem(existingItem.id);
+      
+      // Decrement wishlistCount asynchronously
+      import('../lib/prisma.js').then(({ default: prisma }) => {
+        prisma.product.update({
+          where: { id: productId },
+          data: { wishlistCount: { decrement: 1 } }
+        }).catch(err => console.error(`Failed to decrement wishlistCount for product ${productId}:`, err));
+      });
     } else {
       // Add it if it doesn't exist
       await wishlistRepository.addWishlistItem(wishlist.id, productId);
+      
+      // Increment wishlistCount asynchronously
+      import('../lib/prisma.js').then(({ default: prisma }) => {
+        prisma.product.update({
+          where: { id: productId },
+          data: { wishlistCount: { increment: 1 } }
+        }).catch(err => console.error(`Failed to increment wishlistCount for product ${productId}:`, err));
+      });
     }
 
     return await wishlistRepository.getWishlistByUserId(userId);

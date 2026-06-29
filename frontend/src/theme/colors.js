@@ -1,17 +1,27 @@
 export const colors = {
   brand: {
-    50: '#EEF0FF',
-    100: '#E0E4FF',
-    200: '#D7DBFF',
-    300: '#A5ABFF',
-    400: '#8188FF',
-    500: '#5B5CEB',
-    600: '#4C4DDC',
-    700: '#4344CC',
-    800: '#3738AA',
-    900: '#2D2E8B',
-    950: '#1A1A54',
+    50: '#F4F7FB',
+    100: '#EAF0F6',
+    200: '#D5E1ED',
+    300: '#B8C2D1',
+    400: '#3F79B5', // Primary Light
+    500: '#234F84', // Secondary
+    600: '#082F5C', // Primary (previously indigo-600)
+    700: '#1A4C86', // Primary Hover (previously indigo-700)
+    800: '#22385D', // Neutral Dark
+    900: '#132137',
+    950: '#0B1320',
   },
+  primary: '#082F5C',
+  primaryHover: '#1A4C86',
+  primaryLight: '#3F79B5',
+  secondary: '#234F84',
+  accent: '#6C7A90',
+  neutralDark: '#22385D',
+  neutral: '#748296',
+  surfaceBrand: '#B8C2D1',
+  backgroundAccent: '#F2E9DD',
+  white: '#FFFFFF',
   success: {
     50: '#F0FDF4',
     100: '#DCFCE7',

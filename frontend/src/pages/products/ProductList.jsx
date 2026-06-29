@@ -5,161 +5,239 @@ import ProductCard from '../../components/products/ProductCard';
 import Pagination from '../../components/ui/Pagination';
 import { ProductCardSkeleton } from '../../components/ui/SkeletonLoader';
 import useProductStore from '../../store/productStore';
+import useCategoryStore from '../../store/categoryStore';
 import { Filter, ChevronDown, Check } from 'lucide-react';
 
-const ALL_CATEGORIES = ['Living Room', 'Bedroom', 'Dining Room', 'Office', 'Lighting', 'Decor'];
 const ALL_RATINGS = [4, 3, 2, 1];
 
 const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products, isLoading, error, fetchProducts, pagination, filters, setFilters, clearFilters: clearStoreFilters, searchQuery } = useProductStore();
+  const { 
+    products, 
+    isLoading, 
+    error, 
+    fetchProducts, 
+    pagination,
+    filters,
+    setFilters, 
+    clearFilters: clearStoreFilters, 
+    searchQuery,
+    setSearchQuery 
+  } = useProductStore();
+  const { categories: categoriesList, fetchCategories } = useCategoryStore();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Read local arrays from URL
-  const selectedCategories = searchParams.get('categories') ? searchParams.get('categories').split(',') : [];
-  const selectedRatings = searchParams.get('ratings') ? searchParams.get('ratings').split(',').map(Number) : [];
-  const selectedAvailability = searchParams.get('availability') ? searchParams.get('availability').split(',') : [];
+  // Parse parameters from URL search parameters
+  const categoryParam = searchParams.get('category');
+  const ratingsParam = searchParams.get('ratings') || '';
+  const availabilityParam = searchParams.get('availability') || '';
+  const minPriceParam = searchParams.get('minPrice') || '';
+  const maxPriceParam = searchParams.get('maxPrice') || '';
+  const sortParam = searchParams.get('sort') || 'newest';
+  const searchParam = searchParams.get('search') || '';
+  const pageParam = parseInt(searchParams.get('page')) || 1;
 
-  // Setup initial store filters from URL only for things that still hit the backend (sort, price)
+  // Local inputs state for prices to allow debouncing
+  const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
+  const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
+
+  // Sync inputs with searchParams when changed (e.g. on clear all)
   useEffect(() => {
-    const sortParam = searchParams.get('sort') || 'newest';
-    const minPriceParam = searchParams.get('minPrice') || '';
-    const maxPriceParam = searchParams.get('maxPrice') || '';
+    setMinPriceInput(minPriceParam);
+    setMaxPriceInput(maxPriceParam);
+  }, [minPriceParam, maxPriceParam]);
 
-    let shouldUpdate = false;
-    let initialFilters = { ...filters, sort: sortParam };
+  // Read selectedCategories: if categoryParam is null, all categories are selected.
+  // If it's "", no categories are selected.
+  const selectedCategories = useMemo(() => {
+    if (categoryParam === null) {
+      return categoriesList.map(c => c.name);
+    }
+    return categoryParam ? categoryParam.split(',') : [];
+  }, [categoryParam, categoriesList]);
 
-    if (sortParam !== filters.sort) shouldUpdate = true;
-    if (minPriceParam !== filters.minPrice) {
-      initialFilters.minPrice = minPriceParam;
-      shouldUpdate = true;
-    }
-    if (maxPriceParam !== filters.maxPrice) {
-      initialFilters.maxPrice = maxPriceParam;
-      shouldUpdate = true;
+  const selectedRatings = useMemo(() => {
+    return ratingsParam ? ratingsParam.split(',').map(Number) : [];
+  }, [ratingsParam]);
+
+  const selectedAvailability = useMemo(() => {
+    return availabilityParam ? availabilityParam.split(',') : [];
+  }, [availabilityParam]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Sync URL params to store filters and trigger fetch
+  useEffect(() => {
+    // Map URL values to backend filter format
+    let backendCategory = 'All';
+    if (categoryParam !== null) {
+      backendCategory = categoryParam; // If it's "" (deselected all), it is empty string
     }
 
-    if (shouldUpdate) {
-      setFilters(initialFilters);
+    const backendMinRating = selectedRatings.length > 0 
+      ? Math.min(...selectedRatings) 
+      : '';
+
+    const backendInStock = selectedAvailability.includes('inStock');
+    const backendSale = selectedAvailability.includes('sale');
+
+    // Sync search input in store
+    if (searchParam !== searchQuery) {
+      setSearchQuery(searchParam);
     }
+
+    setFilters({
+      category: backendCategory,
+      minRating: backendMinRating,
+      inStock: backendInStock,
+      sale: backendSale,
+      minPrice: minPriceParam,
+      maxPrice: maxPriceParam,
+      sort: sortParam,
+    });
+
+    fetchProducts(pageParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [categoryParam, minPriceParam, maxPriceParam, selectedRatings, selectedAvailability, sortParam, pageParam, searchParam]);
 
-  // Sync store changes (price, sort) to URL so they persist too
-  useEffect(() => {
-    const newParams = new URLSearchParams(searchParams);
-    let changed = false;
-    
-    if (filters.sort && filters.sort !== 'newest') {
-      if (newParams.get('sort') !== filters.sort) { newParams.set('sort', filters.sort); changed = true; }
-    } else {
-      if (newParams.has('sort')) { newParams.delete('sort'); changed = true; }
-    }
-    
-    if (filters.minPrice) {
-      if (newParams.get('minPrice') !== filters.minPrice.toString()) { newParams.set('minPrice', filters.minPrice); changed = true; }
-    } else {
-      if (newParams.has('minPrice')) { newParams.delete('minPrice'); changed = true; }
-    }
-
-    if (filters.maxPrice) {
-      if (newParams.get('maxPrice') !== filters.maxPrice.toString()) { newParams.set('maxPrice', filters.maxPrice); changed = true; }
-    } else {
-      if (newParams.has('maxPrice')) { newParams.delete('maxPrice'); changed = true; }
-    }
-
-    if (changed) {
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [filters.sort, filters.minPrice, filters.maxPrice]);
-
-  // Debounced fetch on search or STORE filters change (price, sort)
+  // Debounced price range filters sync to URL
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchProducts(1);
-    }, 400); // 400ms debounce
+      const newParams = new URLSearchParams(searchParams);
+      let changed = false;
+
+      if (minPriceInput !== minPriceParam) {
+        if (minPriceInput) newParams.set('minPrice', minPriceInput);
+        else newParams.delete('minPrice');
+        changed = true;
+      }
+
+      if (maxPriceInput !== maxPriceParam) {
+        if (maxPriceInput) newParams.set('maxPrice', maxPriceInput);
+        else newParams.delete('maxPrice');
+        changed = true;
+      }
+
+      if (changed) {
+        newParams.set('page', '1'); // reset page to 1
+        setSearchParams(newParams, { replace: true });
+      }
+    }, 450);
+
     return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, filters.minPrice, filters.maxPrice, filters.sort]);
+  }, [minPriceInput, maxPriceInput, minPriceParam, maxPriceParam, searchParams, setSearchParams]);
+
+  // Debounced search sync to URL
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const newParams = new URLSearchParams(searchParams);
+      const urlSearch = searchParams.get('search') || '';
+      if (searchQuery !== urlSearch) {
+        if (searchQuery) newParams.set('search', searchQuery);
+        else newParams.delete('search');
+        newParams.set('page', '1'); // reset page to 1
+        setSearchParams(newParams, { replace: true });
+      }
+    }, 450);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchParams, setSearchParams]);
 
   const handlePageChange = (newPage) => {
-    fetchProducts(newPage);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', newPage.toString());
+    setSearchParams(newParams);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const updateUrlParam = (key, values) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (values && values.length > 0) {
-      newParams.set(key, values.join(','));
-    } else {
-      newParams.delete(key);
-    }
-    setSearchParams(newParams, { replace: true });
-  };
-
   const handleCategoryToggle = (cat) => {
-    if (cat === 'All') {
-      updateUrlParam('categories', []);
-      return;
-    }
+    const newParams = new URLSearchParams(searchParams);
     
-    let newCats = [...selectedCategories];
-    // If "All" was active, clicking a category implies unchecking it
-    if (selectedCategories.length === 0) {
-      newCats = ALL_CATEGORIES.filter(c => c !== cat);
+    if (cat === 'All') {
+      const isAllChecked = selectedCategories.length === categoriesList.length;
+      if (isAllChecked) {
+        newParams.set('category', '');
+      } else {
+        newParams.delete('category');
+      }
     } else {
+      let newCats = [...selectedCategories];
       if (newCats.includes(cat)) {
         newCats = newCats.filter(c => c !== cat);
       } else {
         newCats.push(cat);
       }
-    }
 
-    // Auto-check All if everything is selected, or if nothing is selected
-    if (newCats.length === ALL_CATEGORIES.length || newCats.length === 0) {
-      newCats = [];
-    }
-
-    updateUrlParam('categories', newCats);
-  };
-
-  const handleRatingToggle = (rating) => {
-    if (rating === 'All') {
-      updateUrlParam('ratings', []);
-      return;
-    }
-
-    let newRatings = [...selectedRatings];
-    if (selectedRatings.length === 0) {
-      newRatings = ALL_RATINGS.filter(r => r !== rating);
-    } else {
-      if (newRatings.includes(rating)) {
-        newRatings = newRatings.filter(r => r !== rating);
+      if (newCats.length === categoriesList.length) {
+        newParams.delete('category');
       } else {
-        newRatings.push(rating);
+        newParams.set('category', newCats.join(','));
       }
     }
 
-    if (newRatings.length === ALL_RATINGS.length || newRatings.length === 0) {
-      newRatings = [];
-    }
+    newParams.set('page', '1'); // reset page to 1
+    setSearchParams(newParams);
+  };
 
-    updateUrlParam('ratings', newRatings);
+  const handleRatingToggle = (rating) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (rating === 'All') {
+      newParams.delete('ratings');
+    } else {
+      let newRatings = [...selectedRatings];
+      if (selectedRatings.length === 0) {
+        newRatings = [4, 3, 2, 1].filter(r => r !== rating);
+      } else {
+        if (newRatings.includes(rating)) {
+          newRatings = newRatings.filter(r => r !== rating);
+        } else {
+          newRatings.push(rating);
+        }
+      }
+
+      if (newRatings.length === 4 || newRatings.length === 0) {
+        newParams.delete('ratings');
+      } else {
+        newParams.set('ratings', newRatings.join(','));
+      }
+    }
+    
+    newParams.set('page', '1'); // reset page to 1
+    setSearchParams(newParams);
   };
 
   const handleAvailabilityToggle = (value) => {
+    const newParams = new URLSearchParams(searchParams);
     let newAvail = [...selectedAvailability];
     if (newAvail.includes(value)) {
       newAvail = newAvail.filter(v => v !== value);
     } else {
       newAvail.push(value);
     }
-    updateUrlParam('availability', newAvail);
+    
+    if (newAvail.length > 0) {
+      newParams.set('availability', newAvail.join(','));
+    } else {
+      newParams.delete('availability');
+    }
+    newParams.set('page', '1'); // reset page to 1
+    setSearchParams(newParams);
   };
 
   const handleClearAllFilters = () => {
-    clearStoreFilters(); // resets search, minPrice, maxPrice, sort
-    setSearchParams(new URLSearchParams()); // clears URL params for local filters
+    clearStoreFilters(); // resets store's search, price, sort
+    setSearchParams(new URLSearchParams()); // clears URL params
+  };
+
+  const handleSortChange = (e) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('sort', e.target.value);
+    newParams.set('page', '1'); // reset page to 1
+    setSearchParams(newParams);
   };
 
   const sortOptions = [
@@ -170,24 +248,6 @@ const ProductList = () => {
     { value: 'highest_rated', label: 'Highest Rated' },
     { value: 'discount', label: 'Largest Discount' },
   ];
-
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(product => {
-      // Category (OR logic for array items)
-      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-      
-      // Rating (OR logic for array items)
-      const matchesRating = selectedRatings.length === 0 || selectedRatings.some(r => product.rating >= r);
-      
-      // Availability (OR logic for array items)
-      const inStockMatch = selectedAvailability.includes('inStock') && product.stock > 0;
-      const saleMatch = selectedAvailability.includes('sale') && product.sale === true;
-      const matchesAvailability = selectedAvailability.length === 0 || inStockMatch || saleMatch;
-
-      return matchesCategory && matchesRating && matchesAvailability;
-    });
-  }, [products, selectedCategories, selectedRatings, selectedAvailability]);
 
   const startItem = pagination.totalItems > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0;
   const endItem = Math.min(startItem + pagination.itemsPerPage - 1, pagination.totalItems);
@@ -232,7 +292,7 @@ const ProductList = () => {
           <div className="relative group">
             <select
               value={filters.sort}
-              onChange={(e) => setFilters({ sort: e.target.value })}
+              onChange={handleSortChange}
               className="appearance-none bg-white border border-border text-text-brand-600 py-2 pl-4 pr-10 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-brand-600 cursor-pointer shadow-sm"
             >
               {sortOptions.map(opt => (
@@ -253,25 +313,26 @@ const ProductList = () => {
             <h3 className="text-lg font-bold text-text-brand-600 mb-4">Categories</h3>
             <div className="space-y-2">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategories.length === 0
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategories.length === categoriesList.length
                     ? 'bg-brand-600 border-brand-600'
                     : 'border-border group-hover:border-brand-600-400'
                   }`}>
-                  {selectedCategories.length === 0 && <Check className="w-3.5 h-3.5 text-white" />}
+                  {selectedCategories.length === categoriesList.length && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
-                <span className={`text-sm ${selectedCategories.length === 0 ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
+                <span className={`text-sm ${selectedCategories.length === categoriesList.length ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
                   All
                 </span>
                 <input
                   type="checkbox"
                   className="sr-only"
-                  checked={selectedCategories.length === 0}
+                  checked={selectedCategories.length === categoriesList.length}
                   onChange={() => handleCategoryToggle('All')}
                 />
               </label>
 
-              {ALL_CATEGORIES.map(cat => {
-                const isChecked = selectedCategories.length === 0 || selectedCategories.includes(cat);
+              {categoriesList.map(catObj => {
+                const cat = catObj.name;
+                const isChecked = selectedCategories.includes(cat);
                 return (
                   <label key={cat} className="flex items-center gap-3 cursor-pointer group">
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked
@@ -281,7 +342,7 @@ const ProductList = () => {
                       {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
                     </div>
                     <span className={`text-sm ${isChecked ? 'font-semibold text-brand-700' : 'text-text-secondary group-hover:text-text-brand-600'}`}>
-                      {cat}
+                      {cat} <span className="text-xs text-text-muted">({catObj.count})</span>
                     </span>
                     <input
                       type="checkbox"
@@ -352,8 +413,8 @@ const ProductList = () => {
                   type="number"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
                   placeholder="0"
-                  value={filters.minPrice || ''}
-                  onChange={(e) => setFilters({ minPrice: e.target.value })}
+                  value={minPriceInput}
+                  onChange={(e) => setMinPriceInput(e.target.value)}
                 />
               </div>
               <div>
@@ -362,8 +423,8 @@ const ProductList = () => {
                   type="number"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
                   placeholder="2000"
-                  value={filters.maxPrice || ''}
-                  onChange={(e) => setFilters({ maxPrice: e.target.value })}
+                  value={maxPriceInput}
+                  onChange={(e) => setMaxPriceInput(e.target.value)}
                 />
               </div>
             </div>
@@ -431,10 +492,10 @@ const ProductList = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {[...Array(6)].map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
-          ) : filteredProducts.length > 0 ? (
+          ) : products.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

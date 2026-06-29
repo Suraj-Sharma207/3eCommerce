@@ -10,6 +10,9 @@ import useAddressStore from '../../store/addressStore';
 import { CheckCircle2, CreditCard, Truck, MapPin, Smartphone, Banknote, AlertCircle, QrCode, MonitorSmartphone } from 'lucide-react';
 import { formatPrice } from '../../utils/currency';
 import ImageFallback from '../../components/ui/ImageFallback';
+import { getOptimizedUrl } from '../../utils/cloudinary';
+import useSettingsStore from '../../store/settingsStore';
+import { calculateShipping } from '../../utils/shipping';
 
 const steps = [
   { id: 1, name: 'Shipping', icon: Truck },
@@ -21,6 +24,7 @@ const CheckoutPage = () => {
   const { cart, fetchCart } = useCartStore();
   const { checkout, isLoading: isOrderLoading, error: orderError } = useOrderStore();
   const { addresses, fetchAddresses, isLoading: isAddressesLoading } = useAddressStore();
+  const { publicConfig } = useSettingsStore();
   const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -54,8 +58,9 @@ const CheckoutPage = () => {
     const itemPrice = item.product.finalPrice || item.product.price;
     return acc + (itemPrice * item.quantity);
   }, 0);
-  const shipping = subtotal > 4999 ? 0 : 499;
-  const total = subtotal + shipping;
+  const shippingInfo = calculateShipping(subtotal, publicConfig);
+  const shipping = validItems.length > 0 ? shippingInfo.fee : 0;
+  const total = subtotal + (shipping === -1 ? 0 : shipping);
 
   useEffect(() => {
     fetchAddresses();
@@ -268,7 +273,7 @@ const CheckoutPage = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { id: 'GPAY', name: 'Google Pay', icon: MonitorSmartphone, color: 'text-blue-500' },
-                      { id: 'PHONEPE', name: 'PhonePe', icon: MonitorSmartphone, color: 'text-purple-600' },
+                      { id: 'PHONEPE', name: 'PhonePe', icon: MonitorSmartphone, color: 'text-[#5f259f]' },
                       { id: 'PAYTM', name: 'Paytm', icon: MonitorSmartphone, color: 'text-blue-400' },
                       { id: 'BHIM', name: 'BHIM UPI', icon: MonitorSmartphone, color: 'text-orange-500' },
                       { id: 'OTHER', name: 'Other UPI ID', icon: Smartphone, color: 'text-text-muted' },
@@ -574,7 +579,7 @@ const CheckoutPage = () => {
                 <div key={item.id} className="flex gap-4">
                   <div className="relative">
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-border-light">
-                      <ImageFallback src={item.product.thumbnail} alt={item.product.name} className="w-full h-full object-cover" />
+                      <ImageFallback src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" />
                     </div>
                     <span className="absolute -top-2 -right-2 w-5 h-5 bg-neutral-800 text-white text-xs font-bold flex items-center justify-center rounded-full">
                       {item.quantity}

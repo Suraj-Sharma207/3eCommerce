@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 import PageContainer from '../layout/PageContainer';
 import { formatPrice } from '../../utils/currency';
+import useSettingsStore from '../../store/settingsStore';
 
 const HeroBanner = () => {
+  const { publicConfig } = useSettingsStore();
+  const threshold = publicConfig?.shipping?.freeShippingThreshold;
   return (
     <div className="bg-surface-background py-12 lg:py-20">
       <PageContainer>
@@ -42,7 +45,7 @@ const HeroBanner = () => {
 
         {/* Trust Indicators */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 px-4 lg:px-8">
-          <TrustBadge icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" title="Free Delivery" desc={`On orders over ${formatPrice(4999)}`} />
+          <TrustBadge icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" title="Free Delivery" desc={threshold ? `On orders over ${formatPrice(threshold)}` : "On qualifying orders"} />
           <TrustBadge icon="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" title="30-Day Returns" desc="No questions asked" />
           <TrustBadge icon="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" title="Premium Quality" desc="Built to last" />
           <TrustBadge icon="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" title="Secure Payments" desc="100% protected" />

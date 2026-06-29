@@ -14,7 +14,7 @@ const Footer = () => {
                             {branding?.logoUrl ? (
                                 <img src={branding.logoUrl} alt={branding?.platformName} className="h-10 w-auto" />
                             ) : (
-                                branding?.platformName || 'LuxeHome'
+                                branding?.platformName || 'Store'
                             )}
                         </Link>
                         <p className="text-text-secondary leading-relaxed mb-8 max-w-sm">
@@ -71,7 +71,7 @@ const Footer = () => {
 
                 <div className="border-t border-border mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-text-secondary text-sm">
-                        &copy; {new Date().getFullYear()} {branding?.platformName || 'LuxeHome'}. All rights reserved.
+                        &copy; {new Date().getFullYear()} {branding?.platformName || 'Store'}. All rights reserved.
                     </p>
                     <div className="flex gap-6 text-sm">
                         <Link to="/privacy" className="text-text-secondary hover:text-brand-600">Privacy Policy</Link>

@@ -9,6 +9,7 @@ import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
 import { formatPrice } from '../../utils/currency';
+import { getOptimizedUrl } from '../../utils/cloudinary';
 
 const ProductCard = ({ product }) => {
   if (!product) return null;
@@ -42,10 +43,10 @@ const ProductCard = ({ product }) => {
     <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-soft transition-all duration-300 border border-border-light">
       
       {/* Image Area with Actions */}
-      <div className="relative aspect-[4/3] bg-surface-background overflow-hidden">
+      <div className="relative aspect-square bg-surface-background overflow-hidden">
         <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full">
           <ImageFallback 
-            src={product.thumbnail} 
+            src={getOptimizedUrl(product.thumbnail, 'card')} 
             alt={product.name} 
             loading="lazy"
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" 

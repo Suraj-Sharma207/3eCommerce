@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import useProductStore from '../../store/productStore';
 import Button from '../../components/ui/Button';
 import { Plus, Edit2, Trash2, Search, Inbox } from 'lucide-react';
@@ -13,10 +14,15 @@ import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
 
 const AdminProducts = () => {
-  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage } = useProductStore();
+  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage, filters, setFilters, inventoryCounts } = useProductStore();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  
+  // Always derive selectedProduct from the live store so image updates propagate automatically
+  const selectedProduct = selectedProductId
+    ? (products.find(p => p.id === selectedProductId) ?? null)
+    : null;
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
@@ -30,16 +36,16 @@ const AdminProducts = () => {
       fetchProducts(1);
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, fetchProducts]);
+  }, [searchQuery, filters.inventoryTab, fetchProducts]);
 
   const handleOpenModal = (product = null) => {
-    setSelectedProduct(product);
+    setSelectedProductId(product?.id ?? null);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedProduct(null);
+    setSelectedProductId(null);
   };
 
   const handleSaveProduct = async (productData) => {
@@ -100,6 +106,33 @@ const AdminProducts = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
         
+        {/* Inventory Tabs */}
+        <div className="flex items-center px-4 pt-4 border-b border-border gap-6 overflow-x-auto hide-scrollbar">
+          {[
+            { id: 'all', label: 'All Products', count: inventoryCounts.all },
+            { id: 'active', label: 'Active', count: inventoryCounts.active },
+            { id: 'outOfStock', label: 'Out of Stock', count: inventoryCounts.outOfStock }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setFilters({ inventoryTab: tab.id })}
+              className={`pb-3 text-sm font-bold transition-colors relative whitespace-nowrap ${
+                filters.inventoryTab === tab.id 
+                  ? 'text-brand-600' 
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {tab.label} <span className="ml-1 opacity-80">({tab.count})</span>
+              {filters.inventoryTab === tab.id && (
+                <motion.div 
+                  layoutId="activeAdminTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Toolbar */}
         <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
           <div className="relative w-full max-w-sm">
@@ -139,15 +172,25 @@ const AdminProducts = () => {
                 ))
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-16 text-center">
-                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                      <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4 border border-border">
-                        <Inbox className="w-8 h-8 text-text-muted opacity-50" />
-                      </div>
-                      <h3 className="text-lg font-extrabold text-text-primary mb-1">No products found.</h3>
-                      <p className="text-sm text-text-secondary font-medium">
-                        {searchQuery ? 'We couldn\'t find any products matching your search criteria. Try adjusting your filters.' : 'Your store doesn\'t have any products yet. Add a product to get started.'}
-                      </p>
+                  <td colSpan="5" className="p-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      {filters.inventoryTab === 'outOfStock' && !searchQuery ? (
+                        <>
+                          <div className="w-16 h-16 bg-success-500/10 rounded-full flex items-center justify-center mb-4">
+                            <span className="text-3xl">🎉</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-text-primary mb-2">Great!</h3>
+                          <p className="text-text-muted max-w-sm">No products are currently out of stock. Everything is available for purchase.</p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4">
+                            <Inbox className="w-8 h-8 text-text-muted" strokeWidth={1.5} />
+                          </div>
+                          <h3 className="text-lg font-bold text-text-primary mb-2">No products found</h3>
+                          <p className="text-text-muted max-w-sm">Try adjusting your search query or creating a new product.</p>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -161,28 +204,23 @@ const AdminProducts = () => {
                     <td className="p-4 text-sm text-text-secondary">{product.category || 'N/A'}</td>
                     <td className="p-4 font-bold text-text-brand-600">{formatPrice(product.price)}</td>
                     <td className="p-4">
-                      {(() => {
-                        const stock = product.stock || 0;
-                        if (stock > lowStockThreshold) {
-                          return (
-                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-success-50 text-success-700 border border-success-200">
-                              {stock} In Stock
-                            </span>
-                          );
-                        } else if (stock > 0) {
-                          return (
-                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-warning-50 text-warning-700 border border-warning-200">
-                              {stock} Left
-                            </span>
-                          );
-                        } else {
-                          return (
-                            <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-danger-50 text-danger-700 border border-danger-200">
-                              Out of Stock
-                            </span>
-                          );
-                        }
-                      })()}
+                      {product.stock === 0 ? (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger-600/10 text-danger-600 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+                          Out of Stock
+                        </div>
+                      ) : (
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                          product.stock <= lowStockThreshold 
+                            ? 'bg-warning-500/10 text-warning-600'
+                            : 'bg-success-500/10 text-success-600'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            product.stock <= lowStockThreshold ? 'bg-warning-500' : 'bg-success-500'
+                          }`}></span>
+                          {product.stock} in stock
+                        </div>
+                      )}
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
                       <button 

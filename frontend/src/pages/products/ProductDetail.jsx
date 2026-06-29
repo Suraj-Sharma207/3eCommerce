@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ProductGallery from '../../components/ecommerce/ProductGallery';
 import RatingDisplay from '../../components/ecommerce/RatingDisplay';
-import QuantitySelector from '../../components/ecommerce/QuantitySelector';
+import QuantityStepper from '../../components/ecommerce/QuantityStepper';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
@@ -12,6 +12,7 @@ import useCartStore from '../../store/cartStore';
 import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
 import { useBrandingStore } from '../../store/brandingStore';
+import useSettingsStore from '../../store/settingsStore';
 import ImageFallback from '../../components/ui/ImageFallback';
 import ProductCard from '../../components/products/ProductCard';
 import NotifyMeModal from '../../components/products/NotifyMeModal';
@@ -25,6 +26,7 @@ const ProductDetail = () => {
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
   const { branding } = useBrandingStore();
+  const { publicConfig } = useSettingsStore();
   
   const isCartLoading = product ? (loadingProducts[product.id] || false) : false;
   
@@ -203,9 +205,10 @@ const ProductDetail = () => {
               <div className="flex flex-col sm:flex-row items-end gap-4">
                 <div className="w-full sm:w-auto">
                   <h3 className="text-sm font-bold text-text-brand-600 uppercase tracking-wider mb-3">Quantity</h3>
-                  <QuantitySelector 
+                  <QuantityStepper 
                     quantity={quantity} 
                     setQuantity={setQuantity} 
+                    min={1} 
                     max={product.stock}
                     className="w-full sm:w-auto"
                   />
@@ -237,7 +240,7 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 border-t border-border">
             <div className="flex items-center gap-3 text-text-secondary">
               <Truck className="w-5 h-5 text-brand-600" />
-              <span className="text-sm font-medium">Free Delivery over {formatPrice(4999)}</span>
+              <span className="text-sm font-medium">Free Delivery {publicConfig?.shipping?.freeShippingThreshold ? `over ${formatPrice(publicConfig.shipping.freeShippingThreshold)}` : 'on qualifying orders'}</span>
             </div>
             <div className="flex items-center gap-3 text-text-secondary">
               <RotateCcw className="w-5 h-5 text-brand-600" />
@@ -285,7 +288,7 @@ const ProductDetail = () => {
               </div>
               <div className="flex justify-between py-3 border-b border-border-light">
                 <span className="font-medium text-text-brand-600">Brand</span>
-                <span>{product.brand || branding?.platformName || 'LuxeHome'}</span>
+                <span>{product.brand || branding?.platformName || 'Store'}</span>
               </div>
               <div className="flex justify-between py-3 border-b border-border-light">
                 <span className="font-medium text-text-brand-600">SKU</span>

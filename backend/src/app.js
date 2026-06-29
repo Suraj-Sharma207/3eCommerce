@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 
 // Import routes (will be created soon)
+import { getBranding } from './controllers/brandingController.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
@@ -16,6 +17,7 @@ import userRoutes from './routes/userRoutes.js';
 import addressRoutes from './routes/addressRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import promotionRoutes from './routes/promotionRoutes.js';
+import homeRoutes from './routes/homeRoutes.js';
 import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
@@ -46,6 +48,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/home', homeRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -56,6 +59,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
+
+// Public endpoints
+app.get('/api/branding', getBranding);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

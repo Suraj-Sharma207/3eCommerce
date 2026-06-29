@@ -21,7 +21,7 @@ const AuthLayout = () => {
             {branding?.logoUrl ? (
               <img src={branding.logoUrl} alt={branding?.platformName} className="h-10 w-auto" />
             ) : (
-              branding?.platformName || 'LuxeHome'
+              branding?.platformName || 'Store'
             )}
           </Link>
         </div>
@@ -49,7 +49,7 @@ const AuthLayout = () => {
         {/* Value Prop Overlay - Centered vertically */}
         <div className="absolute inset-0 flex flex-col justify-center p-12 lg:p-16 text-white max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
           <h3 className="text-4xl lg:text-5xl font-extrabold mb-8 tracking-tight leading-tight drop-shadow-sm">
-            Elevate your living space with {branding?.platformName || 'LuxeHome'}.
+            Elevate your living space with {branding?.platformName || 'Store'}.
           </h3>
           <div className="flex flex-wrap gap-4">
             {[

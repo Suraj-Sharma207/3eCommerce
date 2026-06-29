@@ -3,8 +3,18 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-brand-primary: #082F5C;
+    --color-brand-primary-hover: #1A4C86;
+    --color-brand-primary-light: #3F79B5;
+    --color-brand-secondary: #234F84;
+    --color-brand-accent: #6C7A90;
+    --color-brand-neutral-dark: #22385D;
+    --color-brand-neutral: #748296;
+    --color-brand-surface: #B8C2D1;
+    --color-brand-bg-accent: #F2E9DD;
+  }
 
-  
   body {
     @apply bg-background-default text-text-primary antialiased font-sans;
   }

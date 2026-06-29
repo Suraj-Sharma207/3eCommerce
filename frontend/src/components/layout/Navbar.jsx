@@ -1,37 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, User, Search, Heart, Menu, X, ArrowRight } from 'lucide-react';
+import { ShoppingCart, User, Search, Heart, Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import useProductStore from '../../store/productStore';
 import useCartStore from '../../store/cartStore';
 import useAuthStore from '../../store/authStore';
 import useWishlistStore from '../../store/wishlistStore';
 import { useBrandingStore } from '../../store/brandingStore';
+import useCategoryStore from '../../store/categoryStore';
 import AccountDropdown from './AccountDropdown';
 import ImageFallback from '../ui/ImageFallback';
 import { formatPrice } from '../../utils/currency';
+import { getOptimizedUrl } from '../../utils/cloudinary';
+import useUIStore from '../../store/uiStore';
+import CategoryNavigation from './CategoryNavigation';
 
 const Navbar = () => {
     const { searchQuery, setSearchQuery } = useProductStore();
-    const { cart } = useCartStore();
+    const { cart, isLoading: isCartLoading } = useCartStore();
     const { user, isAuthenticated } = useAuthStore();
     const { fetchWishlist } = useWishlistStore();
     const { branding } = useBrandingStore();
+    const { categories, fetchCategories } = useCategoryStore();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+    
+    // UI state for sticky category navigation
+    const isCategorySticky = useUIStore(state => state.isCategorySticky);
 
     useEffect(() => {
         if (isAuthenticated) {
-            fetchWishlist();
+            // Wishlist fetching moved to App.jsx global initialization
         }
-    }, [isAuthenticated, fetchWishlist]);
+    }, [isAuthenticated]);
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 10);
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        fetchCategories();
+    }, [fetchCategories]);
 
     // Search Suggestions State
     const [suggestions, setSuggestions] = useState([]);
@@ -130,9 +135,9 @@ const Navbar = () => {
     };
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-lg border-b border-border-light transition-shadow duration-300 ${isScrolled ? 'shadow-md' : 'shadow-none'}`}>
+        <nav className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-lg border-b border-border-light transition-shadow duration-300 ${isCategorySticky ? 'shadow-md' : 'shadow-none'}`}>
             <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-                <div className="flex justify-between items-center h-20">
+                <div className={`flex justify-between items-center transition-all duration-300 ${isCategorySticky ? 'h-16' : 'h-20'}`}>
 
                     {/* Mobile menu button */}
                     <div className="flex items-center md:hidden">
@@ -152,9 +157,13 @@ const Navbar = () => {
                             className="text-3xl font-extrabold text-brand-600 tracking-tight flex items-center gap-2"
                         >
                             {branding?.logoUrl ? (
-                                <img src={branding.logoUrl} alt={branding?.platformName} className="h-10 w-auto" />
+                                <img 
+                                    src={branding.logoUrl} 
+                                    alt={branding?.platformName} 
+                                    className={`w-auto transition-all duration-300 ${isCategorySticky ? 'h-8' : 'h-10'}`} 
+                                />
                             ) : (
-                                branding?.platformName || 'LuxeHome'
+                                branding?.platformName || 'Store'
                             )}
                         </Link>
                     </div>
@@ -219,7 +228,7 @@ const Navbar = () => {
                                                                 }`}
                                                         >
                                                             <div className="w-10 h-10 rounded bg-border-light flex-shrink-0 overflow-hidden">
-                                                                <ImageFallback src={item.thumbnail} alt={item.name} className="w-full h-full object-cover" />
+                                                                <ImageFallback src={getOptimizedUrl(item.thumbnail, 'thumbnail')} alt={item.name} className="w-full h-full object-cover" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <h4 className="text-sm font-bold text-text-brand-600 truncate">{item.name}</h4>
@@ -299,15 +308,21 @@ const Navbar = () => {
 
                         <Link to="/cart" className="relative text-text-secondary hover:text-brand-600 transition-colors duration-200">
                             <ShoppingCart className="h-6 w-6" strokeWidth={1.5} />
-                            {cartItemCount > 0 && (
-                                <span className="absolute -top-1.5 -right-2 bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
-                                    {cartItemCount}
-                                </span>
+                            {isAuthenticated && (
+                                <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] bg-brand-600 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white shadow-sm">
+                                    {isCartLoading && !cart ? (
+                                        <div className="w-2 h-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : (
+                                        cartItemCount > 99 ? '99+' : cartItemCount
+                                    )}
+                                </div>
                             )}
                         </Link>
                     </div>
                 </div>
             </div>
+
+            <CategoryNavigation isVisible={isCategorySticky} />
 
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
@@ -325,9 +340,39 @@ const Navbar = () => {
                                 placeholder="Search furniture..."
                             />
                         </form>
-                        <Link to="/products" className="block px-3 py-3 text-base font-medium text-text-brand-600 hover:bg-surface-background rounded-lg">Shop</Link>
-                        <Link to="/products?category=Collections" className="block px-3 py-3 text-base font-medium text-text-brand-600 hover:bg-surface-background rounded-lg">Collections</Link>
-                        <Link to="/products?sale=true" className="block px-3 py-3 text-base font-medium text-danger-600 hover:bg-danger-600/10 rounded-lg">Sale</Link>
+                        <Link 
+                            to="/products" 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="block px-3 py-3 text-base font-medium text-text-primary hover:bg-surface-background rounded-lg"
+                        >
+                            All Products
+                        </Link>
+                        
+                        <div className="pt-2 pb-1 px-3">
+                            <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Categories</p>
+                            <div className="space-y-1">
+                                {categories.map((category) => (
+                                    <Link 
+                                        key={category.name}
+                                        to={`/products?category=${encodeURIComponent(category.name)}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="block px-3 py-2 text-sm font-medium text-text-secondary hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                                    >
+                                        {category.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-border-light mt-2">
+                            <Link 
+                                to="/products?sale=true" 
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="block px-3 py-3 text-base font-medium text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+                            >
+                                Sale
+                            </Link>
+                        </div>
                     </div>
                 </div>
             )}

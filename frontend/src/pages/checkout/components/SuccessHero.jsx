@@ -9,7 +9,7 @@ const SuccessHero = ({ customerName }) => {
         <div className="absolute inset-0 rounded-full border-4 border-success-200 animate-ping opacity-20"></div>
         {/* Subtle decorative particles */}
         <div className="absolute -top-2 -left-4 w-2 h-2 bg-success-300 rounded-full opacity-50"></div>
-        <div className="absolute top-1/2 -right-6 w-3 h-3 border-2 border-indigo-200 rounded-full opacity-50"></div>
+        <div className="absolute top-1/2 -right-6 w-3 h-3 border-2 border-brand-200 rounded-full opacity-50"></div>
         <div className="absolute -bottom-4 left-1/4 w-2 h-2 bg-warning-300 rounded-full opacity-50"></div>
       </div>
 

@@ -1,30 +1,54 @@
 import prisma from '../lib/prisma.js';
+import { mapProduct } from '../utils/productMapper.js';
+
+const PRODUCT_WITH_IMAGES = {
+  include: {
+    images: { orderBy: { displayOrder: 'asc' } }
+  }
+};
+
+/** Map product inside a cart item */
+const mapCartItem = (item) => ({
+  ...item,
+  product: item.product ? mapProduct(item.product) : null,
+});
+
+/** Map all items in a cart */
+const mapCart = (cart) => {
+  if (!cart) return null;
+  return {
+    ...cart,
+    items: (cart.items || []).map(mapCartItem),
+  };
+};
 
 class CartRepository {
   async getCartByUserId(userId) {
-    return await prisma.cart.findUnique({
+    const cart = await prisma.cart.findUnique({
       where: { userId },
       include: {
         items: {
           include: {
-            product: true
+            product: PRODUCT_WITH_IMAGES,
           }
         }
       }
     });
+    return mapCart(cart);
   }
 
   async createCart(userId) {
-    return await prisma.cart.create({
+    const cart = await prisma.cart.create({
       data: { userId },
       include: {
         items: {
           include: {
-            product: true
+            product: PRODUCT_WITH_IMAGES,
           }
         }
       }
     });
+    return mapCart(cart);
   }
 
   async getCartItem(cartId, productId) {

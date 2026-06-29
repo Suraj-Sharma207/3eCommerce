@@ -1,5 +1,24 @@
 import prisma from '../lib/prisma.js';
 import promotionService from '../services/promotionService.js';
+import settingsService from '../services/settingsService.js';
+import { mapProduct } from '../utils/productMapper.js';
+
+const PRODUCT_WITH_IMAGES = {
+  include: { images: { orderBy: { displayOrder: 'asc' } } }
+};
+
+const mapOrderItem = (item) => ({
+  ...item,
+  product: item.product ? mapProduct(item.product) : null,
+});
+
+const mapOrder = (order) => {
+  if (!order) return null;
+  return {
+    ...order,
+    items: (order.items || []).map(mapOrderItem),
+  };
+};
 
 class OrderRepository {
   async executeCheckoutTransaction(userId, shippingAddressId, billingAddressId, paymentMethod, paymentMetadata) {
@@ -66,7 +85,12 @@ class OrderRepository {
       });
     }
 
-    const shippingCost = preComputedTotal > 4999 ? 0 : 499;
+    // Fetch shipping settings from DB
+    const { shipping } = await settingsService.getSettingsByKeys(['shipping']);
+    const freeShippingThreshold = shipping?.freeShippingThreshold ?? Infinity;
+    const standardDeliveryCharge = shipping?.standardDeliveryCharge ?? 499;
+
+    const shippingCost = preComputedTotal >= freeShippingThreshold ? 0 : standardDeliveryCharge;
     const grandTotal = preComputedTotal + shippingCost;
 
     // 3. Atomic Transaction — only pure DB writes, no external calls
@@ -79,7 +103,10 @@ class OrderRepository {
         await tx.product.update({
           where: { id: product.id },
           data: {
-            stock: Math.max(0, newStock)
+            stock: Math.max(0, newStock),
+            totalSold: { increment: item.quantity },
+            totalRevenue: { increment: item.quantity * product.finalPrice },
+            lastPurchasedAt: new Date()
           }
         });
       }
@@ -110,7 +137,7 @@ class OrderRepository {
         include: {
           items: {
             include: {
-              product: true
+              product: PRODUCT_WITH_IMAGES,
             }
           }
         }
@@ -131,52 +158,55 @@ class OrderRepository {
     // Attach user to order for downstream email service
     order.user = user;
 
-    return order;
+    return mapOrder(order);
   }
 
   async getOrdersByUser(userId) {
-    return await prisma.order.findMany({
+    const orders = await prisma.order.findMany({
       where: { userId },
       include: {
         items: {
           include: {
-            product: true
+            product: PRODUCT_WITH_IMAGES,
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
+    return orders.map(mapOrder);
   }
 
   async getOrderById(orderId, userId = null) {
     const where = { id: orderId };
     if (userId) where.userId = userId;
 
-    return await prisma.order.findUnique({
+    const order = await prisma.order.findUnique({
       where,
       include: {
         items: {
           include: {
-            product: true
+            product: PRODUCT_WITH_IMAGES,
           }
         }
       }
     });
+    return mapOrder(order);
   }
 
   async updateOrderStatus(orderId, status) {
-    return await prisma.order.update({
+    const order = await prisma.order.update({
       where: { id: orderId },
       data: { orderStatus: status },
       include: {
         user: true,
         items: {
           include: {
-            product: true
+            product: PRODUCT_WITH_IMAGES,
           }
         }
       }
     });
+    return mapOrder(order);
   }
 
   async updatePaymentStatus(orderId, status) {

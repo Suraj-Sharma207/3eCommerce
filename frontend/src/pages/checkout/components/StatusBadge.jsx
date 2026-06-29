@@ -10,7 +10,7 @@ const StatusBadge = ({ status, type }) => {
   } else if (type === 'order') {
     const s = status?.toUpperCase() || '';
     if (s === 'DELIVERED') badgeStyles = "bg-success-100 text-success-700";
-    else if (s === 'SHIPPED') badgeStyles = "bg-indigo-100 text-indigo-700";
+    else if (s === 'SHIPPED') badgeStyles = "bg-brand-100 text-brand-700";
     else if (s === 'PROCESSING' || s === 'CONFIRMED') badgeStyles = "bg-blue-100 text-blue-700";
     else if (s === 'CANCELLED') badgeStyles = "bg-danger-100 text-danger-700";
     else badgeStyles = "bg-warning-100 text-warning-800";

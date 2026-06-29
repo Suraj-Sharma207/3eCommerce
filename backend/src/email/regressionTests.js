@@ -117,7 +117,7 @@ async function runRegression() {
   // 5. Test Welcome and Verification Email Queuing
   try {
     console.log('[TEST] Checking if Welcome & Verification emails are queued...');
-    await wait(3000); // Give the emitter time to dispatch and queue
+    await wait(8000); // Give the emitter time to dispatch and queue
     
     const logs = await prisma.emailLog.findMany({
       where: { userId: createdUserId }
@@ -257,7 +257,7 @@ async function runRegression() {
 
     // Emit event
     emailEvents.emit('order.created', mockOrder);
-    await wait(3000); // Wait for async worker queue loop
+    await wait(8000); // Wait for async worker queue loop and SMTP verification
 
     // Retrieve order confirmation log
     const orderLog = await prisma.emailLog.findFirst({

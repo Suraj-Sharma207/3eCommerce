@@ -14,18 +14,17 @@ export const validateProductInput = (data) => {
   }
 
   // 2. Category
-  const validCategories = [
-    'Living Room',
-    'Bedroom',
-    'Dining Room',
-    'Office',
-    'Outdoor',
-    'Kitchen',
-    'Decor',
-    'Lighting'
-  ];
-  if (!data.category || !validCategories.includes(String(data.category).trim())) {
-    errors.category = 'Please select a valid category from the list.';
+  if (!data.category) {
+    errors.category = 'Category is required.';
+  } else {
+    const categoryStr = String(data.category).trim();
+    if (categoryStr.length === 0) {
+      errors.category = 'Category cannot be empty.';
+    } else if (categoryStr.length > 50) {
+      errors.category = 'Category cannot exceed 50 characters.';
+    } else if (!/^[A-Za-z0-9\s&'.,()-]+$/.test(categoryStr)) {
+      errors.category = 'Please enter a valid category name.';
+    }
   }
 
   // 3. Brand — allow letters, numbers, spaces, and common punctuation

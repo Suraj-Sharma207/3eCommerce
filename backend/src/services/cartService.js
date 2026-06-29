@@ -35,6 +35,12 @@ class CartService {
       await cartRepository.updateCartItem(existingItem.id, newQuantity);
     } else {
       await cartRepository.addCartItem(cart.id, productId, quantity);
+      import('../lib/prisma.js').then(({ default: prisma }) => {
+        prisma.product.update({
+          where: { id: productId },
+          data: { cartCount: { increment: 1 } }
+        }).catch(err => console.error(`Failed to increment cartCount for product ${productId}:`, err));
+      });
     }
 
     const updatedCart = await cartRepository.getCartByUserId(userId);
@@ -54,6 +60,12 @@ class CartService {
 
     if (quantity <= 0) {
       await cartRepository.removeCartItem(item.id);
+      import('../lib/prisma.js').then(({ default: prisma }) => {
+        prisma.product.update({
+          where: { id: productId },
+          data: { cartCount: { decrement: 1 } }
+        }).catch(err => console.error(`Failed to decrement cartCount for product ${productId}:`, err));
+      });
     } else {
       const product = await productRepository.findById(productId);
       if (!product) throw new Error('Product not found');
@@ -77,6 +89,13 @@ class CartService {
 
     await cartRepository.removeCartItem(item.id);
 
+    import('../lib/prisma.js').then(({ default: prisma }) => {
+      prisma.product.update({
+        where: { id: productId },
+        data: { cartCount: { decrement: 1 } }
+      }).catch(err => console.error(`Failed to decrement cartCount for product ${productId}:`, err));
+    });
+
     const updatedCart = await cartRepository.getCartByUserId(userId);
     return await this._processCartPromotions(updatedCart);
   }
@@ -84,7 +103,18 @@ class CartService {
   async clearCart(userId) {
     const cart = await cartRepository.getCartByUserId(userId);
     if (cart) {
+      const items = cart.items || [];
       await cartRepository.clearCart(cart.id);
+      if (items.length > 0) {
+        import('../lib/prisma.js').then(({ default: prisma }) => {
+          Promise.all(items.map(item => 
+            prisma.product.update({
+              where: { id: item.productId },
+              data: { cartCount: { decrement: 1 } }
+            }).catch(() => {})
+          ));
+        });
+      }
     }
     const updatedCart = await cartRepository.getCartByUserId(userId);
     return await this._processCartPromotions(updatedCart);

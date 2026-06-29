@@ -7,6 +7,7 @@ import { Package, ChevronRight } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import { formatPrice } from '../../utils/currency';
 import ImageFallback from '../../components/ui/ImageFallback';
+import { getOptimizedUrl } from '../../utils/cloudinary';
 
 const OrdersSkeleton = () => (
   <PageContainer className="py-8 lg:py-12 max-w-5xl">
@@ -112,7 +113,7 @@ const OrdersPage = () => {
                     order.orderStatus === 'DELIVERED' ? 'bg-green-50 text-green-700 border border-green-200' :
                     order.orderStatus === 'CANCELLED' ? 'bg-red-50 text-red-700 border border-red-200' :
                     order.orderStatus === 'OUT_FOR_DELIVERY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                    order.orderStatus === 'SHIPPED' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                    order.orderStatus === 'SHIPPED' ? 'bg-brand-50 text-brand-700 border border-brand-200' :
                     'bg-orange-50 text-orange-700 border border-orange-200'
                   }`}>
                     {order.orderStatus.replace(/_/g, ' ')}
@@ -124,7 +125,7 @@ const OrdersPage = () => {
                 {order.items.map((item) => (
                   <Link key={item.id} to={`/products/${item.productId}`} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-border-light group border border-border">
                     <ImageFallback 
-                      src={item.product.thumbnail} 
+                      src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} 
                       alt={item.product.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

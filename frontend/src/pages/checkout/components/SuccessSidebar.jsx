@@ -28,8 +28,8 @@ const SuccessSidebar = ({ order }) => {
       {/* Email Confirmation Card */}
       <div className="bg-white rounded-[20px] shadow-sm border border-border-light p-6">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center">
-            <Mail className="w-4 h-4 text-indigo-600" />
+          <div className="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center">
+            <Mail className="w-4 h-4 text-brand-600" />
           </div>
           <div>
             <h3 className="font-bold text-text-brand-700 text-sm">Confirmation Email</h3>
@@ -47,11 +47,11 @@ const SuccessSidebar = ({ order }) => {
         <p className="text-xs text-text-secondary mb-4">Our support team is here to assist you with your order.</p>
         <div className="flex justify-center gap-3 text-sm">
           <button className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow font-medium text-text-brand-700">
-            <MessageCircle className="w-4 h-4 mr-2 text-indigo-600" />
+            <MessageCircle className="w-4 h-4 mr-2 text-brand-600" />
             Chat
           </button>
           <a href={`mailto:${supportEmail}`} className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow font-medium text-text-brand-700">
-            <Mail className="w-4 h-4 mr-2 text-indigo-600" />
+            <Mail className="w-4 h-4 mr-2 text-brand-600" />
             Email
           </a>
         </div>

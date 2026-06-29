@@ -24,6 +24,10 @@ class OrderService {
         // Emit order.created event
         emailEvents.emit('order.created', order);
 
+        import('../controllers/homeController.js').then(({ homeCache }) => {
+          homeCache.clear();
+        });
+
         // Check for low stock on any of the ordered items
         const settings = await settingsService.getSettingsByKeys(['notifications']);
         const threshold = parseInt(settings.notifications?.lowStockThreshold || '5', 10);

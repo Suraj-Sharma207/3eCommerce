@@ -6,18 +6,37 @@ import useAuthStore from './store/authStore';
 import useUserStore from './store/userStore';
 import useSettingsStore from './store/settingsStore';
 import { useBrandingStore } from './store/brandingStore';
+import useCartStore from './store/cartStore';
+import useWishlistStore from './store/wishlistStore';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { checkAuth, token, user } = useAuthStore();
   const { fetchProfile } = useUserStore();
   const { fetchPublicConfig } = useSettingsStore();
-  const { fetchBranding } = useBrandingStore();
+  const { branding, fetchBranding } = useBrandingStore();
+  const { fetchCart } = useCartStore();
+  const { fetchWishlist } = useWishlistStore();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   useEffect(() => {
     fetchPublicConfig();
     fetchBranding();
   }, [fetchPublicConfig, fetchBranding]);
+
+  useEffect(() => {
+    if (branding?.platformName) {
+      document.title = branding.platformName;
+    }
+    
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = branding?.faviconUrl || branding?.logoUrl || '/vite.svg';
+  }, [branding]);
 
   useEffect(() => {
     // If we have a token but haven't checked auth yet, check it on load
@@ -28,6 +47,13 @@ function App() {
       });
     }
   }, [token, user, checkAuth, fetchProfile]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+      fetchWishlist();
+    }
+  }, [isAuthenticated, fetchCart, fetchWishlist]);
 
   return (
     <Router>

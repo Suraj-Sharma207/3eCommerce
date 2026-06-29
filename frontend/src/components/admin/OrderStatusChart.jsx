@@ -2,9 +2,9 @@ import React, { memo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { AlertCircle } from 'lucide-react';
 
-const COLORS = ['#6366F1', '#F09005', '#10B981', '#EF4444', '#8B5CF6'];
+const COLORS = ['#082F5C', '#3F79B5', '#234F84', '#6C7A90', '#B8C2D1'];
 
-const OrderStatusChart = memo(({ data }) => {
+const OrderStatusChart = memo(({ data, onSliceClick }) => {
   return (
     <>
       <div className="flex-1 flex items-center justify-center min-h-[300px]">
@@ -19,9 +19,14 @@ const OrderStatusChart = memo(({ data }) => {
                 outerRadius={100}
                 paddingAngle={5}
                 dataKey="value"
+                onClick={(entry) => onSliceClick && onSliceClick(entry.name)}
+                style={{ cursor: onSliceClick ? 'pointer' : 'default' }}
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
+                  />
                 ))}
               </Pie>
               <Tooltip 

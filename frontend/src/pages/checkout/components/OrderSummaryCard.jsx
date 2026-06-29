@@ -16,8 +16,8 @@ const OrderSummaryCard = ({ order }) => {
         
         {/* Order Date */}
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
-            <Calendar className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+            <Calendar className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-xs text-text-muted mb-1 font-medium">Order Date</p>
           <p className="font-bold text-text-brand-700 text-base">{formattedDate}</p>
@@ -26,8 +26,8 @@ const OrderSummaryCard = ({ order }) => {
 
         {/* Total Paid */}
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
-            <Wallet className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+            <Wallet className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-xs text-text-muted mb-1 font-medium">Total Paid</p>
           <p className="font-bold text-text-brand-700 text-[18px]">{formatPrice(order.totalAmount)}</p>
@@ -35,8 +35,8 @@ const OrderSummaryCard = ({ order }) => {
 
         {/* Payment Status */}
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
-            <CheckCircle2 className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+            <CheckCircle2 className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-xs text-text-muted mb-2 font-medium">Payment Status</p>
           <StatusBadge status={order.paymentStatus} type="payment" />
@@ -44,8 +44,8 @@ const OrderSummaryCard = ({ order }) => {
 
         {/* Payment Method */}
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
-            <CreditCard className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+            <CreditCard className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-xs text-text-muted mb-1 font-medium">Payment Method</p>
           <p className="font-bold text-text-brand-700 text-base">{order.paymentMethod || 'Online'}</p>

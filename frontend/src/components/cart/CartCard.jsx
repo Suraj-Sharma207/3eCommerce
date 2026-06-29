@@ -1,8 +1,10 @@
 import React from 'react';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import Card from '../ui/Card';
 import { formatPrice } from '../../utils/currency';
 import ImageFallback from '../ui/ImageFallback';
+import QuantityStepper from '../ecommerce/QuantityStepper';
+import { getOptimizedUrl } from '../../utils/cloudinary';
 
 const CartCard = ({ item }) => {
   if (!item || !item.product) return null;
@@ -11,7 +13,7 @@ const CartCard = ({ item }) => {
     <Card className="flex flex-col sm:flex-row items-center gap-4 p-4">
       <div className="w-full sm:w-24 h-24 flex-shrink-0 bg-border-light rounded-lg overflow-hidden">
         <ImageFallback 
-          src={item.product.thumbnail} 
+          src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} 
           alt={item.product.name} 
           className="w-full h-full object-cover"
         />
@@ -23,17 +25,12 @@ const CartCard = ({ item }) => {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center border border-border rounded-lg p-1 bg-white">
-          <button className="p-1 text-secondary-400 hover:text-brand-600 transition-colors">
-            <Minus className="w-4 h-4" />
-          </button>
-          <span className="w-8 text-center text-sm font-medium text-secondary-900">
-            {item.quantity}
-          </span>
-          <button className="p-1 text-secondary-400 hover:text-brand-600 transition-colors">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
+        <QuantityStepper 
+          quantity={item.quantity} 
+          setQuantity={() => {}} 
+          max={item.product.stock || 99}
+          className="w-full sm:w-32"
+        />
         <div className="text-right min-w-[80px]">
           <p className="text-base font-bold text-secondary-900">{formatPrice((item.product.finalPrice || item.product.price) * item.quantity)}</p>
         </div>

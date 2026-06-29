@@ -7,8 +7,8 @@ const AddressCard = ({ address }) => {
   return (
     <div className="bg-white rounded-[20px] shadow-sm border border-border-light p-6">
       <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
-        <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center">
-          <MapPin className="w-4 h-4 text-indigo-600" />
+        <div className="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center">
+          <MapPin className="w-4 h-4 text-brand-600" />
         </div>
         <h3 className="font-bold text-text-brand-700 text-sm">Delivery Address</h3>
       </div>

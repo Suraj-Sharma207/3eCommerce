@@ -5,10 +5,82 @@ import orderController from './orderController.js';
 class AdminController {
   async getDashboardAnalytics(req, res, next) {
     try {
-      const data = await adminService.getDashboardAnalytics();
+      const timeFilter = req.query.timeFilter || '7d';
+      const data = await adminService.getDashboardAnalytics(timeFilter);
       return successResponse(res, 'Analytics retrieved', data, 200);
     } catch (error) {
-      next(error);
+      console.error('Dashboard Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getRevenueAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getRevenueAnalytics();
+      return successResponse(res, 'Revenue analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Revenue Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getInventoryAlerts(req, res, next) {
+    try {
+      const data = await adminService.getInventoryAlerts();
+      return successResponse(res, 'Inventory alerts retrieved', data, 200);
+    } catch (error) {
+      console.error('Inventory Alerts Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getOrdersAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getOrdersAnalytics();
+      return successResponse(res, 'Orders analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Orders Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getCustomersAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getCustomersAnalytics();
+      return successResponse(res, 'Customers analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Customers Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getProductsAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getProductsAnalytics();
+      return successResponse(res, 'Products analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Products Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getDeliveriesAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getDeliveriesAnalytics();
+      return successResponse(res, 'Deliveries analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Deliveries Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async getCancellationsAnalytics(req, res, next) {
+    try {
+      const data = await adminService.getCancellationsAnalytics();
+      return successResponse(res, 'Cancellations analytics retrieved', data, 200);
+    } catch (error) {
+      console.error('Cancellations Analytics Error:', error);
+      return res.status(500).json({ success: false, message: error.message });
     }
   }
 

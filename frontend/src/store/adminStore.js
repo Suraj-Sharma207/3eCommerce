@@ -4,8 +4,28 @@ import toast from 'react-hot-toast';
 
 const useAdminStore = create((set, get) => ({
   analytics: null,
+  inventoryAlerts: null,
+  inventoryAlertsError: null,
   cachedAt: null,
   activeRequest: null,
+  
+  // Detailed Analytics Caches
+  detailedAnalytics: {
+    revenue: null,
+    orders: null,
+    customers: null,
+    products: null,
+    deliveries: null,
+    cancellations: null
+  },
+  detailedLoading: {
+    revenue: false,
+    orders: false,
+    customers: false,
+    products: false,
+    deliveries: false,
+    cancellations: false
+  },
   orders: [],
   ordersPagination: {
     currentPage: 1,
@@ -54,14 +74,14 @@ const useAdminStore = create((set, get) => ({
     }
 
     try {
-      const response = await api.get('/admin/analytics', {
+      const response = await api.get('/admin/dashboard', {
         signal: abortController.signal
       });
       set({ 
-        analytics: response.data.data, 
-        cachedAt: Date.now(),
+        analytics: response.data?.data || response.data, 
+        cachedAt: now,
         isLoading: false,
-        activeRequest: null
+        activeRequest: null 
       });
     } catch (error) {
       if (error.name === 'CanceledError' || error.name === 'AbortError') {
@@ -78,9 +98,64 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  fetchOrders: async (page = 1, limit = get().ordersPagination.itemsPerPage) => {
+  fetchRevenueChartData: async (timeFilter) => {
+    try {
+      const response = await api.get(`/admin/dashboard?timeFilter=${timeFilter}`);
+      const data = response.data?.data || response.data;
+      set(state => ({
+        analytics: {
+          ...state.analytics,
+          revenueTrend: data.revenueTrend
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to fetch revenue chart data', error);
+    }
+  },
+
+  fetchInventoryAlerts: async () => {
+    set({ inventoryAlertsError: null });
+    try {
+      const response = await api.get('/admin/dashboard/inventory-alerts');
+      set({ inventoryAlerts: response.data?.data || response.data });
+    } catch (error) {
+      console.error('Failed to fetch inventory alerts', error);
+      set({ inventoryAlertsError: error.response?.data?.message || 'Failed to fetch inventory alerts' });
+    }
+  },
+
+  // Generic fetcher for detailed analytics drawers
+  fetchDetailedAnalytics: async (type, { force = false } = {}) => {
+    const state = get();
+    
+    // Simple caching (if we already have it, don't refetch unless forced)
+    if (!force && state.detailedAnalytics[type]) {
+      return;
+    }
+
+    set(state => ({
+      detailedLoading: { ...state.detailedLoading, [type]: true }
+    }));
+
+    try {
+      const response = await api.get(`/admin/dashboard/${type}`);
+      set(state => ({
+        detailedAnalytics: { ...state.detailedAnalytics, [type]: response.data?.data || response.data },
+        detailedLoading: { ...state.detailedLoading, [type]: false }
+      }));
+    } catch (error) {
+      console.error(`Failed to fetch ${type} analytics:`, error);
+      toast.error(`Failed to load ${type} analytics`);
+      set(state => ({
+        detailedLoading: { ...state.detailedLoading, [type]: false }
+      }));
+    }
+  },
+
+  fetchOrders: async (page = get().ordersPagination.currentPage) => {
     set({ isLoading: true, error: null });
-    const { searchQuery } = get();
+    const { searchQuery, ordersPagination } = get();
+    const limit = ordersPagination.itemsPerPage;
     try {
       const response = await api.get(`/admin/orders?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`);
       set({ 

@@ -6,11 +6,15 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 
 const BrandingTab = () => {
-  const { branding, loading, uploading, fetchBranding, updateBranding, uploadLogo } = useBrandingStore();
+  const { branding, loading, uploading, fetchBranding, updateBranding, uploadLogo, uploadEmailLogo } = useBrandingStore();
   const [platformName, setPlatformName] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  const [emailPreviewUrl, setEmailPreviewUrl] = useState(null);
+  const [selectedEmailFile, setSelectedEmailFile] = useState(null);
+  const emailFileInputRef = useRef(null);
 
   useEffect(() => {
     fetchBranding();
@@ -20,6 +24,7 @@ const BrandingTab = () => {
     if (branding) {
       setPlatformName(branding.platformName || '');
       setPreviewUrl(branding.logoUrl || null);
+      setEmailPreviewUrl(branding.emailLogoUrl || null);
     }
   }, [branding]);
 
@@ -50,6 +55,33 @@ const BrandingTab = () => {
     fileInputRef.current?.click();
   };
 
+  const handleEmailFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Email Logo size must be less than 2 MB.');
+      emailFileInputRef.current.value = '';
+      return;
+    }
+
+    // Validate type
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      toast.error('Only PNG and JPG images are allowed.');
+      emailFileInputRef.current.value = '';
+      return;
+    }
+
+    setSelectedEmailFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setEmailPreviewUrl(objectUrl);
+  };
+
+  const handleEmailUploadClick = () => {
+    emailFileInputRef.current?.click();
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -62,6 +94,12 @@ const BrandingTab = () => {
       if (selectedFile) {
         await uploadLogo(selectedFile);
         setSelectedFile(null); // Reset after upload
+      }
+
+      // Upload new email logo if selected
+      if (selectedEmailFile) {
+        await uploadEmailLogo(selectedEmailFile);
+        setSelectedEmailFile(null); // Reset after upload
       }
 
       toast.success('Branding settings saved successfully');
@@ -144,11 +182,60 @@ const BrandingTab = () => {
           </div>
         </div>
 
+        <div className="bg-surface-background p-6 rounded-xl border border-border space-y-6">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-semibold text-text-brand-600">Email Logo</label>
+              <p className="text-xs text-text-secondary mt-1">This logo will be used in transactional and marketing emails.</p>
+            </div>
+            <div className="flex items-start space-x-6">
+              <div 
+                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={handleEmailUploadClick}
+              >
+                {emailPreviewUrl ? (
+                  <img src={emailPreviewUrl} alt="Email Logo preview" className="max-w-full max-h-full object-contain p-2" />
+                ) : (
+                  <div className="text-gray-400 flex flex-col items-center">
+                    <ImageIcon className="w-8 h-8 mb-2" />
+                    <span className="text-xs font-medium">No logo</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-1 space-y-3">
+                <input
+                  type="file"
+                  ref={emailFileInputRef}
+                  onChange={handleEmailFileSelect}
+                  accept="image/png, image/jpeg, image/jpg"
+                  className="hidden"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleEmailUploadClick}
+                  className="w-full flex justify-center"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Choose Email Image
+                </Button>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• Allowed formats: JPG, PNG</p>
+                  <p>• Maximum size: 2 MB</p>
+                  <p>• Recommended dimensions: 600x180 px</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-end pt-4">
           <Button 
             type="submit" 
             isLoading={uploading} 
-            disabled={uploading || (!selectedFile && platformName === branding?.platformName)}
+            disabled={uploading || (!selectedFile && !selectedEmailFile && platformName === branding?.platformName)}
           >
             <Save className="w-4 h-4 mr-2" />
             Save Changes

@@ -2,20 +2,45 @@ import productRepository from '../repositories/productRepository.js';
 import { validateProductInput } from '../utils/productValidation.js';
 import prisma from '../lib/prisma.js';
 import promotionService from './promotionService.js';
+import { homeCache } from '../controllers/homeController.js';
+
+const normalizeCategory = (category) => {
+  if (!category) return 'Decor';
+  return category
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 class ProductService {
-  async getProducts({ page = 1, limit = 12, search = '', category, minPrice, maxPrice, inStock, sort, featured, trending, newArrival, bestSeller, sale }) {
-    const skip = (page - 1) * limit;
+  async getProducts({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts }) {
     const take = parseInt(limit);
+    const filterArgs = { search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts };
 
-    const filterArgs = { search, category, minPrice, maxPrice, inStock, sort, featured, trending, newArrival, bestSeller, sale };
+    // Fetch total items based on current stockStatus filter
+    const totalItems = await productRepository.count(filterArgs);
+    
+    // Concurrently fetch counts for ALL stock statuses only if explicitly requested
+    let inventoryCounts = null;
+    if (filterArgs.includeInventoryCounts === 'true' || filterArgs.includeInventoryCounts === true) {
+      inventoryCounts = await productRepository.countByStockStatus(filterArgs);
+    }
 
-    const [products, totalItems] = await Promise.all([
-      productRepository.findAll({ skip, take, ...filterArgs }),
-      productRepository.count(filterArgs),
-    ]);
+    const totalPages = Math.max(1, Math.ceil(totalItems / take));
 
-    const totalPages = Math.ceil(totalItems / take);
+    let currentPage = parseInt(page);
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+      currentPage = 1;
+    }
+
+    const skip = (currentPage - 1) * take;
+
+    const products = await productRepository.findAll({ skip, take, ...filterArgs });
 
     // Fetch active promotions and calculate final prices dynamically
     const activePromotions = await promotionService.getActivePromotions();
@@ -27,10 +52,11 @@ class ProductService {
     return {
       products: dynamicProducts,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage,
         totalPages,
         totalItems,
         itemsPerPage: take,
+        inventoryCounts,
       },
     };
   }
@@ -52,6 +78,12 @@ class ProductService {
     }
     const activePromotions = await promotionService.getActivePromotions();
     const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(product, activePromotions);
+
+    // Increment totalViews asynchronously
+    prisma.product.update({
+      where: { id },
+      data: { totalViews: { increment: 1 } }
+    }).catch(err => console.error(`Failed to update totalViews for product ${id}:`, err));
 
     return { ...product, finalPrice, discountPercentage };
   }
@@ -83,6 +115,7 @@ class ProductService {
       ...data,
       name: data.name.trim(),
       brand: data.brand.trim(),
+      category: normalizeCategory(data.category),
       description: data.description.trim(),
       sku: generatedSku,
       price: parseFloat(data.price),
@@ -91,7 +124,13 @@ class ProductService {
       finalPrice: parseFloat(data.price) - (parseFloat(data.price) * (parseFloat(data.discountPercentage) || 0) / 100),
     };
 
-    return await productRepository.create(formattedData);
+    // Remove legacy image fields — images are managed via ProductImage
+    delete formattedData.thumbnail;
+    delete formattedData.galleryImages;
+
+    const created = await productRepository.create(formattedData);
+    homeCache.clear();
+    return created;
   }
 
   async updateProduct(id, data) {
@@ -126,22 +165,30 @@ class ProductService {
       name: data.name.trim(),
       brand: data.brand.trim(),
       description: data.description.trim(),
-      category: data.category,
+      category: normalizeCategory(data.category),
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
       discountPercentage: parseFloat(data.discountPercentage) || 0,
       finalPrice: parseFloat(data.price) - (parseFloat(data.price) * (parseFloat(data.discountPercentage) || 0) / 100),
-      thumbnail: data.thumbnail || null,
       featured: Boolean(data.featured),
       active: Boolean(data.active),
+      trending: Boolean(data.trending),
+      bestSeller: Boolean(data.bestSeller),
+      newArrival: Boolean(data.newArrival),
+      recommended: Boolean(data.recommended),
+      // Images are managed separately via ProductImage — not written here
     };
 
-    return await productRepository.update(id, formattedData);
+    const updated = await productRepository.update(id, formattedData);
+    homeCache.clear();
+    return updated;
   }
 
   async deleteProduct(id) {
     await this.getProductById(id);
-    return await productRepository.delete(id);
+    const deleted = await productRepository.delete(id);
+    homeCache.clear();
+    return deleted;
   }
 
   async getCategories() {

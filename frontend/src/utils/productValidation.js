@@ -66,25 +66,7 @@ export const validateProductInput = (data) => {
     }
   }
 
-  // 8. Thumbnail URL
-  if (data.thumbnail && typeof data.thumbnail === 'string' && data.thumbnail.trim() !== '') {
-    const thumbStr = data.thumbnail.trim();
-    try {
-      const parsed = new URL(thumbStr);
-      // Check pathname for image extension, ignoring query params (handles Unsplash, Cloudinary, etc.)
-      const pathname = parsed.pathname.toLowerCase();
-      if (!/\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(pathname)) {
-        // Also accept URLs from known image CDNs even without extension in path
-        const knownImageDomains = ['unsplash.com', 'images.unsplash.com', 'cloudinary.com', 'imgix.net', 'imagekit.io', 'picsum.photos'];
-        const isKnownCDN = knownImageDomains.some(d => parsed.hostname.includes(d));
-        if (!isKnownCDN) {
-          errors.thumbnail = 'Please enter a valid image URL (.jpg, .png, .webp, .avif, .gif, .svg).';
-        }
-      }
-    } catch (_) {
-      errors.thumbnail = 'Please enter a valid image URL.';
-    }
-  }
+  // 8. Thumbnail — no longer validated here; images are managed via the Images tab
 
   return {
     isValid: Object.keys(errors).length === 0,

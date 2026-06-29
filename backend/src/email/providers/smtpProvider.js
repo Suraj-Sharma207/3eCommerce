@@ -133,9 +133,11 @@ class SmtpProvider extends EmailProvider {
    */
   async send(options) {
     const { transporter, fromEmail } = await this.getTransporter();
+    const { brandingService } = await import('../../services/brandingService.js');
+    const branding = await brandingService.getBranding();
 
     const mailOptions = {
-      from: options.from || `"LuxeHome" <${fromEmail}>`,
+      from: options.from || `"${branding.platformName}" <${fromEmail}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,

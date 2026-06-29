@@ -10,7 +10,7 @@
         Thank You for Your Order!
       </h1>
       <p
-        style="font-size: 16px; line-height: 1.7; font-weight: 700; color: #5B5CEB; margin: 0 0 8px 0; font-family: Helvetica, Arial, sans-serif;">
+        style="font-size: 16px; line-height: 1.7; font-weight: 700; color: #082F5C; margin: 0 0 8px 0; font-family: Helvetica, Arial, sans-serif;">
         Hi {{name}},
       </p>
       <p
@@ -24,11 +24,11 @@
 
       <!-- Order ID Pill -->
       <table cellpadding="0" cellspacing="0" border="0" align="center"
-        style="background-color: #F5F3FF; border-radius: 8px;">
+        style="background-color: #EAF0F6; border-radius: 8px;">
         <tr>
           <td
             style="padding: 12px 24px; font-size: 14px; color: #111827; font-weight: 600; font-family: Helvetica, Arial, sans-serif;">
-            Order ID: <span style="color: #5B5CEB;">#{{orderNumber}}</span>
+            Order ID: <span style="color: #082F5C;">#{{orderNumber}}</span>
           </td>
         </tr>
       </table>
@@ -79,8 +79,8 @@
               <tr>
                 {{#if product.thumbnail}}
                 <td width="88" style="padding-right: 16px; vertical-align: middle;" class="mobile-stack">
-                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72"
-                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0;" />
+                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72" loading="eager"
+                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0; border: 0;" border="0" />
                 </td>
                 {{/if}}
                 <td valign="middle" style="vertical-align: middle; text-align: left;" class="mobile-stack">
@@ -104,7 +104,7 @@
 
           <!-- Price -->
           <td class="mobile-stack" valign="middle" align="right"
-            style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #5B5CEB; vertical-align: middle; width: 100px; text-align: right;">
+            style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #082F5C; vertical-align: middle; width: 100px; text-align: right;">
             <span class="mobile-label"
               style="display: none; color: #9CA3AF; font-size: 14px; font-weight: 400; margin-right: 4px;">Price:
             </span>{{formattedPrice}}
@@ -165,7 +165,7 @@
         <tr>
           <td colspan="2" style="padding-top: 16px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0"
-              style="background-color: #0B1533; border-radius: 8px;" class="grand-total-card">
+              style="background-color: #082F5C; border-radius: 8px;" class="grand-total-card">
               <tr>
                 <td class="mobile-stack"
                   style="padding: 16px 20px; font-size: 14px; color: #9CA3AF; font-weight: 700; text-align: left; font-family: Helvetica, Arial, sans-serif;">
@@ -207,7 +207,7 @@
                 <td width="20" valign="top" style="padding-right: 8px; vertical-align: top; padding-top: 1px;">
                   <!-- Location pin inline SVG -->
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="#5B5CEB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    stroke="#082F5C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                     style="display:block; margin-top:2px;">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
@@ -296,9 +296,9 @@
       <table border="0" cellspacing="0" cellpadding="0" width="240" class="cta-button-table"
         style="width: 240px; margin: 0 auto;">
         <tr>
-          <td align="center" style="border-radius: 12px; background-color: #5B5CEB;">
+          <td align="center" style="border-radius: 12px; background-color: #082F5C;">
             <a href="{{trackUrl}}" target="_blank"
-              style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 12px; padding: 14px 0; border: 1px solid #5B5CEB; display: block; font-weight: 600; text-align: center;">
+              style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 12px; padding: 14px 0; border: 1px solid #082F5C; display: block; font-weight: 600; text-align: center;">
               View My Orders
             </a>
           </td>
@@ -320,7 +320,7 @@
   style="text-align: center; font-family: Helvetica, Arial, sans-serif;">
   <tr>
     <td align="center" style="font-size: 14px; color: #6B7280; padding-top: 24px; border-top: 1px solid #E5E7EB;">
-      Need help? <a href="mailto:{{supportEmail}}" style="color: #5B5CEB; text-decoration: underline;">Contact our
+      Need help? <a href="mailto:{{supportEmail}}" style="color: #082F5C; text-decoration: underline;">Contact our
         support team.</a>
     </td>
   </tr>
@@ -402,8 +402,8 @@
               <tr>
                 {{#if product.thumbnail}}
                 <td width="88" style="padding-right: 16px; vertical-align: middle;" class="mobile-stack">
-                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72"
-                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0;" />
+                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72" loading="eager"
+                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0; border: 0;" border="0" />
                 </td>
                 {{/if}}
                 <td valign="middle" style="vertical-align: middle; text-align: left;" class="mobile-stack">

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import settingsService from '../services/settingsService';
 
 const useSettingsStore = create((set, get) => ({
-  publicConfig: {},
+  publicConfig: null,
   domains: {
     store: { data: {}, isLoading: false, isSaving: false },
     shipping: { data: {}, isLoading: false, isSaving: false },

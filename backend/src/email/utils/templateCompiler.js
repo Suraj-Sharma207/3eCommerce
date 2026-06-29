@@ -26,6 +26,55 @@ export const escapeHtml = (str) => {
     .replace(/\//g, '&#x2F;');
 };
 
+// Default fallbacks for email images
+const DEFAULT_LOGO_URL = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=150&auto=format&fit=crop&q=60';
+const DEFAULT_PRODUCT_THUMBNAIL = 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=150&auto=format&fit=crop&q=60';
+
+// Ensure image URLs are absolute HTTPS URLs and fallback if missing
+export const ensureAbsoluteUrl = (url, defaultFallback, typeLabel = 'Asset') => {
+  if (!url) {
+    console.warn(`[EMAIL COMPILER] ${typeLabel} image URL missing. Rendering default fallback.`);
+    return defaultFallback;
+  }
+  
+  const trimmed = String(url).trim();
+  if (!trimmed) {
+    console.warn(`[EMAIL COMPILER] ${typeLabel} image URL empty. Rendering default fallback.`);
+    return defaultFallback;
+  }
+
+  // Check for invalid URL formats
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.includes('localhost') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('file:') ||
+    trimmed.startsWith('http://')
+  ) {
+    let resolved = trimmed;
+    if (resolved.startsWith('/')) {
+      const websiteUrl = process.env.FRONTEND_URL || 'https://luxehome.com';
+      resolved = `${websiteUrl.replace(/\/$/, '')}${resolved}`;
+    } else if (resolved.includes('localhost')) {
+      resolved = resolved.replace(/http:\/\/localhost:\d+/, process.env.FRONTEND_URL || 'https://luxehome.com');
+    }
+    
+    // Ensure it is HTTPS
+    if (resolved.startsWith('http://')) {
+      resolved = 'https://' + resolved.substring(7);
+    } else if (!resolved.startsWith('https://')) {
+      if (resolved.includes(':')) {
+        return defaultFallback;
+      }
+      resolved = 'https://' + resolved;
+    }
+    
+    return resolved;
+  }
+
+  return trimmed;
+};
+
 // Recursively sanitize all string variables in data
 export const sanitizeData = (data) => {
   if (data === null || data === undefined) return data;
@@ -135,22 +184,46 @@ export const renderTemplate = async (templateName, data = {}) => {
   // Fetch dynamic branding
   const branding = await brandingService.getBranding();
 
-  // Inject defaults (branding variables)
+  const cleanPlatformName = (branding.platformName || 'Store').toLowerCase().replace(/\s+/g, '');
   const defaults = {
     websiteUrl: branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173',
-    supportEmail: branding.supportEmail || 'support@luxehome.com',
-    supportPhone: branding.supportPhone || '+1 (800) 555-LUXE',
-    facebookUrl: 'https://facebook.com/luxehome',
-    instagramUrl: 'https://instagram.com/luxehome',
-    twitterUrl: 'https://twitter.com/luxehome',
+    supportEmail: branding.supportEmail || `support@${cleanPlatformName}.com`,
+    supportPhone: branding.supportPhone || '+1 (800) 555-0000',
+    facebookUrl: `https://facebook.com/${cleanPlatformName}`,
+    instagramUrl: `https://instagram.com/${cleanPlatformName}`,
+    twitterUrl: `https://twitter.com/${cleanPlatformName}`,
     currentYear: new Date().getFullYear().toString(),
     logoUrl: branding.logoUrl || null,
-    platformName: branding.platformName || 'LuxeHome'
+    emailLogoUrl: branding.emailLogoUrl || branding.logoUrl || null,
+    platformName: branding.platformName || 'Store'
   };
 
   // Merge and sanitize data to prevent HTML injection
   const mergedData = { ...defaults, ...data };
   const sanitizedData = sanitizeData(mergedData);
+
+  // Normalize branding image URLs to absolute HTTPS or fallback
+  sanitizedData.logoUrl = ensureAbsoluteUrl(sanitizedData.logoUrl, DEFAULT_LOGO_URL, 'Brand logo');
+  sanitizedData.emailLogoUrl = ensureAbsoluteUrl(sanitizedData.emailLogoUrl, sanitizedData.logoUrl, 'Email logo');
+
+  // Traverse data recursively to find any product thumbnails or image URLs and normalize them
+  const normalizeThumbnails = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) {
+      obj.forEach(normalizeThumbnails);
+      return;
+    }
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (key === 'thumbnail' || key === 'imageUrl') {
+          obj[key] = ensureAbsoluteUrl(obj[key], DEFAULT_PRODUCT_THUMBNAIL, 'Product thumbnail');
+        } else if (typeof obj[key] === 'object') {
+          normalizeThumbnails(obj[key]);
+        }
+      }
+    }
+  };
+  normalizeThumbnails(sanitizedData);
 
   // Render body first
   const bodyHtml = template(sanitizedData);

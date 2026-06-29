@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { useBrandingStore } from '../../store/brandingStore';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X, Layout } from 'lucide-react';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -24,6 +24,7 @@ const AdminLayout = () => {
     { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
     { name: 'Customers', path: '/admin/customers', icon: Users },
     { name: 'Offers', path: '/admin/offers', icon: Tag },
+    { name: 'Homepage Sections', path: '/admin/homepage', icon: Layout },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 

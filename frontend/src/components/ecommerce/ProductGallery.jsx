@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getOptimizedUrl } from '../../utils/cloudinary';
 
 const ProductGallery = ({ images = [] }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -9,11 +10,11 @@ const ProductGallery = ({ images = [] }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Main Image */}
-      <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-border-light shadow-sm relative">
+      <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-surface-background flex items-center justify-center shadow-sm relative">
         <img 
-          src={safeImages[activeIndex]} 
+          src={getOptimizedUrl(safeImages[activeIndex], 'detail')} 
           alt={`Product View ${activeIndex + 1}`}
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-contain object-center"
         />
       </div>
 
@@ -28,7 +29,7 @@ const ProductGallery = ({ images = [] }) => {
                 activeIndex === idx ? 'border-brand-600 shadow-md ring-2 ring-primary-100' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(img, 'thumbnail')} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

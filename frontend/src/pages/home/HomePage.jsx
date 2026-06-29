@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import PageContainer from '../../components/layout/PageContainer';
 import HeroBanner from '../../components/ecommerce/HeroBanner';
 import SectionHeader from '../../components/layout/SectionHeader';
@@ -6,54 +6,55 @@ import CategoryCard from '../../components/ecommerce/CategoryCard';
 import ProductCard from '../../components/products/ProductCard';
 import Button from '../../components/ui/Button';
 import { ProductCardSkeleton } from '../../components/ui/SkeletonLoader';
+import useUIStore from '../../store/uiStore';
+import useIntersectionObserver from '../../hooks/useIntersectionObserver';
+import useProductStore from '../../store/productStore';
+import useCategoryStore from '../../store/categoryStore';
 
 const HomePage = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [trendingProducts, setTrendingProducts] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
-  const [saleProducts, setSaleProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { homeProducts, fetchHomeProducts, hasFetchedHome } = useProductStore();
+  const { categories, fetchCategories, isLoading: isCategoriesLoading } = useCategoryStore();
+  const [isLoading, setIsLoading] = useState(!hasFetchedHome);
 
-  const [categories, setCategories] = useState([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+  // IntersectionObserver for Sticky Navbar
+  const sentinelRef = useRef(null);
+  const setCategorySticky = useUIStore(state => state.setCategorySticky);
+
+  const handleIntersection = useCallback((entry) => {
+    // When sentinel scrolls past the 64px mark (navbar height), it stops intersecting.
+    if (!entry.isIntersecting && entry.boundingClientRect.top <= 64) {
+      setCategorySticky(true);
+    } else {
+      setCategorySticky(false);
+    }
+  }, [setCategorySticky]);
+
+  useIntersectionObserver(sentinelRef, handleIntersection, {
+    rootMargin: '-64px 0px 0px 0px',
+    threshold: 0,
+  });
+
+  // Ensure sticky state is reset when unmounting HomePage
+  useEffect(() => {
+    return () => setCategorySticky(false);
+  }, [setCategorySticky]);
 
   useEffect(() => {
-    const fetchHomeData = async () => {
+    const loadHomeData = async () => {
       setIsLoading(true);
-      try {
-        const { default: api } = await import('../../services/api');
-        const response = await api.get('/products/home');
-        const data = response.data.data;
-        
-        setFeaturedProducts(data.featured || []);
-        setTrendingProducts(data.trending || []);
-        setNewArrivals(data.newArrivals || []);
-        setBestSellers(data.bestSellers || []);
-        setSaleProducts(data.sale || []);
-      } catch (error) {
-        console.error('Failed to fetch home products:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      await fetchHomeProducts();
+      setIsLoading(false);
     };
-    fetchHomeData();
-  }, []);
+    if (!hasFetchedHome) {
+      loadHomeData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchHomeProducts, hasFetchedHome]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { default: api } = await import('../../services/api');
-        const response = await api.get('/products/categories');
-        setCategories(response.data.data.categories || []);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      } finally {
-        setIsCategoriesLoading(false);
-      }
-    };
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const getCategoryIcon = (categoryName) => {
     const iconMap = {
@@ -93,90 +94,89 @@ const HomePage = () => {
       <HeroBanner />
 
       {/* Shop by Category */}
-      <PageContainer>
-        <SectionHeader 
-          title="Shop by Category" 
-          subtitle="Explore our wide range of furniture categories"
-          actionLabel="View all"
-          actionLink="/products"
-        />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className="relative">
+        <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-[1px] pointer-events-none -mt-8" aria-hidden="true" />
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="Trending Now" subtitle="Most loved by our customers" />
+            <Button variant="outline" href="/products?sort=popular" className="hidden sm:flex">View All</Button>
+          </div>
+          {renderProductGrid(homeProducts.trending)}
+        </PageContainer>
+      </div>
+
+      {/* Categories Section */}
+      <section className="py-16 sm:py-24 bg-surface">
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="Shop by Category" subtitle="Find exactly what you need" />
+            <Button variant="outline" href="/products" className="hidden sm:flex">All Categories</Button>
+          </div>
+          
           {isCategoriesLoading ? (
-            [...Array(6)].map((_, i) => (
-               <div key={i} className="bg-white border border-border rounded-2xl p-6 flex flex-col items-center justify-center animate-pulse">
-                 <div className="w-16 h-16 bg-border-light rounded-full mb-4"></div>
-                 <div className="h-5 bg-border-light rounded w-24 mb-2"></div>
-                 <div className="h-4 bg-border-light rounded w-16"></div>
-               </div>
-            ))
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="aspect-square bg-surface-background rounded-2xl animate-pulse" />
+              ))}
+            </div>
           ) : (
-            categories.map((cat, idx) => (
-              <CategoryCard 
-                key={idx}
-                title={cat.name}
-                count={cat.count}
-                iconName={getCategoryIcon(cat.name)}
-                to={`/products?category=${encodeURIComponent(cat.name)}`}
-              />
-            ))
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+              {categories.slice(0, 6).map((category, index) => (
+                <CategoryCard
+                  key={category.id || index}
+                  title={category.name}
+                  count={category.productCount || 0}
+                  iconName={getCategoryIcon(category.name)}
+                  to={`/products?category=${encodeURIComponent(category.name)}`}
+                />
+              ))}
+            </div>
           )}
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </section>
 
-      {/* Featured Collection */}
-      <PageContainer className="bg-surface-background/50 py-16 rounded-3xl">
-        <SectionHeader 
-          title="Featured Collection" 
-          subtitle="Handpicked favorites for you"
-          actionLabel="View all"
-          actionLink="/products?featured=true"
-        />
-        {renderProductGrid(featuredProducts)}
-      </PageContainer>
-
-      {/* Trending Now */}
-      <PageContainer>
-        <SectionHeader 
-          title="Trending Now" 
-          subtitle="What's popular this season"
-          actionLabel="View all"
-          actionLink="/products?trending=true"
-        />
-        {renderProductGrid(trendingProducts)}
-      </PageContainer>
-      
-      {/* Sale / Special Offers */}
-      <PageContainer className="bg-danger-600/5 py-16 rounded-3xl">
-        <SectionHeader 
-          title="Special Offers" 
-          subtitle="Grab them before they're gone"
-          actionLabel="View Sale"
-          actionLink="/products?sale=true"
-        />
-        {renderProductGrid(saleProducts)}
-      </PageContainer>
+      {/* Featured Products */}
+      <section className="py-16 sm:py-24">
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="Featured Collection" subtitle="Handpicked premium pieces" />
+            <Button variant="outline" href="/products" className="hidden sm:flex">View Collection</Button>
+          </div>
+          {renderProductGrid(homeProducts.featured)}
+        </PageContainer>
+      </section>
 
       {/* New Arrivals */}
-      <PageContainer>
-        <SectionHeader 
-          title="New Arrivals" 
-          subtitle="The latest additions to our catalog"
-          actionLabel="Shop new"
-          actionLink="/products?newArrival=true"
-        />
-        {renderProductGrid(newArrivals)}
-      </PageContainer>
+      <section className="py-16 sm:py-24 bg-surface">
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="New Arrivals" subtitle="The latest additions to our store" />
+            <Button variant="outline" href="/products?sort=newest" className="hidden sm:flex">Discover More</Button>
+          </div>
+          {renderProductGrid(homeProducts.newArrivals)}
+        </PageContainer>
+      </section>
+      {/* Sale / Special Offers */}
+      <section className="py-16 sm:py-24">
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="Special Offers" subtitle="Grab them before they're gone" />
+            <Button variant="outline" href="/products?sale=true" className="hidden sm:flex">View Sale</Button>
+          </div>
+          {renderProductGrid(homeProducts.sale)}
+        </PageContainer>
+      </section>
 
       {/* Best Sellers */}
-      <PageContainer className="bg-surface-background/50 py-16 rounded-3xl">
-        <SectionHeader 
-          title="Best Sellers" 
-          subtitle="Our most loved furniture"
-          actionLabel="View all"
-          actionLink="/products?bestSeller=true"
-        />
-        {renderProductGrid(bestSellers)}
-      </PageContainer>
+      <section className="py-16 sm:py-24 bg-surface">
+        <PageContainer>
+          <div className="flex justify-between items-end mb-8 sm:mb-12">
+            <SectionHeader title="Best Sellers" subtitle="Our most loved furniture" />
+            <Button variant="outline" href="/products?bestSeller=true" className="hidden sm:flex">View all</Button>
+          </div>
+          {renderProductGrid(homeProducts.bestSellers)}
+        </PageContainer>
+      </section>
 
       {/* Newsletter Section */}
       <PageContainer>

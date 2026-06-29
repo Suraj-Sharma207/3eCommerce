@@ -173,7 +173,7 @@ const RegisterPage = () => {
       <div className="mb-6 stagger-1">
         <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
         <p className="mt-1 text-[16px] text-text-muted font-medium stagger-2">
-          Join {branding?.platformName || 'LuxeHome'} to experience premium shopping.
+          Join {branding?.platformName || 'Store'} to experience premium shopping.
         </p>
       </div>
 

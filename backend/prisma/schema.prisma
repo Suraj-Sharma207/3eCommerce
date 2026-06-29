@@ -53,37 +53,68 @@ enum Role {
 }
 
 model Product {
-  id                 String      @id @default(uuid())
+  id                 String         @id @default(uuid())
   name               String
-  slug               String?     @unique
-  brand              String      @default("FurnitureCo")
-  sku                String?     @unique
+  slug               String?        @unique
+  brand              String         @default("FurnitureCo")
+  sku                String?        @unique
   description        String
   price              Float
-  discountPercentage Float       @default(0)
-  finalPrice         Float       @default(0)
-  category           String      @default("Living Room")
-  stock              Int         @default(0)
-  rating             Float       @default(0)
-  reviewCount        Int         @default(0)
-  thumbnail          String?
-  galleryImages      String[]
-  featured           Boolean     @default(false)
-  trending           Boolean     @default(false)
-  bestSeller         Boolean     @default(false)
-  newArrival         Boolean     @default(false)
-  active             Boolean     @default(true)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-  
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  wishlistItems WishlistItem[]
+  discountPercentage Float          @default(0)
+  finalPrice         Float          @default(0)
+  category           String         @default("Living Room")
+  stock              Int            @default(0)
+  rating             Float          @default(0)
+  reviewCount        Int            @default(0)
+  featured           Boolean        @default(false)
+  trending           Boolean        @default(false)
+  bestSeller         Boolean        @default(false)
+  newArrival         Boolean        @default(false)
+  active             Boolean        @default(true)
+  recommended        Boolean        @default(false)
+
+  homepageOrder      Int            @default(0)
+  totalSold          Int            @default(0)
+  totalRevenue       Float          @default(0)
+  totalViews         Int            @default(0)
+  wishlistCount      Int            @default(0)
+  cartCount          Int            @default(0)
+  lastPurchasedAt    DateTime?
+
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  images             ProductImage[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  wishlistItems      WishlistItem[]
   stockNotifications StockNotification[]
-  promotions  PromotionProduct[]
+  promotions         PromotionProduct[]
 
   @@index([stock])
   @@index([createdAt])
+  @@index([category])
+}
+
+model ProductImage {
+  id           String   @id @default(uuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url          String
+  publicId     String?  @unique
+  displayOrder Int      @default(0)
+  isPrimary    Boolean  @default(false)
+  altText      String?
+  width        Int?
+  height       Int?
+  format       String?
+  bytes        Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([productId, url])
+  @@index([productId])
+  @@index([productId, isPrimary])
 }
 
 model Cart {
@@ -368,11 +399,14 @@ model BrandingSettings {
   platformName String   @default("LuxeHome")
   logoUrl      String?
   logoPublicId String?
+  emailLogoUrl      String?
+  emailLogoPublicId String?
   faviconUrl   String?
   primaryColor String?
   supportEmail String?
   supportPhone String?
   websiteUrl   String?
+  brandingVersion Int   @default(1)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

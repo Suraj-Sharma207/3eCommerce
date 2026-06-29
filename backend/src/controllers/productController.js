@@ -4,8 +4,8 @@ import { successResponse, errorResponse } from '../utils/response.js';
 class ProductController {
   async getProducts(req, res, next) {
     try {
-      const { page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, sort, featured, trending, newArrival, bestSeller, sale } = req.query;
-      const data = await productService.getProducts({ page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, sort, featured, trending, newArrival, bestSeller, sale });
+      const { page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts } = req.query;
+      const data = await productService.getProducts({ page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts });
       return successResponse(res, 'Products retrieved successfully', data, 200);
     } catch (error) {
       next(error);
@@ -37,13 +37,30 @@ class ProductController {
   async getHomeProducts(req, res, next) {
     try {
       // Optimized parallel fetching for homepage sections
-      const [featured, trending, newArrivals, bestSellers, sale] = await Promise.all([
+      let [featured, trending, newArrivals, bestSellers, sale] = await Promise.all([
         productService.getProducts({ featured: 'true', limit: 8 }),
         productService.getProducts({ trending: 'true', limit: 8 }),
         productService.getProducts({ newArrival: 'true', limit: 8 }),
         productService.getProducts({ bestSeller: 'true', limit: 8 }),
         productService.getProducts({ sale: 'true', limit: 8 })
       ]);
+
+      // Fallbacks if any section is empty
+      if (!featured.products || featured.products.length === 0) {
+        featured = await productService.getProducts({ limit: 8, sort: 'newest' });
+      }
+      if (!trending.products || trending.products.length === 0) {
+        trending = await productService.getProducts({ limit: 8, sort: 'popular' });
+      }
+      if (!newArrivals.products || newArrivals.products.length === 0) {
+        newArrivals = await productService.getProducts({ limit: 8, sort: 'newest' });
+      }
+      if (!bestSellers.products || bestSellers.products.length === 0) {
+        bestSellers = await productService.getProducts({ limit: 8, sort: 'popular' });
+      }
+      if (!sale.products || sale.products.length === 0) {
+        sale = await productService.getProducts({ limit: 8, sort: 'discount' });
+      }
 
       return successResponse(res, 'Home products retrieved successfully', {
         featured: featured.products,
@@ -52,6 +69,71 @@ class ProductController {
         bestSellers: bestSellers.products,
         sale: sale.products
       }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getFeaturedProducts(req, res, next) {
+    try {
+      const { limit = 8 } = req.query;
+      let data = await productService.getProducts({ featured: 'true', limit: parseInt(limit) });
+      if (!data.products || data.products.length === 0) {
+        data = await productService.getProducts({ limit: parseInt(limit), sort: 'newest' });
+      }
+      return successResponse(res, 'Featured products retrieved successfully', { products: data.products }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getTrendingProducts(req, res, next) {
+    try {
+      const { limit = 8 } = req.query;
+      let data = await productService.getProducts({ trending: 'true', limit: parseInt(limit) });
+      if (!data.products || data.products.length === 0) {
+        data = await productService.getProducts({ limit: parseInt(limit), sort: 'popular' });
+      }
+      return successResponse(res, 'Trending products retrieved successfully', { products: data.products }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getNewProducts(req, res, next) {
+    try {
+      const { limit = 8 } = req.query;
+      let data = await productService.getProducts({ newArrival: 'true', limit: parseInt(limit) });
+      if (!data.products || data.products.length === 0) {
+        data = await productService.getProducts({ limit: parseInt(limit), sort: 'newest' });
+      }
+      return successResponse(res, 'New products retrieved successfully', { products: data.products }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getBestSellers(req, res, next) {
+    try {
+      const { limit = 8 } = req.query;
+      let data = await productService.getProducts({ bestSeller: 'true', limit: parseInt(limit) });
+      if (!data.products || data.products.length === 0) {
+        data = await productService.getProducts({ limit: parseInt(limit), sort: 'popular' });
+      }
+      return successResponse(res, 'Best seller products retrieved successfully', { products: data.products }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getRecommendedProductsEndpoint(req, res, next) {
+    try {
+      const { limit = 8 } = req.query;
+      let data = await productService.getProducts({ recommended: 'true', limit: parseInt(limit) });
+      if (!data.products || data.products.length === 0) {
+        data = await productService.getProducts({ limit: parseInt(limit), sort: 'highest_rated' });
+      }
+      return successResponse(res, 'Recommended products retrieved successfully', { products: data.products }, 200);
     } catch (error) {
       next(error);
     }

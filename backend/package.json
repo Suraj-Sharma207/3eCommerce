@@ -10,7 +10,9 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
     "db:generate": "prisma generate",
-    "seed:admin": "node src/scripts/seedAdmin.js"
+    "db:migrate": "prisma migrate dev",
+    "seed:admin": "node src/scripts/seedAdmin.js",
+    "audit:images": "node src/scripts/auditImages.js"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",

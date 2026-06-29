@@ -25,6 +25,7 @@ const AdminCustomers = lazy(() => import('../pages/admin/AdminCustomers'));
 const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
 const AdminOffers = lazy(() => import('../pages/admin/AdminOffers'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
+const AdminHomepageSettings = lazy(() => import('../pages/admin/AdminHomepageSettings'));
 
 const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
 const GuestProtectedRoute = lazy(() => import('../components/layout/GuestProtectedRoute'));
@@ -82,6 +83,7 @@ const AppRoutes = () => {
             <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
             <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="homepage" element={<AdminHomepageSettings />} />
             <Route path="offers" element={<AdminOffers />} />
           </Route>
 

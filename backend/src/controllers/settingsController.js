@@ -179,12 +179,15 @@ class SettingsController {
         diagnostics.smtpConnection = true;
         diagnostics.gmailAuthentication = true;
 
-        const toEmail = req.user?.email || 'admin@luxehome.com';
+        const { brandingService } = await import('../../services/brandingService.js');
+        const branding = await brandingService.getBranding();
+
+        const toEmail = req.user?.email || `admin@${branding.platformName.toLowerCase().replace(/\s+/g, '')}.com`;
         await transporter.sendMail({
           from: `"${config.fromEmail}" <${config.user}>`,
           to: toEmail,
-          subject: 'LuxeHome SMTP Diagnostics Test',
-          text: 'This is a diagnostic email from the LuxeHome SMTP test suite.'
+          subject: `${branding.platformName} SMTP Diagnostics Test`,
+          text: `This is a diagnostic email from the ${branding.platformName} SMTP test suite.`
         });
         diagnostics.testEmailDelivery = true;
         
@@ -205,10 +208,11 @@ class SettingsController {
   // Public endpoint for storefront config
   async getPublicConfig(req, res) {
     try {
-      const data = await settingsService.getSettingsByKeys(['store', 'payment']);
+      const data = await settingsService.getSettingsByKeys(['store', 'payment', 'shipping']);
       
       const storeConfig = data.store || {};
       const paymentConfig = data.payment || {};
+      const shippingConfig = data.shipping || {};
 
       // EXPOSE ONLY PUBLIC FIELDS
       const publicConfig = {
@@ -217,6 +221,7 @@ class SettingsController {
         currencySymbol: storeConfig.currencySymbol,
         stripePublicKey: paymentConfig.stripePublicKey,
         lowStockThreshold: storeConfig.lowStockThreshold || 5,
+        shipping: shippingConfig,
       };
 
       return successResponse(res, 'Public config fetched', publicConfig);

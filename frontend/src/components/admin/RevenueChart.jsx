@@ -9,8 +9,8 @@ const RevenueChart = memo(({ data }) => {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+              <stop offset="5%" stopColor="#082F5C" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#082F5C" stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -20,7 +20,7 @@ const RevenueChart = memo(({ data }) => {
             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
             formatter={(value) => [formatPrice(value), 'Revenue']}
           />
-          <Area type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+          <Area type="monotone" dataKey="revenue" stroke="#082F5C" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
