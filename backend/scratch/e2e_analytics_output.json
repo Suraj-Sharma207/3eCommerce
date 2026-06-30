@@ -1,0 +1,25 @@
+{
+  "summary": {
+    "total": 252490.5,
+    "today": 237490.5,
+    "yesterday": 15000,
+    "thisWeek": 252490.5,
+    "thisMonth": 252490.5,
+    "thisYear": 252490.5,
+    "aov": 42081.75,
+    "highest": 47498.1
+  },
+  "byCategory": [
+    {
+      "category": "Living Room",
+      "revenue": 47498.1
+    }
+  ],
+  "byProduct": [
+    {
+      "name": "Wooden TV Unit",
+      "qtySold": 2,
+      "revenue": 47498.1
+    }
+  ]
+}

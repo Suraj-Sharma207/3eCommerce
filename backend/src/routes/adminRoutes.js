@@ -25,9 +25,11 @@ router.get('/dashboard/inventory-alerts', adminController.getInventoryAlerts);
 router.get('/dashboard/orders', adminController.getOrdersAnalytics);
 router.get('/dashboard/customers', adminController.getCustomersAnalytics);
 router.get('/dashboard/products', adminController.getProductsAnalytics);
+router.get('/products', adminController.getAllProducts);
 router.get('/dashboard/deliveries', adminController.getDeliveriesAnalytics);
 router.get('/dashboard/cancellations', adminController.getCancellationsAnalytics);
 router.get('/orders', adminController.getAllOrders);
+router.get('/orders/:id', adminController.getOrderById);
 router.put('/orders/:id/status', adminController.updateOrderStatus);
 
 router.post('/profile/avatar', uploadAvatar.single('avatar'), userController.uploadAvatar);

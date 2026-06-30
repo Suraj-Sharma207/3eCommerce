@@ -14,7 +14,7 @@ import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
 
 const AdminProducts = () => {
-  const { products, isLoading, updatingProductIds, fetchProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage, filters, setFilters, inventoryCounts } = useProductStore();
+  const { products, isLoading, updatingProductIds, fetchAdminProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage, filters, setFilters, inventoryCounts } = useProductStore();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
@@ -33,10 +33,10 @@ const AdminProducts = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProducts(1);
+      fetchAdminProducts(1);
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, filters.inventoryTab, fetchProducts]);
+  }, [searchQuery, filters.inventoryTab, fetchAdminProducts]);
 
   const handleOpenModal = (product = null) => {
     setSelectedProductId(product?.id ?? null);
@@ -249,11 +249,11 @@ const AdminProducts = () => {
             <Pagination 
               currentPage={pagination.currentPage} 
               totalPages={pagination.totalPages} 
-              onPageChange={(page) => fetchProducts(page)} 
+              onPageChange={fetchAdminProducts} 
               itemsPerPage={pagination.itemsPerPage}
               onItemsPerPageChange={(limit) => {
                 setItemsPerPage(limit);
-                fetchProducts(1);
+                fetchAdminProducts(1);
               }}
             />
           </div>

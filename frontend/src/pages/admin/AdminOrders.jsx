@@ -5,6 +5,7 @@ import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import StatusDropdown from '../../components/ui/StatusDropdown';
 import { formatPrice } from '../../utils/currency';
 import Pagination from '../../components/ui/Pagination';
+import OrderDetailsDrawer from '../../components/admin/orders/OrderDetailsDrawer';
 
 const PAYMENT_COLORS = {
   PAID:    'bg-green-50 text-green-700 border-green-200',
@@ -15,6 +16,7 @@ const PAYMENT_COLORS = {
 
 const AdminOrders = () => {
   const { orders, isLoading, updatingOrderIds, fetchOrders, updateOrderStatus, ordersPagination, searchQuery, setSearchQuery, setOrdersItemsPerPage } = useAdminStore();
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -96,7 +98,8 @@ const AdminOrders = () => {
                   return (
                     <tr
                       key={order.id}
-                      className={`hover:bg-surface-background transition-colors ${isUpdating ? 'opacity-70' : ''}`}
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className={`cursor-pointer hover:bg-surface-background transition-colors ${isUpdating ? 'opacity-70' : ''}`}
                     >
                       <td className="p-4 pl-6 font-bold text-text-brand-600 text-sm uppercase font-mono">
                         #{order.orderNumber || order.id.split('-')[0]}
@@ -120,7 +123,7 @@ const AdminOrders = () => {
                           {order.paymentStatus}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
                         <StatusDropdown
                           value={order.orderStatus}
                           onChange={(newStatus) => handleStatusChange(order.id, newStatus)}
@@ -152,6 +155,11 @@ const AdminOrders = () => {
           </div>
         )}
       </div>
+
+      <OrderDetailsDrawer
+        orderId={selectedOrderId}
+        onClose={() => setSelectedOrderId(null)}
+      />
     </div>
   );
 };

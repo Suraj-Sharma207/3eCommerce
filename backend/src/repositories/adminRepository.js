@@ -32,11 +32,10 @@ class AdminRepository {
     }).finally(() => { if (isDev) console.timeEnd('Recent Orders Query'); });
 
     if (isDev) console.time('Top Products Grouping');
-    const topProductsPromise = prisma.orderItem.groupBy({
-      by: ['productId'],
-      _sum: { quantity: true, price: true },
-      orderBy: { _sum: { quantity: 'desc' } },
-      take: 5
+    const topProductsPromise = prisma.product.findMany({
+      orderBy: { totalSold: 'desc' },
+      take: 5,
+      include: { images: { orderBy: { displayOrder: 'asc' } } }
     }).finally(() => { if (isDev) console.timeEnd('Top Products Grouping'); });
 
     if (isDev) console.time('Revenue Trend Query');
@@ -78,25 +77,12 @@ class AdminRepository {
     if (isDev) console.time('Top Products Details Fetch');
     let populatedTopProducts = [];
     if (topProducts.length > 0) {
-      const productIds = topProducts.map(tp => tp.productId);
-      const products = await prisma.product.findMany({
-        where: { id: { in: productIds } },
-        include: { images: { orderBy: { displayOrder: 'asc' } } }
-      });
-
-      const productMap = products.reduce((acc, p) => {
-        acc[p.id] = {
-          ...p,
-          thumbnail: p.images?.[0]?.url || null
-        };
-        delete acc[p.id].images;
-        return acc;
-      }, {});
-
-      populatedTopProducts = topProducts.map(tp => ({
-        product: productMap[tp.productId],
-        totalSold: tp._sum.quantity,
-        revenue: tp._sum.price
+      // Note: we can use the productMapper to properly map the thumbnail
+      const { mapProduct } = await import('../utils/productMapper.js');
+      populatedTopProducts = topProducts.map(p => ({
+        product: mapProduct(p),
+        totalSold: p.totalSold,
+        revenue: p.totalRevenue
       }));
     }
     if (isDev) console.timeEnd('Top Products Details Fetch');
@@ -183,20 +169,18 @@ class AdminRepository {
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const thisYear = new Date(today.getFullYear(), 0, 1);
 
-    const [allPaid, byCategoryRaw, byBrandRaw] = await Promise.all([
+    const [allPaid, deliveredItemsRaw] = await Promise.all([
       prisma.order.findMany({
         where: { paymentStatus: 'PAID' },
         select: { totalAmount: true, createdAt: true }
       }),
-      prisma.product.groupBy({
-        by: ['category'],
-        _sum: { totalRevenue: true },
-        orderBy: { _sum: { totalRevenue: 'desc' } }
-      }),
-      prisma.product.groupBy({
-        by: ['brand'],
-        _sum: { totalRevenue: true },
-        orderBy: { _sum: { totalRevenue: 'desc' } }
+      prisma.orderItem.findMany({
+        where: {
+          order: { orderStatus: 'DELIVERED' }
+        },
+        include: {
+          product: { select: { id: true, name: true, category: true, images: { orderBy: { displayOrder: 'asc' }, take: 1 } } }
+        }
       })
     ]);
 
@@ -213,10 +197,39 @@ class AdminRepository {
 
     const aov = allPaid.length > 0 ? total / allPaid.length : 0;
 
+    // Aggregate category and product revenue from delivered items
+    const categoryMap = {};
+    const productMap = {};
+
+    deliveredItemsRaw.forEach(item => {
+      const itemRev = item.quantity * item.price;
+      const cat = item.product?.category || 'Unknown';
+      const prodId = item.product?.id || 'UnknownId';
+      const prodName = item.product?.name || 'Unknown Product';
+      const thumbnail = item.product?.images?.[0]?.url || '';
+
+      if (!categoryMap[cat]) categoryMap[cat] = 0;
+      categoryMap[cat] += itemRev;
+
+      if (!productMap[prodId]) productMap[prodId] = { id: prodId, name: prodName, thumbnail, qtySold: 0, revenue: 0 };
+      productMap[prodId].qtySold += item.quantity;
+      productMap[prodId].revenue += itemRev;
+    });
+
+    const byCategory = Object.keys(categoryMap)
+      .map(cat => ({ category: cat, revenue: categoryMap[cat] }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    const byProduct = Object.values(productMap)
+      .map(p => ({ id: p.id, name: p.name, thumbnail: p.thumbnail, sold: p.qtySold, revenue: p.revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
     return {
       summary: { total, today: todayRev, yesterday: yesterdayRev, thisWeek: thisWeekRev, thisMonth: thisMonthRev, thisYear: thisYearRev, aov, highest },
-      byCategory: byCategoryRaw.map(c => ({ category: c.category || 'Unknown', revenue: c._sum.totalRevenue || 0 })),
-      byBrand: byBrandRaw.map(b => ({ brand: b.brand || 'Unknown', revenue: b._sum.totalRevenue || 0 }))
+      byCategory,
+      byProduct
     };
   }
 
@@ -442,13 +455,30 @@ class AdminRepository {
     };
   }
 
-  async updateCustomerStatus(id, active) {
-    const customer = await prisma.user.update({
-      where: { id },
-      data: { active }
+  async updateCustomerStatus(customerId, active) {
+    return prisma.user.update({
+      where: { id: customerId },
+      data: { active },
+      select: { id: true, name: true, email: true, active: true }
     });
-    customer.password = undefined;
-    return customer;
+  }
+
+  async getOrderById(orderId) {
+    return prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true } },
+        items: {
+          include: {
+            product: {
+              include: {
+                images: { orderBy: { displayOrder: 'asc' } }
+              }
+            }
+          }
+        }
+      }
+    });
   }
 }
 

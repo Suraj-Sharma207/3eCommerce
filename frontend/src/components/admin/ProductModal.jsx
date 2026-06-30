@@ -349,6 +349,7 @@ const ImageManager = ({ product }) => {
           accept="image/jpeg,image/jpg,image/png,image/webp"
           className="hidden"
           onChange={handleFileInputChange}
+          onClick={(e) => e.stopPropagation()}
         />
 
         {uploadProgress !== null ? (

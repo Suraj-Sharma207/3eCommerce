@@ -68,6 +68,7 @@ class OrderService {
         emailEvents.emit('order.shipped', { order });
       } else if (status === 'DELIVERED') {
         emailEvents.emit('order.delivered', { order, deliveredDate: new Date().toLocaleDateString() });
+        import('../controllers/homeController.js').then(({ homeCache }) => homeCache.clear());
       } else if (status === 'CANCELLED') {
         emailEvents.emit('order.cancelled', { order, cancellationReason: 'Fulfillment cancellation' });
         if (order.paymentStatus === 'PAID') {

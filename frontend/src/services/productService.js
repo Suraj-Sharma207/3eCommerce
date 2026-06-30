@@ -1,6 +1,6 @@
 import api from './api';
 
-const getProducts = async ({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort }) => {
+const getProducts = async ({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }) => {
   const params = { page, limit, search };
   
   if (category && category !== 'All') params.category = category;
@@ -12,8 +12,27 @@ const getProducts = async ({ page = 1, limit = 12, search = '', category, brand,
   if (stockStatus) params.stockStatus = stockStatus;
   if (sale) params.sale = sale;
   if (sort) params.sort = sort;
+  if (includeInventoryCounts) params.includeInventoryCounts = includeInventoryCounts;
 
   const response = await api.get('/products', { params });
+  return response.data;
+};
+
+const getAdminProducts = async ({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }) => {
+  const params = { page, limit, search };
+  
+  if (category && category !== 'All') params.category = category;
+  if (brand && brand !== 'All') params.brand = brand;
+  if (minRating !== undefined && minRating !== '') params.minRating = minRating;
+  if (minPrice !== undefined && minPrice !== '') params.minPrice = minPrice;
+  if (maxPrice !== undefined && maxPrice !== '') params.maxPrice = maxPrice;
+  if (inStock) params.inStock = inStock;
+  if (stockStatus) params.stockStatus = stockStatus;
+  if (sale) params.sale = sale;
+  if (sort) params.sort = sort;
+  if (includeInventoryCounts) params.includeInventoryCounts = includeInventoryCounts;
+
+  const response = await api.get('/admin/products', { params });
   return response.data;
 };
 
@@ -23,7 +42,7 @@ const getProductById = async (id) => {
 };
 
 const getProductsHome = async () => {
-  const response = await api.get('/products/home');
+  const response = await api.get('/home/all');
   return response.data;
 };
 
@@ -114,6 +133,7 @@ const getProductImages = async (productId) => {
 
 export default {
   getProducts,
+  getAdminProducts,
   getProductById,
   getProductsHome,
   createProduct,

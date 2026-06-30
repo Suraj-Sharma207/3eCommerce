@@ -89,6 +89,18 @@ class AdminController {
     return orderController.getAllOrders(req, res, next);
   }
 
+  async getAllProducts(req, res, next) {
+    try {
+      const { page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts } = req.query;
+      // We must import productService at the top of the file.
+      const { default: productService } = await import('../services/productService.js');
+      const data = await productService.getProducts({ page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin: true });
+      return successResponse(res, 'Admin products retrieved successfully', data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateOrderStatus(req, res, next) {
     return orderController.updateOrderStatus(req, res, next);
   }
@@ -120,6 +132,17 @@ class AdminController {
       const { active } = req.body;
       const data = await adminService.updateCustomerStatus(id, active);
       return successResponse(res, 'Customer status updated', data, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getOrderById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const data = await adminService.getOrderById(id);
+      if (!data) return res.status(404).json({ success: false, message: 'Order not found' });
+      return successResponse(res, 'Order details retrieved', data, 200);
     } catch (error) {
       next(error);
     }

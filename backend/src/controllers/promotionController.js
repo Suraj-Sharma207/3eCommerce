@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { logAudit } from '../services/auditLogger.js';
+import { homeCache } from './homeController.js';
 
 class PromotionController {
   async getPromotions(req, res) {
@@ -47,6 +48,8 @@ class PromotionController {
       }
 
       const promotion = await prisma.promotion.create({ data });
+
+      homeCache.clear();
 
       await logAudit({
         adminName: req.user.name,
@@ -99,6 +102,8 @@ class PromotionController {
 
       const promotion = await prisma.promotion.update({ where: { id }, data });
 
+      homeCache.clear();
+
       await logAudit({
         adminName: req.user.name,
         section: 'Promotions',
@@ -121,6 +126,8 @@ class PromotionController {
       if (!oldPromotion) return errorResponse(res, 'Promotion not found', [], 404);
 
       await prisma.promotion.delete({ where: { id } });
+
+      homeCache.clear();
 
       await logAudit({
         adminName: req.user.name,

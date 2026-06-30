@@ -12,7 +12,6 @@ const router = express.Router();
 // ── Public routes ───────────────────────────────────────────────────────────
 router.get('/', productController.getProducts);
 router.get('/search/suggestions', productController.getSearchSuggestions);
-router.get('/home', productController.getHomeProducts);
 router.get('/featured', productController.getFeaturedProducts);
 router.get('/trending', productController.getTrendingProducts);
 router.get('/new', productController.getNewProducts);

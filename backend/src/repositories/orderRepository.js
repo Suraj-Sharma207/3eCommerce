@@ -194,19 +194,46 @@ class OrderRepository {
   }
 
   async updateOrderStatus(orderId, status) {
-    const order = await prisma.order.update({
-      where: { id: orderId },
-      data: { orderStatus: status },
-      include: {
-        user: true,
-        items: {
-          include: {
-            product: PRODUCT_WITH_IMAGES,
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      const existing = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { items: true }
+      });
+      if (!existing) throw new Error('Order not found');
+
+      const previousStatus = existing.orderStatus;
+      
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: { orderStatus: status },
+        include: {
+          user: true,
+          items: {
+            include: {
+              product: PRODUCT_WITH_IMAGES,
+            }
+          }
+        }
+      });
+
+      if (previousStatus !== 'DELIVERED' && status === 'DELIVERED') {
+        for (const item of order.items) {
+          if (item.product) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                totalSold: { increment: item.quantity },
+                totalRevenue: { increment: item.price * item.quantity },
+                lastPurchasedAt: new Date()
+              }
+            });
           }
         }
       }
+      return order;
     });
-    return mapOrder(order);
+
+    return mapOrder(updatedOrder);
   }
 
   async updatePaymentStatus(orderId, status) {

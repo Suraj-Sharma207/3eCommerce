@@ -106,6 +106,10 @@ class AdminService {
   async getProductsAnalytics() { return await adminRepository.getProductsAnalytics(); }
   async getDeliveriesAnalytics() { return await adminRepository.getDeliveriesAnalytics(); }
   async getCancellationsAnalytics() { return await adminRepository.getCancellationsAnalytics(); }
+
+  async getOrderById(orderId) {
+    return await adminRepository.getOrderById(orderId);
+  }
 }
 
 export default new AdminService();

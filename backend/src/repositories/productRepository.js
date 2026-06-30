@@ -9,7 +9,7 @@ const IMAGE_INCLUDE = {
 };
 
 class ProductRepository {
-  _buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale }) {
+  _buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
     const andClauses = [];
 
     if (search) {
@@ -84,13 +84,15 @@ class ProductRepository {
     if (bestSeller === 'true' || bestSeller === true) andClauses.push({ bestSeller: true });
     if (recommended === 'true' || recommended === true) andClauses.push({ recommended: true });
 
-    andClauses.push({ active: true });
+    if (!isAdmin) {
+      andClauses.push({ active: true });
+    }
 
     return { AND: andClauses };
   }
 
-  async findAll({ skip, take, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale }) {
-    const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale });
+  async findAll({ skip, take, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
+    const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
 
     let orderBy = { createdAt: 'desc' };
     if (sort === 'price_asc') orderBy = { finalPrice: 'asc' };
@@ -193,9 +195,25 @@ class ProductRepository {
       }
     });
 
+    const getCategoryIcon = (categoryName) => {
+      const iconMap = {
+        'Living Room': 'Sofa',
+        'Bedroom': 'Bed',
+        'Dining': 'Utensils',
+        'Office': 'Monitor',
+        'Lighting': 'Lightbulb',
+        'Decor': 'Star',
+        'Outdoor': 'Sun'
+      };
+      return iconMap[categoryName] || 'Package';
+    };
+
     return categories.map(cat => ({
+      id: cat.category.toLowerCase().replace(/\s+/g, '-'),
       name: cat.category,
-      count: cat._count.category,
+      slug: cat.category.toLowerCase().replace(/\s+/g, '-'),
+      icon: getCategoryIcon(cat.category),
+      productCount: cat._count.category,
     }));
   }
 

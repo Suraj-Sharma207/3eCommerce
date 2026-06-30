@@ -56,19 +56,6 @@ const HomePage = () => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const getCategoryIcon = (categoryName) => {
-    const iconMap = {
-      'Living Room': 'Sofa',
-      'Bedroom': 'Bed',
-      'Dining': 'Utensils',
-      'Office': 'Monitor',
-      'Lighting': 'Lightbulb',
-      'Decor': 'Star',
-      'Outdoor': 'Sun'
-    };
-    return iconMap[categoryName] || 'Package';
-  };
-
   const renderProductGrid = (items) => {
     if (isLoading) {
       return (
@@ -126,7 +113,7 @@ const HomePage = () => {
                   key={category.id || index}
                   title={category.name}
                   count={category.productCount || 0}
-                  iconName={getCategoryIcon(category.name)}
+                  iconName={category.icon}
                   to={`/products?category=${encodeURIComponent(category.name)}`}
                 />
               ))}

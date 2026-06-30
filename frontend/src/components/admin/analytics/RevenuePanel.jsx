@@ -8,7 +8,7 @@ const RevenuePanel = () => {
 
   if (!data) return null;
 
-  const { summary, byProduct, byCategory, byBrand } = data;
+  const { summary, byProduct, byCategory } = data;
 
   return (
     <div className="space-y-8">
@@ -38,19 +38,6 @@ const RevenuePanel = () => {
         </div>
       </section>
 
-      {/* Revenue By Brand */}
-      <section>
-        <h3 className="font-bold text-text-brand-600 mb-3 text-sm uppercase tracking-wider">Revenue By Brand</h3>
-        <div className="bg-surface-background rounded-xl p-4 space-y-3">
-          {byBrand.length === 0 ? <p className="text-text-muted text-sm">No data available.</p> : null}
-          {byBrand.map((br, i) => (
-            <div key={i} className="flex justify-between items-center text-sm">
-              <span className="font-medium text-text-primary">{br.brand}</span>
-              <span className="font-bold text-brand-600">{formatPrice(br.revenue)}</span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Top Products By Revenue */}
       <section>
@@ -70,8 +57,17 @@ const RevenuePanel = () => {
               ) : null}
               {byProduct.map((p, i) => (
                 <tr key={i} className="hover:bg-surface-background/50">
-                  <td className="p-3 font-medium text-text-primary line-clamp-1">{p.name}</td>
-                  <td className="p-3 text-right text-text-secondary">{p.qtySold}</td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      {p.thumbnail ? (
+                        <img src={p.thumbnail} alt={p.name} className="w-10 h-10 object-cover rounded-md border border-border" />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 rounded-md border border-border" />
+                      )}
+                      <span className="font-medium text-text-primary line-clamp-1">{p.name}</span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-right text-text-secondary">{p.sold}</td>
                   <td className="p-3 text-right font-bold text-brand-600">{formatPrice(p.revenue)}</td>
                 </tr>
               ))}

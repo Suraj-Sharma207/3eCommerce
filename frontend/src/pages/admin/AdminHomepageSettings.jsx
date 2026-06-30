@@ -133,7 +133,7 @@ const AdminHomepageSettings = () => {
         <div className="bg-slate-800 text-white p-4 text-center font-bold">
           Live Homepage Preview
         </div>
-        <div className="p-8 bg-background-default">
+        <div className="p-4 sm:p-8 bg-background-default">
           <PageContainer>
             {/* Render featured as it would appear */}
             <section className="mb-16">
@@ -142,9 +142,9 @@ const AdminHomepageSettings = () => {
                 subtitle="Curated products selected just for you"
                 align="center"
               />
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
                 {featured.slice(0, 8).map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} previewMode={true} />
                 ))}
               </div>
             </section>
@@ -155,9 +155,9 @@ const AdminHomepageSettings = () => {
                 subtitle="Don't miss these amazing deals"
                 align="center"
               />
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
                 {specialOffers.slice(0, 4).map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} previewMode={true} />
                 ))}
               </div>
             </section>

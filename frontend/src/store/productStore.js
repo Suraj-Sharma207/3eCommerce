@@ -42,14 +42,14 @@ const useProductStore = create((set, get) => ({
     if (get().hasFetchedHome) return;
     try {
       const response = await productService.getProductsHome();
-      const data = response.data?.data || {};
+      const data = response?.data || {};
       set({ 
         homeProducts: {
-          featured: data.featured || [],
+          featured: data.featuredCollection || data.featured || [],
           trending: data.trending || [],
           newArrivals: data.newArrivals || [],
           bestSellers: data.bestSellers || [],
-          sale: data.sale || []
+          sale: data.specialOffers || data.sale || []
         },
         hasFetchedHome: true
       });
@@ -136,6 +136,38 @@ const useProductStore = create((set, get) => ({
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'Failed to fetch products', 
+        isLoading: false 
+      });
+    }
+  },
+
+  fetchAdminProducts: async (page = get().pagination.currentPage) => {
+    set({ isLoading: true, error: null });
+    const { searchQuery, filters, pagination } = get();
+    
+    try {
+      let stockStatus;
+      if (filters.inventoryTab === 'active') stockStatus = 'active';
+      else if (filters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+
+      const { data } = await productService.getAdminProducts({
+        page,
+        limit: pagination.itemsPerPage,
+        search: searchQuery,
+        stockStatus,
+        ...filters,
+        includeInventoryCounts: true
+      });
+      
+      set({
+        products: data.products,
+        pagination: data.pagination,
+        inventoryCounts: data.pagination?.inventoryCounts || get().inventoryCounts,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.message || 'Failed to fetch admin products', 
         isLoading: false 
       });
     }

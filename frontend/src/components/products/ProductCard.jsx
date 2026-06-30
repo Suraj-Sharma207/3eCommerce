@@ -11,7 +11,7 @@ import useSettingsStore from '../../store/settingsStore';
 import { formatPrice } from '../../utils/currency';
 import { getOptimizedUrl } from '../../utils/cloudinary';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, previewMode = false }) => {
   if (!product) return null;
 
   const { addToCart, loadingProducts } = useCartStore();
@@ -20,12 +20,13 @@ const ProductCard = ({ product }) => {
   const { publicConfig } = useSettingsStore();
   
   const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
-  const isCartLoading = loadingProducts[product.id] || false;
-  const isWishlisted = isInWishlist(product.id);
+  const isCartLoading = previewMode ? false : (loadingProducts[product.id] || false);
+  const isWishlisted = previewMode ? false : isInWishlist(product.id);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (previewMode) return;
     if (!isAuthenticated) return alert('Please login first');
     addToCart(product.id, 1, product.name);
   };
@@ -33,6 +34,7 @@ const ProductCard = ({ product }) => {
   const handleToggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (previewMode) return;
     if (!isAuthenticated) return alert('Please login first');
     toggleWishlist(product.id);
   };
@@ -44,7 +46,7 @@ const ProductCard = ({ product }) => {
       
       {/* Image Area with Actions */}
       <div className="relative aspect-square bg-surface-background overflow-hidden">
-        <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full">
+        <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full" onClick={(e) => previewMode && e.preventDefault()}>
           <ImageFallback 
             src={getOptimizedUrl(product.thumbnail, 'card')} 
             alt={product.name} 
@@ -80,7 +82,11 @@ const ProductCard = ({ product }) => {
           >
             <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
           </button>
-          <button className="w-10 h-10 rounded-full bg-white text-text-secondary hover:text-brand-600 hover:bg-brand-50 shadow-md flex items-center justify-center transition-colors" aria-label="Quick view">
+          <button 
+            className="w-10 h-10 rounded-full bg-white text-text-secondary hover:text-brand-600 hover:bg-brand-50 shadow-md flex items-center justify-center transition-colors" 
+            aria-label="Quick view"
+            onClick={(e) => { if (previewMode) { e.preventDefault(); e.stopPropagation(); } }}
+          >
             <Eye className="w-5 h-5" />
           </button>
         </div>
@@ -93,7 +99,7 @@ const ProductCard = ({ product }) => {
           {product.brand && <span className="opacity-70">{product.brand}</span>}
         </div>
         
-        <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors">
+        <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors" onClick={(e) => previewMode && e.preventDefault()}>
           <h3 className="text-lg font-bold text-text-brand-600 line-clamp-1">{product.name}</h3>
         </Link>
         
