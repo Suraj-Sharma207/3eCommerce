@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import PageContainer from '../../components/layout/PageContainer';
 import HeroBanner from '../../components/ecommerce/HeroBanner';
-import SectionHeader from '../../components/layout/SectionHeader';
+import HomeSection from '../../components/layout/HomeSection';
 import CategoryCard from '../../components/ecommerce/CategoryCard';
 import ProductCard from '../../components/products/ProductCard';
 import Button from '../../components/ui/Button';
@@ -57,9 +57,11 @@ const HomePage = () => {
   }, [fetchCategories]);
 
   const renderProductGrid = (items) => {
+    const gridClass = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-x-6 lg:gap-y-8";
+    
     if (isLoading) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className={gridClass}>
           {[...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       );
@@ -68,7 +70,7 @@ const HomePage = () => {
       return <div className="text-center text-text-muted py-8">No products found in this section.</div>;
     }
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className={gridClass}>
         {items.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -77,96 +79,91 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-24 pb-20">
+    <div className="flex flex-col pb-20">
       <HeroBanner />
 
-      {/* Shop by Category */}
+      {/* Sentinel for Navbar */}
       <div className="relative">
         <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-[1px] pointer-events-none -mt-8" aria-hidden="true" />
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="Trending Now" subtitle="Most loved by our customers" />
-            <Button variant="outline" href="/products?sort=popular" className="hidden sm:flex">View All</Button>
-          </div>
-          {renderProductGrid(homeProducts.trending)}
-        </PageContainer>
       </div>
 
       {/* Categories Section */}
-      <section className="py-16 sm:py-24 bg-surface">
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="Shop by Category" subtitle="Find exactly what you need" />
-            <Button variant="outline" href="/products" className="hidden sm:flex">All Categories</Button>
+      <HomeSection 
+        title="Shop by Category" 
+        subtitle="Find exactly what you need"
+        hasBackground={true}
+        actionButton={<Button variant="outline" href="/products">All Categories</Button>}
+      >
+        {isCategoriesLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-square bg-surface-background rounded-2xl animate-pulse" />
+            ))}
           </div>
-          
-          {isCategoriesLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="aspect-square bg-surface-background rounded-2xl animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
-              {categories.slice(0, 6).map((category, index) => (
-                <CategoryCard
-                  key={category.id || index}
-                  title={category.name}
-                  count={category.productCount || 0}
-                  iconName={category.icon}
-                  to={`/products?category=${encodeURIComponent(category.name)}`}
-                />
-              ))}
-            </div>
-          )}
-        </PageContainer>
-      </section>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6">
+            {categories.slice(0, 6).map((category, index) => (
+              <CategoryCard
+                key={category.id || index}
+                title={category.name}
+                count={category.productCount || 0}
+                iconName={category.icon}
+                to={`/products?category=${encodeURIComponent(category.name)}`}
+              />
+            ))}
+          </div>
+        )}
+      </HomeSection>
 
       {/* Featured Products */}
-      <section className="py-16 sm:py-24">
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="Featured Collection" subtitle="Handpicked premium pieces" />
-            <Button variant="outline" href="/products" className="hidden sm:flex">View Collection</Button>
-          </div>
-          {renderProductGrid(homeProducts.featured)}
-        </PageContainer>
-      </section>
+      <HomeSection 
+        title="Featured Collection" 
+        subtitle="Handpicked premium pieces"
+        actionButton={<Button variant="outline" href="/products">View Collection</Button>}
+      >
+        {renderProductGrid(homeProducts.featured)}
+      </HomeSection>
+
+      {/* Trending Now */}
+      <HomeSection 
+        title="Trending Now" 
+        subtitle="Most loved by our customers"
+        actionButton={<Button variant="outline" href="/products?sort=popular">View All</Button>}
+      >
+        {renderProductGrid(homeProducts.trending)}
+      </HomeSection>
 
       {/* New Arrivals */}
-      <section className="py-16 sm:py-24 bg-surface">
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="New Arrivals" subtitle="The latest additions to our store" />
-            <Button variant="outline" href="/products?sort=newest" className="hidden sm:flex">Discover More</Button>
-          </div>
-          {renderProductGrid(homeProducts.newArrivals)}
-        </PageContainer>
-      </section>
+      <HomeSection 
+        title="New Arrivals" 
+        subtitle="The latest additions to our store"
+        hasBackground={true}
+        actionButton={<Button variant="outline" href="/products?sort=newest">Discover More</Button>}
+      >
+        {renderProductGrid(homeProducts.newArrivals)}
+      </HomeSection>
+
       {/* Sale / Special Offers */}
-      <section className="py-16 sm:py-24">
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="Special Offers" subtitle="Grab them before they're gone" />
-            <Button variant="outline" href="/products?sale=true" className="hidden sm:flex">View Sale</Button>
-          </div>
-          {renderProductGrid(homeProducts.sale)}
-        </PageContainer>
-      </section>
+      <HomeSection 
+        title="Special Offers" 
+        subtitle="Grab them before they're gone"
+        actionButton={<Button variant="outline" href="/products?sale=true">View Sale</Button>}
+      >
+        {renderProductGrid(homeProducts.sale)}
+      </HomeSection>
 
       {/* Best Sellers */}
-      <section className="py-16 sm:py-24 bg-surface">
-        <PageContainer>
-          <div className="flex justify-between items-end mb-8 sm:mb-12">
-            <SectionHeader title="Best Sellers" subtitle="Our most loved furniture" />
-            <Button variant="outline" href="/products?bestSeller=true" className="hidden sm:flex">View all</Button>
-          </div>
-          {renderProductGrid(homeProducts.bestSellers)}
-        </PageContainer>
-      </section>
+      <HomeSection 
+        title="Best Sellers" 
+        subtitle="Our most loved furniture"
+        hasBackground={true}
+        actionButton={<Button variant="outline" href="/products?bestSeller=true">View all</Button>}
+      >
+        {renderProductGrid(homeProducts.bestSellers)}
+      </HomeSection>
 
       {/* Newsletter Section */}
-      <PageContainer>
+      <HomeSection>
         <div className="bg-brand-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
@@ -189,7 +186,7 @@ const HomePage = () => {
             </form>
           </div>
         </div>
-      </PageContainer>
+      </HomeSection>
     </div>
   );
 };

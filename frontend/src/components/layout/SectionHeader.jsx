@@ -2,15 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-const SectionHeader = ({ title, subtitle, actionLabel, actionLink }) => {
+const SectionHeader = ({ title, subtitle, actionLabel, actionLink, actionButton }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-4">
       <div>
-        <h2 className="text-3xl font-extrabold text-text-brand-600 tracking-tight mb-2">{title}</h2>
+        <h2 className="text-3xl font-extrabold text-text-brand-600 tracking-tight mb-3 leading-none">
+          {title}
+        </h2>
         {subtitle && <p className="text-lg text-text-secondary">{subtitle}</p>}
       </div>
       
-      {actionLabel && actionLink && (
+      {actionButton ? (
+        <div className="hidden sm:block">
+          {actionButton}
+        </div>
+      ) : actionLabel && actionLink ? (
         <Link 
           to={actionLink}
           className="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors group"
@@ -18,7 +24,7 @@ const SectionHeader = ({ title, subtitle, actionLabel, actionLink }) => {
           {actionLabel}
           <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
         </Link>
-      )}
+      ) : null}
     </div>
   );
 };

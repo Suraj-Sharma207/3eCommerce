@@ -7,6 +7,9 @@ import uploadAvatar from '../middleware/uploadAvatar.js';
 
 import { updateBranding, uploadLogo, uploadEmailLogo } from '../controllers/brandingController.js';
 import uploadBranding from '../middleware/uploadBranding.js';
+import { createBanner, updateBanner, deleteBanner, getAllBanners } from '../controllers/saleBannerController.js';
+import { createShopBanner, updateShopBanner, deleteShopBanner, getAllShopBanners } from '../controllers/shopBannerController.js';
+import uploadSaleBanner from '../middleware/uploadSaleBanner.js';
 
 const router = Router();
 
@@ -33,6 +36,18 @@ router.get('/orders/:id', adminController.getOrderById);
 router.put('/orders/:id/status', adminController.updateOrderStatus);
 
 router.post('/profile/avatar', uploadAvatar.single('avatar'), userController.uploadAvatar);
+
+// Sale Banner management
+router.get('/sale-banner', getAllBanners);
+router.post('/sale-banner', uploadSaleBanner.single('image'), createBanner);
+router.put('/sale-banner/:id', uploadSaleBanner.single('image'), updateBanner);
+router.delete('/sale-banner/:id', deleteBanner);
+
+// Shop Banner management
+router.get('/shop-banner', getAllShopBanners);
+router.post('/shop-banner', uploadSaleBanner.single('image'), createShopBanner);
+router.put('/shop-banner/:id', uploadSaleBanner.single('image'), updateShopBanner);
+router.delete('/shop-banner/:id', deleteShopBanner);
 
 router.get('/customers', adminController.getAllCustomers);
 router.get('/customers/:id', adminController.getCustomerById);

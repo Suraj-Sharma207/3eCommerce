@@ -6,7 +6,7 @@ const UndoSnackbar = ({ item, onUndo, onConfirmRemoval }) => {
 
   useEffect(() => {
     if (!item) return;
-    
+
     setTimeLeft(5);
 
     const timerInterval = setInterval(() => {
@@ -40,7 +40,7 @@ const UndoSnackbar = ({ item, onUndo, onConfirmRemoval }) => {
               Permanently deleting in {timeLeft}s...
             </span>
           </div>
-          
+
           <button
             onClick={() => onUndo(item)}
             className="text-brand-400 font-bold text-sm uppercase tracking-wider hover:text-brand-300 transition-colors"

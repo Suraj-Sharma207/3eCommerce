@@ -5,6 +5,8 @@ import AuthLayout from '../components/layout/AuthLayout';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const HomePage = lazy(() => import('../pages/home/HomePage'));
+const AboutPage = lazy(() => import('../pages/about/AboutPage'));
+const SalePage = lazy(() => import('../pages/sale/SalePage'));
 const ProductList = lazy(() => import('../pages/products/ProductList'));
 const ProductDetail = lazy(() => import('../pages/products/ProductDetail'));
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
@@ -26,6 +28,7 @@ const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
 const AdminOffers = lazy(() => import('../pages/admin/AdminOffers'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
 const AdminHomepageSettings = lazy(() => import('../pages/admin/AdminHomepageSettings'));
+const AdminSaleBanner = lazy(() => import('../pages/admin/AdminSaleBanner'));
 
 const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
 const GuestProtectedRoute = lazy(() => import('../components/layout/GuestProtectedRoute'));
@@ -44,6 +47,8 @@ const AppRoutes = () => {
           {/* Public Storefront Routes */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/sale" element={<SalePage />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
@@ -83,6 +88,7 @@ const AppRoutes = () => {
             <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
             <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="settings/:tab" element={<AdminSettings />} />
             <Route path="homepage" element={<AdminHomepageSettings />} />
             <Route path="offers" element={<AdminOffers />} />
           </Route>

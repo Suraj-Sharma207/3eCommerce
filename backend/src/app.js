@@ -18,6 +18,8 @@ import addressRoutes from './routes/addressRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import promotionRoutes from './routes/promotionRoutes.js';
 import homeRoutes from './routes/homeRoutes.js';
+import saleBannerRoutes from './routes/saleBannerRoutes.js';
+import shopBannerRoutes from './routes/shopBannerRoutes.js';
 import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
@@ -59,6 +61,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/sale-banner', saleBannerRoutes);
+app.use('/api/shop-banner', shopBannerRoutes);
 
 // Public endpoints
 app.get('/api/branding', getBranding);

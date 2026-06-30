@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { useBrandingStore } from '../../store/brandingStore';
@@ -66,7 +66,7 @@ const AdminLayout = () => {
         <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || (item.path === '/admin/dashboard' && location.pathname === '/admin');
+            const isActive = location.pathname.startsWith(item.path) || (item.path === '/admin/dashboard' && location.pathname === '/admin');
             return (
               <NavLink
                 key={item.name}

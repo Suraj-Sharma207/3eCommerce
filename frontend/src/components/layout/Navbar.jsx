@@ -13,6 +13,8 @@ import { formatPrice } from '../../utils/currency';
 import { getOptimizedUrl } from '../../utils/cloudinary';
 import useUIStore from '../../store/uiStore';
 import CategoryNavigation from './CategoryNavigation';
+import MegaMenu from '../navigation/MegaMenu';
+import MobileCollectionsAccordion from '../navigation/MobileCollectionsAccordion';
 
 const Navbar = () => {
     const { searchQuery, setSearchQuery } = useProductStore();
@@ -24,6 +26,7 @@ const Navbar = () => {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+    const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
     
     // UI state for sticky category navigation
     const isCategorySticky = useUIStore(state => state.isCategorySticky);
@@ -170,10 +173,10 @@ const Navbar = () => {
 
                     {/* Desktop Nav Links */}
                     <div className="hidden md:flex space-x-8 items-center font-medium text-text-secondary">
-                        <Link to="/products" className="hover:text-brand-600 transition-colors">Shop</Link>
-                        <Link to="/products?category=Collections" className="hover:text-brand-600 transition-colors">Collections</Link>
-                        <Link to="/products?category=Rooms" className="hover:text-brand-600 transition-colors">Rooms</Link>
-                        <Link to="/products?sale=true" className="text-danger-600 hover:text-danger-700 transition-colors">Sale</Link>
+                        <Link to="/products" className="hover:text-brand-600 transition-colors py-4">Shop</Link>
+                        <MegaMenu isOpen={isMegaMenuOpen} setIsOpen={setIsMegaMenuOpen} />
+                        <Link to="/about" className="hover:text-brand-600 transition-colors py-4">About</Link>
+                        <Link to="/sale" className="text-danger-600 hover:text-danger-700 transition-colors py-4">Sale</Link>
                     </div>
 
                     {/* Search Bar - Center/Right */}
@@ -345,28 +348,22 @@ const Navbar = () => {
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="block px-3 py-3 text-base font-medium text-text-primary hover:bg-surface-background rounded-lg"
                         >
-                            All Products
+                            Shop
                         </Link>
                         
-                        <div className="pt-2 pb-1 px-3">
-                            <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Categories</p>
-                            <div className="space-y-1">
-                                {categories.map((category) => (
-                                    <Link 
-                                        key={category.name}
-                                        to={`/products?category=${encodeURIComponent(category.name)}`}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className="block px-3 py-2 text-sm font-medium text-text-secondary hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                                    >
-                                        {category.name}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                        <MobileCollectionsAccordion closeMobileMenu={() => setIsMobileMenuOpen(false)} />
+                        
+                        <Link 
+                            to="/about" 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="block px-3 py-3 text-base font-medium text-text-primary hover:bg-surface-background rounded-lg"
+                        >
+                            About
+                        </Link>
 
-                        <div className="pt-2 border-t border-border-light mt-2">
+                        <div className="pt-2 mt-2">
                             <Link 
-                                to="/products?sale=true" 
+                                to="/sale" 
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="block px-3 py-3 text-base font-medium text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
                             >

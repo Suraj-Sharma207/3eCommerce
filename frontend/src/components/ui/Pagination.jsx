@@ -6,7 +6,8 @@ const Pagination = ({
   onPageChange,
   itemsPerPage,
   onItemsPerPageChange,
-  itemsPerPageOptions = [5, 10, 20, 50]
+  itemsPerPageOptions = [5, 10, 20, 50],
+  variant = 'default'
 }) => {
   if (totalPages <= 1 && !onItemsPerPageChange) return null;
 
@@ -43,6 +44,59 @@ const Pagination = ({
     }
     return pages;
   };
+
+  if (variant === 'premium') {
+    return (
+      <div className="flex items-center justify-center gap-2 select-none">
+        <button 
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+            currentPage === 1
+              ? 'border-border-light text-text-muted bg-slate-50 cursor-not-allowed opacity-50'
+              : 'border-border text-text-secondary bg-white hover:bg-slate-50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0'
+          }`}
+          aria-label="Previous page"
+        >
+          &lt;
+        </button>
+
+        {generatePages().map((page, index) => (
+          <React.Fragment key={index}>
+            {page === '...' ? (
+              <span className="w-10 h-10 flex items-center justify-center text-text-muted text-sm font-bold">
+                ...
+              </span>
+            ) : (
+              <button
+                onClick={() => onPageChange(page)}
+                className={`w-10 h-10 rounded-full font-bold text-xs transition-all flex items-center justify-center shadow-sm ${
+                  currentPage === page 
+                    ? 'bg-brand-900 text-white border border-brand-900 hover:bg-brand-950 hover:-translate-y-0.5 active:translate-y-0' 
+                    : 'bg-white text-text-secondary border border-border hover:bg-slate-50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0'
+                }`}
+              >
+                {page}
+              </button>
+            )}
+          </React.Fragment>
+        ))}
+
+        <button 
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+            currentPage === totalPages
+              ? 'border-border-light text-text-muted bg-slate-50 cursor-not-allowed opacity-50'
+              : 'border-border text-text-secondary bg-white hover:bg-slate-50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0'
+          }`}
+          aria-label="Next page"
+        >
+          &gt;
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl shadow-sm border border-border p-3.5 mx-auto w-full max-w-4xl font-sans">
