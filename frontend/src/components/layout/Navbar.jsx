@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, User, Search, Heart, Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import useProductStore from '../../store/productStore';
 import useCartStore from '../../store/cartStore';
 import useAuthStore from '../../store/authStore';
@@ -20,7 +20,7 @@ const Navbar = () => {
     const { searchQuery, setSearchQuery } = useProductStore();
     const { cart, isLoading: isCartLoading } = useCartStore();
     const { user, isAuthenticated } = useAuthStore();
-    const { fetchWishlist } = useWishlistStore();
+    const { fetchWishlist, wishlist, openWishlist } = useWishlistStore();
     const { branding } = useBrandingStore();
     const { categories, fetchCategories } = useCategoryStore();
     const navigate = useNavigate();
@@ -172,11 +172,11 @@ const Navbar = () => {
                     </div>
 
                     {/* Desktop Nav Links */}
-                    <div className="hidden md:flex space-x-8 items-center font-medium text-text-secondary">
-                        <Link to="/products" className="hover:text-brand-600 transition-colors py-4">Shop</Link>
+                    <div className="hidden md:flex space-x-8 items-center font-medium text-text-secondary h-full">
+                        <NavLink to="/products" className={({ isActive }) => `relative py-4 transition-colors ${isActive ? 'text-brand-900 font-bold' : 'hover:text-brand-600'}`}>Shop</NavLink>
                         <MegaMenu isOpen={isMegaMenuOpen} setIsOpen={setIsMegaMenuOpen} />
-                        <Link to="/about" className="hover:text-brand-600 transition-colors py-4">About</Link>
-                        <Link to="/sale" className="text-danger-600 hover:text-danger-700 transition-colors py-4">Sale</Link>
+                        <NavLink to="/about" className={({ isActive }) => `relative py-4 transition-colors ${isActive ? 'text-brand-900 font-bold' : 'hover:text-brand-600'}`}>About</NavLink>
+                        <NavLink to="/sale" className={({ isActive }) => `relative py-4 transition-colors ${isActive ? 'text-danger-700 font-bold' : 'text-danger-600 hover:text-danger-700'}`}>Sale</NavLink>
                     </div>
 
                     {/* Search Bar - Center/Right */}
@@ -202,11 +202,7 @@ const Navbar = () => {
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10">
                                 {isSearching ? (
                                     <div className="w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <span className="text-xs text-secondary-400 font-medium px-2 py-1 bg-white rounded border border-border shadow-sm">
-                                        Ctrl + K
-                                    </span>
-                                )}
+                                ) : null}
                             </div>
 
                             {/* Suggestions Dropdown */}
@@ -272,9 +268,16 @@ const Navbar = () => {
 
                         {isAuthenticated ? (
                             <>
-                                <Link to="/wishlist" className="hidden sm:block text-text-secondary hover:text-brand-600 transition-colors duration-200">
-                                    <Heart className="h-6 w-6" strokeWidth={1.5} />
-                                </Link>
+                                <button 
+                                    onClick={openWishlist} 
+                                    className="hidden sm:block relative text-text-secondary hover:text-brand-600 transition-colors duration-200 focus:outline-none"
+                                >
+                                    {wishlist?.items?.length > 0 ? (
+                                        <Heart className="h-6 w-6 text-danger-600 fill-danger-600" strokeWidth={1.5} />
+                                    ) : (
+                                        <Heart className="h-6 w-6" strokeWidth={1.5} />
+                                    )}
+                                </button>
                                 <div className="relative">
                                     <button
                                         onMouseDown={(e) => e.stopPropagation()}

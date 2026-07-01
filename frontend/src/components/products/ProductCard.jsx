@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import RatingDisplay from '../ecommerce/RatingDisplay';
@@ -18,7 +19,7 @@ const ProductCard = ({ product, previewMode = false }) => {
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
   const { publicConfig } = useSettingsStore();
-  
+
   const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
   const isCartLoading = previewMode ? false : (loadingProducts[product.id] || false);
   const isWishlisted = previewMode ? false : isInWishlist(product.id);
@@ -27,34 +28,38 @@ const ProductCard = ({ product, previewMode = false }) => {
     e.preventDefault();
     e.stopPropagation();
     if (previewMode) return;
-    if (!isAuthenticated) return alert('Please login first');
+    if (!isAuthenticated) return toast.error('Please login first');
     addToCart(product.id, 1, product.name);
   };
 
-  const handleToggleWishlist = (e) => {
+  const handleToggleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (previewMode) return;
-    if (!isAuthenticated) return alert('Please login first');
-    toggleWishlist(product.id);
+    if (!isAuthenticated) return toast.error('Please login first');
+    try {
+      await toggleWishlist(product.id);
+    } catch (error) {
+      toast.error('Failed to update wishlist');
+    }
   };
 
   const hasDiscount = product.discountPercentage > 0;
 
   return (
     <div className="group flex flex-col h-full bg-white rounded-[22px] overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 border border-border-light">
-      
+
       {/* Image Area with Actions */}
-      <div className="relative aspect-[4/3] bg-surface-background overflow-hidden">
+      <div className="relative aspect-[4/3] bg-surface-background overflow-hidden rounded-t-[22px]">
         <Link to={`/products/${product.slug || product.id}`} className="block w-full h-full" onClick={(e) => previewMode && e.preventDefault()}>
-          <ImageFallback 
-            src={getOptimizedUrl(product.thumbnail, 'card')} 
-            alt={product.name} 
+          <ImageFallback
+            src={getOptimizedUrl(product.thumbnail, 'card')}
+            alt={product.name}
             loading="lazy"
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-750 ease-out" 
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-750 ease-out"
           />
         </Link>
-        
+
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {hasDiscount && product.stock > 0 && product.active && (
@@ -81,11 +86,10 @@ const ProductCard = ({ product, previewMode = false }) => {
 
         {/* Wishlist Action (Top Right) */}
         <div className="absolute top-3 right-3 z-10">
-          <button 
+          <button
             onClick={handleToggleWishlist}
-            className={`w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md flex items-center justify-center transition-all ${
-              isWishlisted ? 'text-danger-600 bg-white' : 'text-text-secondary hover:text-danger-600 bg-white/90 hover:bg-white'
-            }`} 
+            className={`w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md flex items-center justify-center transition-all ${isWishlisted ? 'text-danger-600 bg-white' : 'text-text-secondary hover:text-danger-600 bg-white/90 hover:bg-white'
+              }`}
             aria-label="Add to wishlist"
           >
             <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
@@ -99,13 +103,13 @@ const ProductCard = ({ product, previewMode = false }) => {
           <span className="opacity-70">{product.category || 'Furniture'}</span>
           {product.brand && <span className="opacity-50">{product.brand}</span>}
         </div>
-        
+
         <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors" onClick={(e) => previewMode && e.preventDefault()}>
           <h3 className="text-sm font-bold text-text-brand-600 line-clamp-1">{product.name}</h3>
         </Link>
-        
+
         <RatingDisplay rating={product.rating || 0} count={product.reviewCount || 0} className="mb-3" />
-        
+
         <div className="mt-auto flex items-center justify-between pt-3 border-t border-border-light">
           <div className="flex flex-col">
             <span className="text-base font-extrabold text-text-brand-600">
@@ -117,7 +121,7 @@ const ProductCard = ({ product, previewMode = false }) => {
               </span>
             )}
           </div>
-          <Button 
+          <Button
             variant="primary"
             size="iconSm"
             onClick={handleAddToCart}

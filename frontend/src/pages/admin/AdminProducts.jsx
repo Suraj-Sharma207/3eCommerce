@@ -9,7 +9,7 @@ import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import { formatPrice } from '../../utils/currency';
 import toast from 'react-hot-toast';
 import ProductModal from '../../components/admin/ProductModal';
-import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
+import useConfirmStore from '../../store/confirmStore';
 import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
 
@@ -24,8 +24,7 @@ const AdminProducts = () => {
     ? (products.find(p => p.id === selectedProductId) ?? null)
     : null;
   
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
+  const { confirm } = useConfirmStore();
   
   const [isCreating, setIsCreating] = useState(false);
   const { publicConfig } = useSettingsStore();
@@ -72,25 +71,21 @@ const AdminProducts = () => {
     }
   };
 
-  const handleOpenDelete = (product) => {
-    setProductToDelete(product);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleCloseDelete = () => {
-    setIsDeleteDialogOpen(false);
-    setProductToDelete(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
-    // Store handles optimistic removal — no refetch needed
-    const success = await deleteProduct(productToDelete.id);
-    if (success) {
-      toast.success('Product deleted successfully.');
-      handleCloseDelete();
-    } else {
-      toast.error(useProductStore.getState().error || 'Unable to delete product.');
+  const handleOpenDelete = async (product) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Product?',
+      description: `This action cannot be undone. This will permanently delete "${product.name}" and remove all associations.`,
+      variant: 'danger',
+      confirmText: 'Delete'
+    });
+    
+    if (isConfirmed) {
+      const success = await deleteProduct(product.id);
+      if (success) {
+        toast.success('Product deleted successfully.');
+      } else {
+        toast.error(useProductStore.getState().error || 'Unable to delete product.');
+      }
     }
   };
 
@@ -159,8 +154,8 @@ const AdminProducts = () => {
                 <th className="p-4 text-right pr-6">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-100">
-              {isLoading ? (
+            <tbody className={`divide-y divide-secondary-100 ${isLoading && products.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isLoading && products.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
                     <td className="p-4 pl-6"><SkeletonLoader className="h-10 w-full" /></td>
@@ -266,16 +261,6 @@ const AdminProducts = () => {
         product={selectedProduct}
         onSave={handleSaveProduct}
         isLoading={isCreating || (selectedProduct ? updatingProductIds.has(selectedProduct.id) : false)}
-      />
-
-      <ConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={handleCloseDelete}
-        onConfirm={handleConfirmDelete}
-        title="Delete Product?"
-        message="This action cannot be undone. This will permanently delete the product and remove all associations."
-        itemTitle={productToDelete?.name}
-        isLoading={productToDelete ? updatingProductIds.has(productToDelete.id) : false}
       />
     </div>
   );

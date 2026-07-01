@@ -16,18 +16,12 @@ const SkeletonLoader = ({ className = '', type = 'rect', ...props }) => {
     />
   );
 };
-
 export const ProductCardSkeleton = () => (
-  <div className="flex flex-col gap-4">
-    <SkeletonLoader className="aspect-[4/3] w-full rounded-2xl" />
-    <div className="space-y-2">
-      <SkeletonLoader className="h-4 w-1/4" />
-      <SkeletonLoader className="h-6 w-3/4" />
-      <div className="flex justify-between items-center pt-2">
-        <SkeletonLoader className="h-6 w-1/3" />
-        <SkeletonLoader className="h-4 w-1/4" />
-      </div>
-    </div>
+  <div className="space-y-4 animate-pulse">
+    <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full" />
+    <div className="h-4 bg-slate-200 rounded w-2/3" />
+    <div className="h-4 bg-slate-200 rounded w-1/2" />
+    <div className="h-8 bg-slate-200 rounded-full w-full" />
   </div>
 );
 

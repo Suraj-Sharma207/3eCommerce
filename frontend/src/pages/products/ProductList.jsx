@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import PageContainer from '../../components/layout/PageContainer';
 import ProductCard from '../../components/products/ProductCard';
+import ProductGrid from '../../components/products/ProductGrid';
 import Pagination from '../../components/ui/Pagination';
 import useProductStore from '../../store/productStore';
 import useCategoryStore from '../../store/categoryStore';
@@ -36,16 +37,16 @@ const SkeletonLoader = () => {
         {/* Skeleton Grid */}
         <div className="flex-1 space-y-6">
           <div className="h-16 bg-slate-200 rounded-2xl w-full" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-            {[...Array(12)].map((_, i) => (
+          <ProductGrid>
+            {[...Array(10)].map((_, i) => (
               <div key={i} className="space-y-4">
-                <div className="aspect-[4/3] bg-slate-200 rounded-[22px] w-full" />
+                <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full" />
                 <div className="h-4 bg-slate-200 rounded w-2/3" />
                 <div className="h-4 bg-slate-200 rounded w-1/2" />
                 <div className="h-8 bg-slate-200 rounded-full w-full" />
               </div>
             ))}
-          </div>
+          </ProductGrid>
         </div>
       </div>
     </div>
@@ -814,26 +815,26 @@ const ProductList = () => {
             </div>
           )}
 
-          {isLoading ? (
+          {isLoading && products.length === 0 ? (
             /* 10. Skeleton Loaders for Products */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-              {[...Array(12)].map((_, i) => (
+            <ProductGrid>
+              {[...Array(10)].map((_, i) => (
                 <div key={i} className="space-y-4 animate-pulse">
-                  <div className="aspect-[4/3] bg-slate-200 rounded-[22px] w-full" />
+                  <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full" />
                   <div className="h-4 bg-slate-200 rounded w-2/3" />
                   <div className="h-4 bg-slate-200 rounded w-1/2" />
                   <div className="h-8 bg-slate-200 rounded-full w-full" />
                 </div>
               ))}
-            </div>
+            </ProductGrid>
           ) : products.length > 0 ? (
             /* 5. Product Grid - responsive columns */
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-7">
+            <div className={`space-y-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <ProductGrid>
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </div>
+              </ProductGrid>
 
               {/* 8. Premium Pagination */}
               <div className="flex justify-center pt-8">

@@ -7,16 +7,16 @@ class AddressService {
 
   async createAddress(userId, data) {
     const existing = await addressRepository.findByUserId(userId);
-    
+
     // Check for exact duplicate
-    const isDuplicate = existing.some(addr => 
+    const isDuplicate = existing.some(addr =>
       addr.street.toLowerCase() === data.street.toLowerCase() &&
       addr.city.toLowerCase() === data.city.toLowerCase() &&
       addr.zipCode === data.zipCode &&
       addr.recipientName.toLowerCase() === data.recipientName.toLowerCase()
     );
     if (isDuplicate) {
-      throw new Error('Duplicate address found');
+      throw new Error('Duplicate address found.');
     }
 
     // Auto-set default if it's the first address
@@ -27,7 +27,7 @@ class AddressService {
 
     // If setting as default, unset others first
     await this.handleDefaults(userId, data);
-    
+
     return await addressRepository.create({
       ...data,
       userId
@@ -78,7 +78,7 @@ class AddressService {
       const addresses = await addressRepository.findByUserId(userId);
       for (const addr of addresses) {
         if (excludeAddressId && addr.id === excludeAddressId) continue;
-        
+
         let updateData = {};
         if (data.isDefaultShipping && addr.isDefaultShipping) {
           updateData.isDefaultShipping = false;
@@ -86,7 +86,7 @@ class AddressService {
         if (data.isDefaultBilling && addr.isDefaultBilling) {
           updateData.isDefaultBilling = false;
         }
-        
+
         if (Object.keys(updateData).length > 0) {
           await addressRepository.update(addr.id, updateData);
         }

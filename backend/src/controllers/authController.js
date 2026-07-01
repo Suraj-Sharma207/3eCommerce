@@ -16,10 +16,31 @@ class AuthController {
 
   async login(req, res, next) {
     try {
-      const data = await authService.login(req.body);
-      return successResponse(res, 'Login successful', data, 200);
+      const reqInfo = {
+        ip: req.ip || req.connection.remoteAddress,
+        userAgent: req.headers['user-agent']
+      };
+      
+      const { user, accessToken, refreshToken, cookiesConfig } = await authService.login(req.body, reqInfo);
+      
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: cookiesConfig.accessMaxAge
+      });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: cookiesConfig.refreshMaxAge
+      });
+
+      // Maintain backward compatibility by returning token in response body as well temporarily
+      return successResponse(res, 'Login successful', { user, token: accessToken }, 200);
     } catch (error) {
-      if (error.message === 'Invalid email or password.') {
+      if (error.message === 'Invalid email or password.' || error.message.includes('Account locked')) {
         return errorResponse(res, error.message, [], 401);
       }
       next(error);
@@ -37,8 +58,22 @@ class AuthController {
 
   async logout(req, res, next) {
     try {
-      // For JWT, logout is usually handled client-side by deleting the token.
-      // We return a success message here.
+      if (req.cookies && req.cookies.refreshToken) {
+        await authService.logout(req.cookies.refreshToken);
+      }
+      
+      res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax'
+      });
+      
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax'
+      });
+      
       return successResponse(res, 'Logged out successfully', {}, 200);
     } catch (error) {
       next(error);
@@ -91,6 +126,43 @@ class AuthController {
         return errorResponse(res, error.message, [], 400);
       }
       next(error);
+    }
+  }
+
+  async refresh(req, res, next) {
+    try {
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        return errorResponse(res, 'No refresh token provided', [], 401);
+      }
+
+      const reqInfo = {
+        ip: req.ip || req.connection.remoteAddress,
+        userAgent: req.headers['user-agent']
+      };
+
+      const { accessToken, newRefreshToken, cookiesConfig } = await authService.refresh(refreshToken, reqInfo);
+
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: cookiesConfig.accessMaxAge
+      });
+
+      res.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        maxAge: cookiesConfig.refreshMaxAge
+      });
+
+      return successResponse(res, 'Token refreshed successfully', { token: accessToken }, 200);
+    } catch (error) {
+      // If refresh fails, clear cookies
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return errorResponse(res, error.message || 'Invalid refresh token', [], 401);
     }
   }
 }

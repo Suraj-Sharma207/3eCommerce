@@ -157,7 +157,7 @@ class ProductRepository {
         id: { not: id },
         active: true
       },
-      take: parseInt(limit),
+      take: parseInt(limit, 10),
       orderBy: { createdAt: 'desc' },
       include: IMAGE_INCLUDE,
     });
@@ -214,6 +214,7 @@ class ProductRepository {
       slug: cat.category.toLowerCase().replace(/\s+/g, '-'),
       icon: getCategoryIcon(cat.category),
       productCount: cat._count.category,
+      count: cat._count.category,
     }));
   }
 

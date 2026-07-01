@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+
+let ordersAbortController = null;
 
 const useAdminStore = create((set, get) => ({
   analytics: null,
@@ -153,11 +156,18 @@ const useAdminStore = create((set, get) => ({
   },
 
   fetchOrders: async (page = get().ordersPagination.currentPage) => {
+    if (ordersAbortController) {
+      ordersAbortController.abort();
+    }
+    ordersAbortController = new AbortController();
+
     set({ isLoading: true, error: null });
     const { searchQuery, ordersPagination } = get();
     const limit = ordersPagination.itemsPerPage;
     try {
-      const response = await api.get(`/admin/orders?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`);
+      const response = await api.get(`/admin/orders?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`, {
+        signal: ordersAbortController.signal
+      });
       set({ 
         orders: response.data.data.orders, 
         ordersPagination: response.data.data.pagination || {
@@ -169,6 +179,7 @@ const useAdminStore = create((set, get) => ({
         isLoading: false 
       });
     } catch (error) {
+      if (axios.isCancel(error)) return;
       set({ error: error.response?.data?.message || 'Failed to fetch admin orders', isLoading: false });
     }
   },

@@ -6,7 +6,36 @@ import { homeCache } from './homeController.js';
 class PromotionController {
   async getPromotions(req, res) {
     try {
+      const { page = 1, limit = 10, search = '' } = req.query;
+      const take = parseInt(limit, 10);
+      let currentPage = parseInt(page, 10);
+      if (currentPage < 1) currentPage = 1;
+
+      const skip = (currentPage - 1) * take;
+
+      let where = {};
+      if (search) {
+        where = {
+          OR: [
+            { name: { contains: search } },
+            { description: { contains: search } }
+          ]
+        };
+      }
+
+      const totalItems = await prisma.promotion.count({ where });
+      const totalPages = Math.max(1, Math.ceil(totalItems / take));
+
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+
+      const safeSkip = (currentPage - 1) * take;
+
       const promotions = await prisma.promotion.findMany({
+        where,
+        skip: safeSkip,
+        take,
         include: {
           products: { include: { product: true } },
           categories: true,
@@ -14,7 +43,16 @@ class PromotionController {
         },
         orderBy: { createdAt: 'desc' }
       });
-      return successResponse(res, 'Promotions fetched', promotions);
+
+      return successResponse(res, 'Promotions fetched', {
+        promotions,
+        pagination: {
+          currentPage,
+          totalPages,
+          totalItems,
+          itemsPerPage: take
+        }
+      });
     } catch (error) {
       console.error('Error fetching promotions:', error);
       return errorResponse(res, 'Failed to fetch promotions');

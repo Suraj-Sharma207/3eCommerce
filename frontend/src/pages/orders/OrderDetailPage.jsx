@@ -136,8 +136,10 @@ const OrderDetailPage = () => {
                 <span className="font-medium text-text-primary">{formatPrice(currentOrder.totalAmount)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Shipping</span>
-                <span className="font-medium text-text-primary">Free</span>
+                <span>Shipping {currentOrder.deliveryMethod === 'express' ? '(Express)' : ''}</span>
+                <span className="font-medium text-text-primary">
+                  {currentOrder.shippingCharge === 0 ? 'Free' : formatPrice(currentOrder.shippingCharge)}
+                </span>
               </div>
             </div>
 
@@ -158,6 +160,12 @@ const OrderDetailPage = () => {
                 <p>{currentOrder.shippingAddress.street || 'Street missing'}</p>
                 <p>{currentOrder.shippingAddress.city || 'City missing'}, {currentOrder.shippingAddress.state || 'State missing'} {currentOrder.shippingAddress.zipCode || 'Zip missing'}</p>
                 <p>{currentOrder.shippingAddress.country || 'Country missing'}</p>
+                <div className="mt-4 pt-3 border-t border-border-light space-y-1">
+                  <p className="flex justify-between"><span className="text-text-muted">Method:</span> <span className="font-medium text-text-primary capitalize">{currentOrder.deliveryMethod === 'express' ? 'Express Delivery' : 'Standard Delivery'}</span></p>
+                  {currentOrder.estimatedDelivery && (
+                    <p className="flex justify-between"><span className="text-text-muted">Estimated:</span> <span className="font-medium text-text-primary">{currentOrder.estimatedDelivery}</span></p>
+                  )}
+                </div>
               </div>
             ) : (
               <p className="text-sm text-text-muted">Shipping details unavailable.</p>

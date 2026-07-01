@@ -38,15 +38,7 @@ const useCartStore = create((set, get) => ({
       const name = productName || 'Item';
       toast.success(`🛒  Added to Cart — ${name}.`, {
         id: `cart-add-${productId}`,
-        duration: 2500,
-        style: {
-          background: '#111827',
-          color: '#fff',
-          borderRadius: '12px',
-          padding: '12px 20px',
-          fontSize: '14px',
-          maxWidth: '340px',
-        }
+        duration: 2500
       });
       return true;
     } catch (error) {
@@ -57,15 +49,7 @@ const useCartStore = create((set, get) => ({
       });
       toast.error('Unable to add item to cart. Please try again.', {
         id: `cart-error-${productId}`,
-        duration: 3000,
-        style: {
-          background: '#7f1d1d',
-          color: '#fff',
-          borderRadius: '12px',
-          padding: '12px 20px',
-          fontSize: '14px',
-          maxWidth: '340px',
-        }
+        duration: 3000
       });
       return false;
     }

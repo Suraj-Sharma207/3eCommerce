@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import promotionService from '../services/promotionService';
+import axios from 'axios';
+
+let promotionsAbortController = null;
 
 const usePromotionStore = create((set, get) => ({
   promotions: [],
@@ -7,13 +10,48 @@ const usePromotionStore = create((set, get) => ({
   // Per-promotion loading: Set of promotion IDs currently being updated/deleted
   updatingPromotionIds: new Set(),
   error: null,
+  searchQuery: '',
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  },
 
-  fetchPromotions: async () => {
+  setSearchQuery: (query) => {
+    set({ searchQuery: query });
+  },
+
+  setItemsPerPage: (limit) => {
+    set((state) => ({
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+    }));
+  },
+
+  fetchPromotions: async (page = get().pagination.currentPage) => {
+    if (promotionsAbortController) {
+      promotionsAbortController.abort();
+    }
+    promotionsAbortController = new AbortController();
+
     set({ isLoading: true, error: null });
+    const { searchQuery, pagination } = get();
+    
     try {
-      const { data } = await promotionService.getPromotions();
-      set({ promotions: data, isLoading: false });
+      const { data } = await promotionService.getPromotions({
+        page,
+        limit: pagination.itemsPerPage,
+        search: searchQuery
+      }, {
+        signal: promotionsAbortController.signal
+      });
+      set({ 
+        promotions: data.promotions || data, 
+        pagination: data.pagination || get().pagination,
+        isLoading: false 
+      });
     } catch (error) {
+      if (axios.isCancel(error)) return;
       set({ error: error.response?.data?.message || 'Failed to fetch promotions', isLoading: false });
     }
   },

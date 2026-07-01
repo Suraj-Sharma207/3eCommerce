@@ -1,120 +1,130 @@
 import React from 'react';
+import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import { Heart, X, AlertTriangle, Tag } from 'lucide-react';
+import { Heart, X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ImageFallback from '../ui/ImageFallback';
 import QuantityStepper from '../ecommerce/QuantityStepper';
 import { formatPrice } from '../../utils/currency';
 import { getOptimizedUrl } from '../../utils/cloudinary';
+import useWishlistStore from '../../store/wishlistStore';
+import useAuthStore from '../../store/authStore';
 
-const CartItemCard = ({ 
-  item, 
-  onUpdateQuantity, 
-  onRemove, 
-  isUpdating,
-  onMoveToWishlist
-}) => {
+const CartItemCard = ({ item, onUpdateQuantity, onRemove, isUpdating }) => {
   const { product, quantity } = item;
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
+  const { isAuthenticated } = useAuthStore();
+
   const isUnavailable = !product.active || product.stock === 0;
-  const isLowStock = product.stock > 0 && product.stock <= 5;
-  const itemPrice = product.finalPrice || product.price;
-  const subtotal = itemPrice * quantity;
-  const hasDiscount = product.discountPercentage > 0;
+  const isLowStock   = product.stock > 0 && product.stock <= 5;
+  const itemPrice    = product.finalPrice || product.price;
+  const subtotal     = itemPrice * quantity;
+  const hasDiscount  = product.discountPercentage > 0;
+  const isWishlisted = isInWishlist(product.id);
+
+  const handleWishlist = () => {
+    if (!isAuthenticated) return toast.error('Please login first');
+    toggleWishlist(product.id);
+  };
 
   return (
-    <motion.div 
+    <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className={`relative flex flex-col sm:flex-row items-start sm:items-center p-5 gap-6 border-b border-border bg-white group ${isUnavailable ? 'opacity-60 bg-surface-background' : ''} ${isUpdating ? 'opacity-70 pointer-events-none' : ''}`}
+      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.18 } }}
+      className={`flex items-center gap-4 px-5 py-5 border-b border-slate-100 last:border-b-0
+        ${isUnavailable ? 'opacity-60' : ''}
+        ${isUpdating  ? 'opacity-50 pointer-events-none' : ''}
+      `}
     >
-      {/* Product Image & Remove Button */}
-      <div className="relative shrink-0">
-        <button 
-          onClick={() => onRemove(item.productId)}
-          className="absolute -top-2 -left-2 z-10 bg-danger-500 text-white w-6 h-6 rounded-full flex items-center justify-center hover:bg-danger-600 transition-colors shadow-sm"
-          aria-label="Remove item"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-        <Link to={`/products/${item.productId}`} className="block w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-surface-background border border-border shrink-0">
-          <ImageFallback src={getOptimizedUrl(product.thumbnail, 'thumbnail')} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        </Link>
-      </div>
+      {/* ── Product Image ── */}
+      <Link
+        to={`/products/${product.slug || item.productId}`}
+        className="w-[110px] h-[110px] shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 block"
+      >
+        <ImageFallback
+          src={getOptimizedUrl(product.thumbnail, 'thumbnail')}
+          alt={product.name}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      </Link>
 
-      {/* Product Details */}
+      {/* ── Info (grows) ── */}
       <div className="flex-1 min-w-0">
-        <Link to={`/products/${item.productId}`} className="text-base sm:text-lg font-bold text-text-primary hover:text-brand-600 transition-colors line-clamp-2">
+        {/* Brand • Category */}
+        <p className="text-xs text-slate-400 font-medium mb-1">
+          {product.brand && <span className="uppercase tracking-wide">{product.brand}</span>}
+          {product.brand && product.category && <span className="mx-1.5 text-slate-300">•</span>}
+          {product.category && <span className="capitalize">{product.category.replace(/_/g, ' ')}</span>}
+        </p>
+
+        {/* Product name */}
+        <Link
+          to={`/products/${product.slug || item.productId}`}
+          className="block text-sm font-bold text-[#1B2340] hover:underline underline-offset-2 line-clamp-2 leading-snug mb-1.5"
+        >
           {product.name}
         </Link>
-        
-        <div className="flex items-center gap-2 mt-1 mb-2 text-sm text-text-muted">
-          {product.brand && <span className="font-medium text-text-secondary">{product.brand}</span>}
-          {product.brand && <span>•</span>}
-          <span>{product.category?.replace(/_/g, ' ')}</span>
-        </div>
 
-        {/* Variant Badge (Mocked or based on product data if exists) */}
-        {product.variant && (
-          <div className="inline-block px-3 py-1 bg-brand-50 text-brand-700 text-xs font-semibold rounded-full mb-3">
-            {product.variant}
-          </div>
-        )}
-
-        <div className="flex items-end gap-3 mt-2">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-brand-600">{formatPrice(itemPrice)}</span>
-            {quantity > 1 && <span className="text-xs text-text-muted">Each: {formatPrice(itemPrice)}</span>}
-          </div>
-          {hasDiscount && (
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm text-text-muted line-through">{formatPrice(product.price)}</span>
-              <span className="text-xs font-bold text-success-600 bg-success-50 px-2 py-0.5 rounded flex items-center gap-1">
-                <Tag className="w-3 h-3" /> {product.discountPercentage}% OFF
-              </span>
-            </div>
-          )}
-        </div>
-
+        {/* Stock badge */}
         {isUnavailable ? (
-          <span className="text-xs text-danger-600 font-bold mt-2 flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            Out of Stock
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-500">
+            <AlertTriangle className="w-3.5 h-3.5" /> Out of Stock
           </span>
         ) : isLowStock ? (
-          <span className="text-xs text-warning-600 font-bold mt-2 flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            Only {product.stock} left in stock
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
+            <AlertTriangle className="w-3.5 h-3.5" /> Only {product.stock} left
           </span>
-        ) : null}
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+            <CheckCircle2 className="w-3.5 h-3.5" /> In Stock
+          </span>
+        )}
+
+        {/* Unit price */}
+        <div className="flex items-baseline gap-2 mt-2">
+          <span className="text-sm font-bold text-[#1B2340]">{formatPrice(itemPrice)}</span>
+          {hasDiscount && (
+            <span className="text-xs text-slate-400 line-through">{formatPrice(product.price)}</span>
+          )}
+        </div>
       </div>
 
-      {/* Controls: Quantity & Subtotal */}
-      <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-6 sm:gap-8 mt-4 sm:mt-0 border-t sm:border-0 border-border pt-4 sm:pt-0">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-text-secondary sm:hidden">Quantity:</span>
-          <QuantityStepper 
-            quantity={quantity} 
-            setQuantity={(q) => onUpdateQuantity(item.productId, q)} 
-            min={1} 
-            max={item.product.stock}
-            disabled={isUpdating || isUnavailable}
-            className="w-full sm:w-32"
-          />
-        </div>
-        
-        <div className="text-lg font-bold text-brand-600 min-w-[80px] text-right">
-          {formatPrice(subtotal)}
-        </div>
+      {/* ── Controls (right-aligned) ── */}
+      <div className="flex items-center gap-3 shrink-0">
+        {/* Quantity Stepper */}
+        <QuantityStepper
+          quantity={quantity}
+          setQuantity={(q) => onUpdateQuantity(item.productId, q)}
+          min={1}
+          max={product.stock}
+          disabled={isUpdating || isUnavailable}
+        />
 
-        <button 
-          onClick={() => onMoveToWishlist?.(item.productId)}
-          className="text-text-muted hover:text-brand-600 transition-colors p-2"
-          aria-label="Move to wishlist"
-          title="Move to Wishlist"
+        {/* Subtotal */}
+        <span className="text-sm font-extrabold text-[#1B2340] w-20 text-right tabular-nums">
+          {formatPrice(subtotal)}
+        </span>
+
+        {/* Wishlist */}
+        <button
+          onClick={handleWishlist}
+          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 focus:outline-none
+            ${isWishlisted ? 'text-red-500' : 'text-slate-400 hover:text-red-400'}`}
         >
-          <Heart className="w-5 h-5" />
+          <Heart className={`w-4.5 h-4.5 ${isWishlisted ? 'fill-current' : ''}`} style={{ width: 18, height: 18 }} />
+        </button>
+
+        {/* Remove */}
+        <button
+          onClick={() => onRemove(item.productId)}
+          aria-label="Remove item"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+        >
+          <X style={{ width: 18, height: 18 }} />
         </button>
       </div>
     </motion.div>

@@ -21,7 +21,7 @@ const mapOrder = (order) => {
 };
 
 class OrderRepository {
-  async executeCheckoutTransaction(userId, shippingAddressId, billingAddressId, paymentMethod, paymentMetadata) {
+  async executeCheckoutTransaction(userId, shippingAddressId, billingAddressId, paymentMethod, paymentMetadata, deliveryMethod = 'standard') {
     // 1. Non-database pre-work / Validations outside the transaction
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw { status: 401, message: 'Unauthorized user' };
@@ -90,7 +90,14 @@ class OrderRepository {
     const freeShippingThreshold = shipping?.freeShippingThreshold ?? Infinity;
     const standardDeliveryCharge = shipping?.standardDeliveryCharge ?? 499;
 
-    const shippingCost = preComputedTotal >= freeShippingThreshold ? 0 : standardDeliveryCharge;
+    let shippingCost = preComputedTotal >= freeShippingThreshold ? 0 : standardDeliveryCharge;
+    let estimatedDelivery = "3-5 Business Days";
+
+    if (deliveryMethod === 'express') {
+      shippingCost = 149;
+      estimatedDelivery = "1-2 Business Days";
+    }
+
     const grandTotal = preComputedTotal + shippingCost;
 
     // 3. Atomic Transaction — only pure DB writes, no external calls
@@ -121,6 +128,8 @@ class OrderRepository {
           discountAmount: 0,
           taxAmount: 0,
           shippingCharge: shippingCost,
+          deliveryMethod,
+          estimatedDelivery,
           shippingAddress: shippingAddress,
           billingAddress: billingAddress,
           paymentMethod,
@@ -217,20 +226,27 @@ class OrderRepository {
       });
 
       if (previousStatus !== 'DELIVERED' && status === 'DELIVERED') {
-        for (const item of order.items) {
-          if (item.product) {
-            await tx.product.update({
+        const updatePromises = order.items
+          .filter(item => item.product)
+          .map(item => 
+            tx.product.update({
               where: { id: item.productId },
               data: {
                 totalSold: { increment: item.quantity },
                 totalRevenue: { increment: item.price * item.quantity },
                 lastPurchasedAt: new Date()
               }
-            });
-          }
+            })
+          );
+        
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises);
         }
       }
       return order;
+    }, {
+      maxWait: 10000, // default is 2000
+      timeout: 30000, // default is 5000
     });
 
     return mapOrder(updatedOrder);

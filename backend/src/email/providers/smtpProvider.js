@@ -109,6 +109,9 @@ class SmtpProvider extends EmailProvider {
       auth: {
         user: latestConfig.user,
         pass: latestConfig.password
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import useSettingsStore from '../../../store/settingsStore';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import PhoneInput from '../../../components/ui/PhoneInput';
 import toast from 'react-hot-toast';
 import { Save, X, Edit2 } from 'lucide-react';
 
@@ -66,11 +67,10 @@ const StoreTab = () => {
           disabled={!isEditing}
           placeholder="support@example.com" 
         />
-        <Input 
+        <PhoneInput 
           label="Contact Phone" name="contactPhone" 
           value={formData.contactPhone || ''} onChange={handleChange} 
           disabled={!isEditing}
-          placeholder="+1 234 567 8900" 
         />
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-text-primary">Currency</label>

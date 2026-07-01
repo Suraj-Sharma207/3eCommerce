@@ -4,7 +4,7 @@ import { successResponse } from '../utils/response.js';
 class OrderController {
   async checkout(req, res, next) {
     try {
-      const { shippingAddressId, billingAddressId, paymentMethod, paymentDetails } = req.body;
+      const { shippingAddressId, billingAddressId, paymentMethod, paymentDetails, deliveryMethod } = req.body;
       
       if (!['UPI', 'CREDIT_CARD', 'COD'].includes(paymentMethod)) {
         return res.status(400).json({ success: false, message: 'Invalid payment method' });
@@ -80,7 +80,8 @@ class OrderController {
         shippingAddressId, 
         billingAddressId, 
         paymentMethod,
-        paymentMetadata
+        paymentMetadata,
+        deliveryMethod
       });
       return successResponse(res, 'Order placed successfully', order, 201);
     } catch (error) {

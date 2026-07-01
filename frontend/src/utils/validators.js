@@ -1,3 +1,5 @@
+import { isValidPhoneNumber } from 'react-phone-number-input';
+
 /**
  * Centralized Form Validators and Input Sanitizers.
  * Every returned error string MUST end with a full stop (.).
@@ -28,8 +30,10 @@ export const validateConfirmPassword = (password, confirmPassword) => {
 
 export const validatePhone = (phone) => {
   if (!phone) return 'Phone number is required.';
-  const cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.length < 10 || cleanPhone.length > 15) return 'Enter a valid 10 to 15-digit phone number.';
+  // The phone string will be in E.164 format from PhoneInput (e.g. +1234567890)
+  if (!isValidPhoneNumber(String(phone))) {
+    return 'Please enter a valid mobile number.';
+  }
   return '';
 };
 

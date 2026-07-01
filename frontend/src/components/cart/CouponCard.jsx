@@ -9,16 +9,14 @@ const CouponCard = ({ onApplyCoupon }) => {
 
   const handleApply = async () => {
     if (!code.trim()) return;
-    
     setStatus('loading');
     setMessage('');
-    
     // Simulate API call since no coupon API exists yet
     setTimeout(() => {
       if (code.toUpperCase() === 'WELCOME10') {
         setStatus('success');
         setMessage('Coupon applied successfully!');
-        if (onApplyCoupon) onApplyCoupon(10); // 10% discount
+        if (onApplyCoupon) onApplyCoupon(10);
       } else {
         setStatus('error');
         setMessage('Invalid or expired referral code.');
@@ -27,51 +25,46 @@ const CouponCard = ({ onApplyCoupon }) => {
   };
 
   return (
-    <div className="bg-white border border-border rounded-xl p-5 mb-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <h3 className="font-bold text-text-primary text-sm">Have a referral code?</h3>
-      </div>
-      
-      <div className="flex gap-3">
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-5 shadow-sm">
+      <h3 className="font-bold text-[#1B2340] text-sm mb-4">Have a referral code?</h3>
+
+      <div className="flex gap-2">
         <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
             <Tag className="w-4 h-4" />
           </div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={code}
             onChange={(e) => {
               setCode(e.target.value);
-              if (status !== 'idle') {
-                setStatus('idle');
-                setMessage('');
-              }
+              if (status !== 'idle') { setStatus('idle'); setMessage(''); }
             }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
             placeholder="Enter code"
-            className="w-full pl-9 pr-3 py-2.5 bg-surface-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors uppercase placeholder:normal-case"
-            disabled={status === 'loading'}
+            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2340] focus:border-[#1B2340] transition-colors placeholder:text-slate-400 uppercase placeholder:normal-case"
+            disabled={status === 'loading' || status === 'success'}
           />
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={handleApply}
           disabled={!code.trim() || status === 'loading' || status === 'success'}
           isLoading={status === 'loading'}
-          className="px-6 rounded-lg bg-text-primary hover:bg-black text-white" 
+          className="px-5 rounded-xl bg-[#1B2340] hover:bg-[#252f52] border-none text-white font-bold shrink-0"
         >
           Apply
         </Button>
       </div>
 
       {status === 'success' && (
-        <div className="flex items-center gap-1.5 mt-3 text-sm text-success-600 font-medium">
+        <div className="flex items-center gap-2 mt-3 text-sm text-emerald-600 font-semibold">
           <CheckCircle2 className="w-4 h-4" />
           {message}
         </div>
       )}
-      
       {status === 'error' && (
-        <div className="flex items-center gap-1.5 mt-3 text-sm text-danger-600 font-medium">
+        <div className="flex items-center gap-2 mt-3 text-sm text-red-500 font-semibold">
           <AlertCircle className="w-4 h-4" />
           {message}
         </div>

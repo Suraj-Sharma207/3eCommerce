@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ProductCard from '../../components/products/ProductCard';
+import ProductGrid from '../../components/products/ProductGrid';
 import EmptyState from '../../components/ui/EmptyState';
 import useWishlistStore from '../../store/wishlistStore';
 import useAuthStore from '../../store/authStore';
@@ -10,8 +11,8 @@ import { Heart } from 'lucide-react';
 const WishlistSkeleton = () => (
   <PageContainer className="py-8 lg:py-12">
     <div className="h-10 w-64 bg-neutral-200 rounded animate-pulse mb-8"></div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-      {[...Array(4)].map((_, i) => (
+    <ProductGrid>
+      {[...Array(5)].map((_, i) => (
         <div key={i} className="flex flex-col gap-4 animate-pulse">
           <div className="bg-neutral-200 w-full aspect-[4/5] rounded-2xl"></div>
           <div className="space-y-2">
@@ -20,7 +21,7 @@ const WishlistSkeleton = () => (
           </div>
         </div>
       ))}
-    </div>
+    </ProductGrid>
   </PageContainer>
 );
 
@@ -67,7 +68,7 @@ const WishlistPage = () => {
   if (items.length === 0) {
     return (
       <PageContainer className="py-20">
-        <EmptyState 
+        <EmptyState
           title="Your wishlist is empty"
           message="Save your favorite items here to review them later."
           actionLabel="Explore Products"
@@ -83,11 +84,11 @@ const WishlistPage = () => {
         My Wishlist <span className="text-text-muted text-xl font-medium ml-2">({items.length})</span>
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      <ProductGrid>
         {items.map((item) => (
           <ProductCard key={item.productId} product={item.product} />
         ))}
-      </div>
+      </ProductGrid>
     </PageContainer>
   );
 };

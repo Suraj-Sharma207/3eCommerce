@@ -1,55 +1,121 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
+  timeout: 15000, // 15s timeout prevents infinite hangs
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor to attach token
+// Auth-related paths that must NEVER trigger automatic token refresh
+const AUTH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+];
+
+// Request interceptor: attach token from Zustand persisted state
 api.interceptors.request.use((config) => {
-  let token = localStorage.getItem('token');
-  
-  // If no token, or token is string 'null', try to get from Zustand auth-storage
-  if (!token || token === 'null' || token === 'undefined') {
-    try {
-      const authStorage = localStorage.getItem('auth-storage');
-      if (authStorage) {
-        const parsed = JSON.parse(authStorage);
-        token = parsed?.state?.token;
-      }
-    } catch (e) {
-      console.error('Error parsing auth-storage', e);
+  let token = null;
+
+  try {
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage);
+      token = parsed?.state?.token;
     }
+  } catch (e) {
+    // Ignore parse errors silently
   }
 
-  // Double check if token is valid string
+  // Fallback to legacy standalone token key
+  if (!token || token === 'null' || token === 'undefined') {
+    token = localStorage.getItem('token');
+  }
+
   if (token && token !== 'null' && token !== 'undefined') {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return config;
 }, (error) => {
   return Promise.reject(error);
 });
 
-// Interceptor to handle global errors
-api.interceptors.response.use((response) => {
-  return response;
-}, (error) => {
-  if (error.response && error.response.status === 401) {
-    // Handle unauthorized errors by clearing all auth state
-    localStorage.removeItem('token');
-    localStorage.removeItem('auth-storage');
-    
-    // Only redirect if we are not already on the login page
-    if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-      window.location.href = '/login';
+// Token refresh state
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
     }
+  });
+  failedQueue = [];
+};
+
+// Response interceptor: handle 401s and automatic token refresh for non-auth routes
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // CRITICAL: Never attempt token refresh for auth endpoints — they must fail-fast
+    // to the caller so the UI can show errors instead of hanging
+    const isAuthRoute = originalRequest?.url &&
+      AUTH_PATHS.some(path => originalRequest.url.includes(path));
+
+    if (isAuthRoute) {
+      return Promise.reject(error);
+    }
+
+    // For non-auth routes: attempt silent token refresh on 401
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Queue this request until refresh completes
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await api.post('/auth/refresh');
+        processQueue(null);
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        // Clear all auth state on refresh failure
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth-storage');
+
+        // Redirect to login only if not already there
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
   }
-  return Promise.reject(error);
-});
+);
 
 export default api;

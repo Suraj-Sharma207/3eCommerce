@@ -4,14 +4,15 @@ import emailEvents from '../email/utils/emailEvents.js';
 import settingsService from './settingsService.js';
 
 class OrderService {
-  async checkout(userId, { shippingAddressId, billingAddressId, paymentMethod, paymentMetadata }) {
+  async checkout(userId, { shippingAddressId, billingAddressId, paymentMethod, paymentMetadata, deliveryMethod }) {
     // Entire checkout logic has been moved to a single ACID transaction in the repository
     const order = await orderRepository.executeCheckoutTransaction(
       userId, 
       shippingAddressId, 
       billingAddressId, 
       paymentMethod,
-      paymentMetadata
+      paymentMetadata,
+      deliveryMethod
     );
 
     // Execute background tasks asynchronously so they don't block the API response
@@ -92,7 +93,7 @@ class OrderService {
 
   async getAllOrders({ page = 1, limit = 10, search = '' }) {
     const skip = (page - 1) * limit;
-    const take = parseInt(limit);
+    const take = parseInt(limit, 10);
     
     const [orders, totalItems] = await Promise.all([
       orderRepository.getAllOrders({ skip, take, search }),

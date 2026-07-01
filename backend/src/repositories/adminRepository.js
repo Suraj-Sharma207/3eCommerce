@@ -384,7 +384,7 @@ class AdminRepository {
     const customers = await prisma.user.findMany({
       where: whereClause,
       skip,
-      take: parseInt(limit),
+      take: parseInt(limit, 10),
       orderBy: { createdAt: 'desc' },
       include: {
         orders: {
@@ -422,7 +422,7 @@ class AdminRepository {
         totalItems: total,
         totalPages: Math.ceil(total / limit),
         currentPage: parseInt(page),
-        itemsPerPage: parseInt(limit)
+        itemsPerPage: parseInt(limit, 10)
       }
     };
   }

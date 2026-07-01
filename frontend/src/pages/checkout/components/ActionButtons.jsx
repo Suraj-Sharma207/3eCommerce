@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Download, Package, ShoppingBag, ArrowRight } from 'lucide-react';
 import Button from '../../../components/ui/Button';
@@ -36,7 +37,7 @@ const ActionButtons = ({ orderId }) => {
         className="flex-1 bg-white border-transparent hover:bg-gray-100 transition-all duration-300 text-text-secondary"
         onClick={() => {
           // Placeholder for invoice download
-          alert("Invoice generation will be available shortly.");
+          toast.info("Invoice generation will be available shortly.");
         }}
       >
         <Download className="w-4 h-4 mr-2" />

@@ -74,8 +74,8 @@ const AdminCustomers = () => {
                 <th className="p-4 text-right pr-6">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-100">
-              {isLoading ? (
+            <tbody className={`divide-y divide-secondary-100 ${isLoading && customers.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isLoading && customers.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
                     <td className="p-4 pl-6"><SkeletonLoader className="h-10 w-full" /></td>

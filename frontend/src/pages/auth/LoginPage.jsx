@@ -38,8 +38,11 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid({ email: emailError, password: passwordError }, { email, password })) return;
+    
     setSocialMessage('');
+    
     const success = await login(email, password);
+    
     if (success) {
       const { user } = useAuthStore.getState();
       if (user?.role === 'ADMIN') {

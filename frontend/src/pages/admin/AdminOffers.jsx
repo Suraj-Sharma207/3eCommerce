@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tag, Plus, Edit2, Trash2, Calendar, Percent } from 'lucide-react';
 import usePromotionStore from '../../store/promotionStore';
+import useConfirmStore from '../../store/confirmStore';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
@@ -28,7 +29,8 @@ const getNextDayString = (dateStr) => {
 };
 
 const AdminOffers = () => {
-  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion } = usePromotionStore();
+  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion, pagination, setItemsPerPage, setSearchQuery, searchQuery } = usePromotionStore();
+  const { confirm } = useConfirmStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   
@@ -48,15 +50,13 @@ const AdminOffers = () => {
 
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(promotions.length / itemsPerPage);
-  const paginatedPromotions = promotions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
-    fetchPromotions();
-  }, [fetchPromotions]);
+    const timer = setTimeout(() => {
+      fetchPromotions(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchPromotions]);
 
   const handleOpenModal = (promo = null) => {
     setErrors({});
@@ -119,7 +119,13 @@ const AdminOffers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this campaign?')) {
+    const isConfirmed = await confirm({
+      title: 'Delete Campaign',
+      description: 'Are you sure you want to delete this campaign?',
+      variant: 'danger',
+      confirmText: 'Delete'
+    });
+    if (isConfirmed) {
       const success = await deletePromotion(id);
       if (success) toast.success('Campaign deleted.');
     }
@@ -137,29 +143,42 @@ const AdminOffers = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-text-muted">Loading campaigns...</div>
-        ) : promotions.length === 0 ? (
-          <div className="p-16 text-center flex flex-col items-center">
-            <Tag className="w-12 h-12 text-text-muted mb-4 opacity-50" />
-            <h3 className="text-lg font-bold text-text-primary">No Active Campaigns</h3>
-            <p className="text-text-muted mt-2">Create a new promotion to boost your sales.</p>
+        {/* Toolbar */}
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between bg-surface-background">
+          <div className="relative w-full sm:max-w-xs">
+            <input 
+              type="text" 
+              placeholder="Search promotions..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
+            />
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-surface-background text-text-muted text-xs uppercase font-bold tracking-wider border-b border-border">
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider font-bold border-b border-border">
+                <th className="p-4 pl-6">Offer Details</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Duration</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-secondary-100">
+              {isLoading ? (
                 <tr>
-                  <th className="px-6 py-4">Campaign</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Priority</th>
-                  <th className="px-6 py-4">Discount</th>
-                  <th className="px-6 py-4">Validity</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <td colSpan="4" className="p-12 text-center text-text-muted">Loading...</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {paginatedPromotions.map((promo) => (
+              ) : promotions.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="p-12 text-center text-text-muted">
+                    No promotions found.
+                  </td>
+                </tr>
+              ) : (
+                promotions.map((promo) => (
                   <tr key={promo.id} className="hover:bg-surface-background transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-bold text-text-primary">{promo.name}</div>
@@ -174,10 +193,6 @@ const AdminOffers = () => {
                         {promo.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono">{promo.priority}</td>
-                    <td className="px-6 py-4 font-bold text-brand-600">
-                      {promo.type === 'PERCENTAGE_DISCOUNT' ? `${promo.discountValue}%` : `Flat ${promo.discountValue}`}
-                    </td>
                     <td className="px-6 py-4 text-sm text-text-secondary whitespace-nowrap">
                       <div>{new Date(promo.startDate).toLocaleDateString()}</div>
                       <div className="text-xs text-text-muted">to {new Date(promo.endDate).toLocaleDateString()}</div>
@@ -191,19 +206,24 @@ const AdminOffers = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
-        {totalPages > 0 && (
+        {pagination && pagination.totalPages > 0 && (
           <div className="p-4 border-t border-border bg-surface-background">
             <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={(page) => setCurrentPage(page)} 
+              currentPage={pagination.currentPage} 
+              totalPages={pagination.totalPages} 
+              onPageChange={fetchPromotions} 
+              itemsPerPage={pagination.itemsPerPage}
+              onItemsPerPageChange={(limit) => {
+                setItemsPerPage(limit);
+                fetchPromotions(1);
+              }}
             />
           </div>
         )}

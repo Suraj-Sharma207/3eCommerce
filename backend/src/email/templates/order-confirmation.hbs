@@ -397,46 +397,59 @@
         </tr>
 
         <tr class="item-row">
-          <td class="mobile-stack" valign="middle" style="padding: 12px 0; vertical-align: middle; text-align: left;">
-            <table cellpadding="0" cellspacing="0" border="0" width="100%" class="mobile-center-table">
+          <td style="padding: 12px 0; vertical-align: middle; text-align: left;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="table-layout: fixed;">
               <tr>
                 {{#if product.thumbnail}}
-                <td width="88" style="padding-right: 16px; vertical-align: middle;" class="mobile-stack">
-                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="72" height="72" loading="eager"
-                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 72px; height: 72px; margin: 0 auto 0 0; border: 0;" border="0" />
+                <td width="80" style="padding-right: 16px; vertical-align: middle; width: 80px;">
+                  <img class="product-image" src="{{product.thumbnail}}" alt="{{product.name}}" width="64" height="64" loading="eager"
+                    style="border-radius: 8px; display: block; background-color: #F9FAFB; object-fit: cover; width: 64px; height: 64px; margin: 0; border: 0;" border="0" />
                 </td>
                 {{/if}}
-                <td valign="middle" style="vertical-align: middle; text-align: left;" class="mobile-stack">
-                  <p
-                    style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif;">
+                <td style="vertical-align: middle; text-align: left;">
+                  <p class="product-title"
+                    style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-height: 44px;">
                     {{product.name}}
                   </p>
-                  <p style="margin: 0; font-size: 14px; color: #6B7280; font-family: Helvetica, Arial, sans-serif;">
+                  <p class="product-sku" style="margin: 0 0 4px 0; font-size: 14px; color: #6B7280; font-family: Helvetica, Arial, sans-serif;">
                     SKU: {{product.sku}}
                   </p>
+                  
+                  <!--[if !mso]><!-->
+                  <div class="mobile-show" style="display: none; max-height: 0px; overflow: hidden;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td class="product-label" style="font-size: 14px; color: #6B7280; font-family: Helvetica, Arial, sans-serif;">
+                          Qty: {{quantity}}
+                        </td>
+                        <td class="product-price" align="right" style="font-size: 16px; font-weight: 700; color: #111827; font-family: Helvetica, Arial, sans-serif;">
+                          {{formattedPrice}}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                  <!--<![endif]-->
                 </td>
               </tr>
             </table>
           </td>
 
-          <td class="mobile-stack" valign="middle" align="center"
+          <td class="mobile-hide" valign="middle" align="center"
             style="padding: 12px 0; font-size: 16px; font-weight: 600; color: #111827; vertical-align: middle; width: 80px; text-align: center;">
-            <span class="mobile-label"
-              style="display: none; color: #6B7280; font-size: 14px; font-weight: 400; margin-right: 4px;">Qty:</span>
             {{quantity}}
           </td>
 
-          <td class="mobile-stack" valign="middle" align="right"
+          <td class="mobile-hide" valign="middle" align="right"
             style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #111827; vertical-align: middle; width: 100px; text-align: right;">
-            <span class="mobile-label"
-              style="display: none; color: #6B7280; font-size: 14px; font-weight: 400; margin-right: 4px;">Price:</span>
             {{formattedPrice}}
           </td>
         </tr>
 
-        <tr style="display: none;" class="mobile-stack">
-          <td colspan="3" style="border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;"></td>
+        <!--[if !mso]><!-->
+        <tr class="mobile-show" style="display: none; max-height: 0px; overflow: hidden;">
+          <td colspan="3" class="item-spacer" style="border-bottom: 1px solid #E5E7EB;"></td>
         </tr>
+        <!--<![endif]-->
         {{/each}}
 
         <tr class="mobile-hide">
@@ -485,11 +498,10 @@
             <table width="100%" cellpadding="0" cellspacing="0" border="0"
               style="background-color: #F9FAFB; border-radius: 8px;" class="grand-total-card">
               <tr>
-                <td class="mobile-stack"
-                  style="padding: 16px 20px; font-size: 14px; color: #4B5563; font-weight: 700; text-align: left; font-family: Helvetica, Arial, sans-serif;">
+                <td style="padding: 16px 20px; font-size: 14px; color: #4B5563; font-weight: 700; text-align: left; font-family: Helvetica, Arial, sans-serif;">
                   Grand Total
                 </td>
-                <td class="mobile-stack" align="right"
+                <td align="right"
                   style="padding: 16px 20px; font-size: 18px; color: #111827; font-weight: 800; text-align: right; font-family: Helvetica, Arial, sans-serif;">
                   {{formattedTotal}}
                 </td>

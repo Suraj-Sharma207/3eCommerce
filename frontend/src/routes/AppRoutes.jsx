@@ -57,7 +57,6 @@ const AppRoutes = () => {
             {/* Customer Protected Routes */}
             <Route element={<CustomerProtectedRoute />}>
               <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/addresses" element={<AddressBook />} />
               <Route path="/orders" element={<OrdersPage />} />

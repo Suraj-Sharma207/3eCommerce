@@ -21,13 +21,63 @@ const useWishlistStore = create((set, get) => ({
     }
   },
 
+  // UI State for Drawer
+  isWishlistOpen: false,
+  openWishlist: () => set({ isWishlistOpen: true }),
+  closeWishlist: () => set({ isWishlistOpen: false }),
+  toggleWishlistDrawer: () => set((state) => ({ isWishlistOpen: !state.isWishlistOpen })),
+
+  // Request Locks
+  pendingProducts: {},
+
   toggleWishlist: async (productId) => {
-    set({ isLoading: true, error: null });
+    const state = get();
+    // 1. Lock Per Product: Ignore duplicate clicks while syncing
+    if (state.pendingProducts[productId]) return;
+
+    // Lock this product
+    set((s) => ({ pendingProducts: { ...s.pendingProducts, [productId]: true } }));
+
+    const { wishlist } = get();
+    // Save previous state for rollback
+    const previousWishlist = wishlist ? JSON.parse(JSON.stringify(wishlist)) : null;
+
+    // Optimistically update UI
+    const isCurrentlyInWishlist = wishlist?.items?.some(item => item.productId === productId);
+    let newWishlist;
+
+    if (isCurrentlyInWishlist) {
+      newWishlist = {
+        ...wishlist,
+        items: wishlist.items.filter(item => item.productId !== productId)
+      };
+    } else {
+      newWishlist = {
+        ...(wishlist || { items: [] }),
+        items: [...(wishlist?.items || []), { productId, isOptimistic: true, product: { id: productId } }]
+      };
+    }
+
+    // Apply immediately
+    set({ wishlist: newWishlist, error: null });
+
     try {
       const response = await api.post('/wishlist/toggle', { productId });
-      set({ wishlist: response.data.data, isLoading: false });
+      
+      // Update with the actual verified data from the server, and release lock
+      set((s) => ({ 
+        wishlist: response.data.data,
+        pendingProducts: { ...s.pendingProducts, [productId]: false }
+      }));
+      return true;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to update wishlist', isLoading: false });
+      // Rollback on failure and release lock
+      set((s) => ({ 
+        wishlist: previousWishlist, 
+        error: error.response?.data?.message || 'Failed to update wishlist',
+        pendingProducts: { ...s.pendingProducts, [productId]: false }
+      }));
+      throw error;
     }
   },
 
@@ -39,5 +89,4 @@ const useWishlistStore = create((set, get) => ({
   
   clearWishlist: () => set({ wishlist: null, hasFetched: false, error: null })
 }));
-
 export default useWishlistStore;

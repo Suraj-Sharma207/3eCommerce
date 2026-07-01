@@ -1,20 +1,26 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import useAddressStore from '../../store/addressStore';
+import useConfirmStore from '../../store/confirmStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import PhoneInput from '../../components/ui/PhoneInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { Plus, Edit2, Trash2, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, MapPin, CheckCircle2, AlertCircle, Navigation } from 'lucide-react';
 import PageContainer from '../../components/layout/PageContainer';
 import { COUNTRIES } from '../../utils/constants';
 import { validateName, validatePhone, validateRequired, sanitizeNumeric } from '../../utils/validators';
+import { normalizeAddress } from '../../utils/addressMapper';
+import toast from 'react-hot-toast';
 
 const AddressBook = () => {
   const { addresses, fetchAddresses, addAddress, updateAddress, deleteAddress, isLoading, error: backendError } = useAddressStore();
+  const { confirm } = useConfirmStore();
   const [isEditing, setIsEditing] = useState(false);
   const [currentAddress, setCurrentAddress] = useState(null);
   const [initialAddress, setInitialAddress] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [globalMessage, setGlobalMessage] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
   useEffect(() => {
     fetchAddresses();
@@ -46,7 +52,13 @@ const AddressBook = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this address?')) {
+    const isConfirmed = await confirm({
+      title: 'Delete Address',
+      description: 'Are you sure you want to delete this address? This action cannot be undone.',
+      variant: 'danger',
+      confirmText: 'Delete'
+    });
+    if (isConfirmed) {
       const success = await deleteAddress(id);
       if (success) {
         setGlobalMessage('Address deleted successfully.');
@@ -55,6 +67,104 @@ const AddressBook = () => {
       }
     }
   };
+
+  const handleDetectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Unable to determine your location. Try again.');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          if (!response.ok) throw new Error('Network error');
+          
+          const data = await response.json();
+          if (!data || (!data.address && !data.address_components && !data.context)) {
+            throw new Error('Location found but address could not be determined.');
+          }
+
+          const normalized = normalizeAddress(data);
+
+          if (import.meta.env.DEV) {
+            const missingFields = Object.keys(normalized).filter(k => !normalized[k]);
+            console.log('Raw reverse geocoding response:', data);
+            console.log('Normalized address object:', normalized);
+            console.log('Missing fields:', missingFields);
+          }
+
+          const newAddressData = {
+            street: normalized.street || currentAddress.street || '',
+            city: normalized.city || currentAddress.city || '',
+            state: normalized.state || currentAddress.state || '',
+            zipCode: normalized.zipCode || currentAddress.zipCode || '',
+            country: normalized.country || currentAddress.country || 'India',
+            addressLine2: normalized.addressLine2 || currentAddress.addressLine2 || '',
+            landmark: normalized.landmark || currentAddress.landmark || ''
+          };
+
+          const willOverwrite = Object.keys(newAddressData).some(key => {
+            return currentAddress[key] && currentAddress[key] !== newAddressData[key] && newAddressData[key] !== currentAddress[key];
+          });
+
+          if (willOverwrite) {
+            const isConfirmed = await confirm({
+              title: 'Replace Address',
+              description: 'Replace the current address with your detected location?',
+              confirmText: 'Replace',
+              cancelText: 'Cancel'
+            });
+            if (!isConfirmed) {
+              setIsDetectingLocation(false);
+              return;
+            }
+          }
+
+          setCurrentAddress(prev => {
+            const next = { ...prev, ...newAddressData };
+            const newErrors = { ...formErrors };
+            
+            // Validate all mapped fields normally
+            Object.keys(newAddressData).forEach(k => {
+              newErrors[k] = validateField(k, next[k], next);
+            });
+
+            // Phase 7: Explicit validation for missing required fields from auto-fill
+            const requiredFields = ['street', 'city', 'state', 'zipCode', 'country'];
+            requiredFields.forEach(field => {
+              if (!next[field] || next[field].trim() === '') {
+                newErrors[field] = "Couldn't determine this field automatically. Please enter it manually.";
+              }
+            });
+
+            setFormErrors(newErrors);
+            return next;
+          });
+          
+          toast.success('Location Detected');
+          setIsDetectingLocation(false);
+
+        } catch (err) {
+          setIsDetectingLocation(false);
+          toast.error(err.message === 'Network error' ? 'Unable to fetch address. Please check your internet connection.' : 'Location found but address could not be determined.');
+        }
+      },
+      (err) => {
+        setIsDetectingLocation(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error('Location permission denied. Please allow location access.');
+        } else {
+          toast.error('Unable to determine your location. Try again.');
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
 
   const validateField = (name, value, allData) => {
     let err = '';
@@ -188,7 +298,8 @@ const AddressBook = () => {
     
     let sanitizedValue = value;
     if (name === 'phoneNumber') {
-      sanitizedValue = sanitizeNumeric(value).slice(0, 15);
+      // PhoneInput handles E.164 formatting
+      sanitizedValue = value;
     } else if (name === 'city' || name === 'state') {
       sanitizedValue = value.replace(/[^A-Za-z\s]/g, '');
     } else if (name === 'recipientName') {
@@ -273,10 +384,31 @@ const AddressBook = () => {
 
       {isEditing ? (
         <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-border-light flex justify-between items-center">
+          <div className="p-6 sm:p-8 border-b border-border-light flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-xl font-medium text-text-primary">
               {currentAddress.id ? 'Edit Address' : 'Add New Address'}
             </h2>
+            {!currentAddress.id && (
+              <button 
+                type="button"
+                onClick={handleDetectLocation}
+                disabled={isDetectingLocation}
+                className="flex items-center gap-2 px-4 py-2 border-2 border-brand-600 text-brand-700 rounded-full font-medium hover:bg-brand-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Use Current Location"
+              >
+                {isDetectingLocation ? (
+                  <>
+                    <LoadingSpinner size="sm" className="w-4 h-4" />
+                    Detecting Location...
+                  </>
+                ) : (
+                  <>
+                    <Navigation className="w-4 h-4" />
+                    Use Current Location
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <div className="p-6 sm:p-8 relative">
             {isLoading && (
@@ -292,10 +424,10 @@ const AddressBook = () => {
                   value={currentAddress.recipientName} onChange={handleChange} 
                   {...getFieldStatus('recipientName')} required 
                 />
-                <Input 
+                <PhoneInput 
                   label="Phone Number" name="phoneNumber" 
                   value={currentAddress.phoneNumber} onChange={handleChange} 
-                  {...getFieldStatus('phoneNumber')} required placeholder="+1 234 567 8900" maxLength={15} 
+                  {...getFieldStatus('phoneNumber')} required 
                 />
                 
                 <div className="space-y-1">

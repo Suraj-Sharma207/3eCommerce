@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import useConfirmStore from '../../store/confirmStore';
 import { User, Mail, Phone, Lock, Save, Globe, Smartphone, LogOut, CheckCircle, Calendar, Shield, X, Edit2, AlertCircle } from 'lucide-react';
 import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import PhoneInput from '../../components/ui/PhoneInput';
 import AvatarUploader from '../../components/common/AvatarUploader';
 import toast from 'react-hot-toast';
-import { validateName, validatePhone, validatePassword, validateConfirmPassword, sanitizeNumeric, isFormValid } from '../../utils/validators';
+import { validateName, validatePhone, validatePassword, validateConfirmPassword, isFormValid } from '../../utils/validators';
 
 const AdminProfile = () => {
   const { fetchProfile, updateProfile, changePassword, isLoading } = useUserStore();
   const { user: profile } = useAuthStore();
   const { logout } = useAuthStore();
+  const { confirm } = useConfirmStore();
   
   const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'edit' | 'security'
   const [isSaving, setIsSaving] = useState(false);
@@ -58,12 +61,12 @@ const AdminProfile = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
-    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+    const parsedValue = value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
     
     let errorMsg = '';
-    if (name === 'name') errorMsg = validateName(sanitizedValue, 'Name');
-    if (name === 'phone' && sanitizedValue) errorMsg = validatePhone(sanitizedValue);
+    if (name === 'name') errorMsg = validateName(parsedValue, 'Name');
+    if (name === 'phone' && parsedValue) errorMsg = validatePhone(parsedValue);
     setFormErrors(prev => ({ ...prev, [name]: errorMsg }));
   };
 
@@ -94,8 +97,9 @@ const AdminProfile = () => {
     if (!formData.name || formData.name.trim().length < 2 || formData.name.trim().length > 80 || !/^[a-zA-Z\s]+$/.test(formData.name)) {
       errs.name = 'Please enter a valid full name.';
     }
-    if (formData.phone && !/^\+?[0-9]{10,15}$/.test(formData.phone.replace(/\s+/g, ''))) {
-      errs.phone = 'Please enter a valid phone number.';
+    if (formData.phone) {
+      const phoneErr = validatePhone(formData.phone);
+      if (phoneErr) errs.phone = phoneErr;
     }
     if (formData.birthday) {
       const bday = new Date(formData.birthday);
@@ -223,10 +227,16 @@ const AdminProfile = () => {
               <Button 
                 variant={currentView === 'edit' ? 'primary' : 'outline'} 
                 className="w-full justify-center" 
-                onClick={() => {
+                onClick={async () => {
                   if (currentView === 'edit') return;
                   if (isProfileDirty) {
-                    if (!window.confirm('You have unsaved changes. Discard them?')) return;
+                    const isConfirmed = await confirm({
+                      title: 'Discard Changes',
+                      description: 'You have unsaved changes. Are you sure you want to discard them?',
+                      variant: 'warning',
+                      confirmText: 'Discard'
+                    });
+                    if (!isConfirmed) return;
                     cancelProfileEdit();
                   }
                   setCurrentView('edit');
@@ -238,10 +248,16 @@ const AdminProfile = () => {
               <Button 
                 variant={currentView === 'security' ? 'primary' : 'outline'} 
                 className="w-full justify-center" 
-                onClick={() => {
+                onClick={async () => {
                   if (currentView === 'security') return;
                   if (isProfileDirty) {
-                    if (!window.confirm('You have unsaved changes. Discard them?')) return;
+                    const isConfirmed = await confirm({
+                      title: 'Discard Changes',
+                      description: 'You have unsaved changes. Are you sure you want to discard them?',
+                      variant: 'warning',
+                      confirmText: 'Discard'
+                    });
+                    if (!isConfirmed) return;
                     cancelProfileEdit();
                   }
                   setCurrentView('security');
@@ -351,15 +367,15 @@ const AdminProfile = () => {
                         className="bg-surface-background opacity-70 cursor-not-allowed"
                         error="Email cannot be changed."
                       />
-                      <Input 
-                        label="Phone Number" 
-                        name="phone" 
-                        value={formData.phone || ''} 
-                        onChange={handleProfileChange} 
-                        error={formErrors.phone}
-                        placeholder="+1 234 567 8900"
-                        maxLength={15}
-                      />
+                      <div className="sm:col-span-2">
+                        <PhoneInput 
+                          label="Phone Number" 
+                          name="phone" 
+                          value={formData.phone || ''} 
+                          onChange={handleProfileChange} 
+                          error={formErrors.phone}
+                        />
+                      </div>
                       <Input 
                         label="Birthday" 
                         type="date" 

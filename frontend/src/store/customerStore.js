@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import customerService from '../services/customerService';
+import axios from 'axios';
+
+let customersAbortController = null;
 
 const useCustomerStore = create((set, get) => ({
   customers: [],
@@ -27,6 +30,11 @@ const useCustomerStore = create((set, get) => ({
   },
 
   fetchCustomers: async (page = get().pagination.currentPage) => {
+    if (customersAbortController) {
+      customersAbortController.abort();
+    }
+    customersAbortController = new AbortController();
+
     set({ isLoading: true, error: null });
     const { searchQuery, pagination } = get();
     
@@ -35,6 +43,8 @@ const useCustomerStore = create((set, get) => ({
         page,
         limit: pagination.itemsPerPage,
         search: searchQuery,
+      }, {
+        signal: customersAbortController.signal
       });
       
       set({
@@ -43,6 +53,7 @@ const useCustomerStore = create((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
+      if (axios.isCancel(error)) return;
       set({ 
         error: error.response?.data?.message || 'Failed to fetch customers', 
         isLoading: false 

@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import useUserStore from '../../store/userStore';
 import useAuthStore from '../../store/authStore';
 import Input from '../../components/ui/Input';
+import PhoneInput from '../../components/ui/PhoneInput';
 import Button from '../../components/ui/Button';
-import { validateName, validatePhone, validatePassword, validateConfirmPassword, sanitizeNumeric, isFormValid } from '../../utils/validators';
+import { validateName, validatePhone, validatePassword, validateConfirmPassword, isFormValid } from '../../utils/validators';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PageContainer from '../../components/layout/PageContainer';
 import AvatarUploader from '../../components/common/AvatarUploader';
@@ -103,12 +104,13 @@ const ProfilePage = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
-    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+    // We no longer sanitize phone numbers because PhoneInput provides an E.164 string (+123...)
+    const parsedValue = value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
     
     let errorMsg = '';
-    if (name === 'name') errorMsg = validateName(sanitizedValue, 'Name');
-    if (name === 'phone' && sanitizedValue) errorMsg = validatePhone(sanitizedValue);
+    if (name === 'name') errorMsg = validateName(parsedValue, 'Name');
+    if (name === 'phone' && parsedValue) errorMsg = validatePhone(parsedValue);
     setFormErrors(prev => ({ ...prev, [name]: errorMsg }));
   };
 
@@ -442,15 +444,15 @@ const ProfilePage = () => {
                     readOnly
                     className="bg-surface-background opacity-70 cursor-not-allowed"
                   />
-                  <Input 
-                    label="Phone Number" 
-                    name="phone" 
-                    value={formData.phone || ''} 
-                    onChange={handleProfileChange} 
-                    error={formErrors.phone}
-                    placeholder="+1 234 567 8900"
-                    maxLength={15}
-                  />
+                  <div className="sm:col-span-2">
+                    <PhoneInput 
+                      label="Phone Number" 
+                      name="phone" 
+                      value={formData.phone || ''} 
+                      onChange={handleProfileChange} 
+                      error={formErrors.phone}
+                    />
+                  </div>
                   <Input 
                     label="Birthday" 
                     type="date" 

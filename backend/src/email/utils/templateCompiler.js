@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Handlebars from 'handlebars';
 import { brandingService } from '../../services/brandingService.js';
+import { getFrontendUrl } from '../../utils/urlUtils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,20 +54,22 @@ export const ensureAbsoluteUrl = (url, defaultFallback, typeLabel = 'Asset') => 
   ) {
     let resolved = trimmed;
     if (resolved.startsWith('/')) {
-      const websiteUrl = process.env.FRONTEND_URL || 'https://luxehome.com';
+      const websiteUrl = getFrontendUrl();
       resolved = `${websiteUrl.replace(/\/$/, '')}${resolved}`;
     } else if (resolved.includes('localhost')) {
-      resolved = resolved.replace(/http:\/\/localhost:\d+/, process.env.FRONTEND_URL || 'https://luxehome.com');
+      resolved = resolved.replace(/http:\/\/localhost:\d+/, getFrontendUrl());
     }
     
-    // Ensure it is HTTPS
-    if (resolved.startsWith('http://')) {
-      resolved = 'https://' + resolved.substring(7);
-    } else if (!resolved.startsWith('https://')) {
-      if (resolved.includes(':')) {
-        return defaultFallback;
+    // Ensure it is HTTPS, unless it's localhost or an IP address (LAN)
+    const isLocalhostOrIP = /^(https?:\/\/)?(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|10\.\d+\.\d+\.\d+)/.test(resolved);
+    if (!isLocalhostOrIP) {
+      if (resolved.startsWith('http://')) {
+        resolved = 'https://' + resolved.substring(7);
+      } else if (!resolved.startsWith('https://')) {
+        resolved = 'https://' + resolved;
       }
-      resolved = 'https://' + resolved;
+    } else if (!resolved.startsWith('http://') && !resolved.startsWith('https://')) {
+      resolved = 'http://' + resolved;
     }
     
     return resolved;
@@ -186,7 +189,7 @@ export const renderTemplate = async (templateName, data = {}) => {
 
   const cleanPlatformName = (branding.platformName || 'Store').toLowerCase().replace(/\s+/g, '');
   const defaults = {
-    websiteUrl: branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173',
+    websiteUrl: branding.websiteUrl || getFrontendUrl(),
     supportEmail: branding.supportEmail || `support@${cleanPlatformName}.com`,
     supportPhone: branding.supportPhone || '+1 (800) 555-0000',
     facebookUrl: `https://facebook.com/${cleanPlatformName}`,

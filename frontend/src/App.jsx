@@ -8,10 +8,12 @@ import useSettingsStore from './store/settingsStore';
 import { useBrandingStore } from './store/brandingStore';
 import useCartStore from './store/cartStore';
 import useWishlistStore from './store/wishlistStore';
-import { Toaster } from 'react-hot-toast';
+import ConfirmDialog from './components/ui/ConfirmDialog';
+import ToastProvider from './components/ui/ToastProvider';
+import WishlistDrawer from './components/wishlist/WishlistDrawer';
 
 function App() {
-  const { checkAuth, token, user } = useAuthStore();
+  const { checkAuth, token, user, hasCheckedAuth } = useAuthStore();
   const { fetchProfile } = useUserStore();
   const { fetchPublicConfig } = useSettingsStore();
   const { branding, fetchBranding } = useBrandingStore();
@@ -40,13 +42,13 @@ function App() {
 
   useEffect(() => {
     // If we have a token but haven't checked auth yet, check it on load
-    if (token && !user) {
+    if (token && !user && !hasCheckedAuth) {
       checkAuth().then(() => {
         // Also sync the userStore for any legacy components that still rely on it
         fetchProfile();
       });
     }
-  }, [token, user, checkAuth, fetchProfile]);
+  }, [token, user, checkAuth, fetchProfile, hasCheckedAuth]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -57,17 +59,9 @@ function App() {
 
   return (
     <Router>
-      <Toaster position="top-right" toastOptions={{
-        duration: 4000,
-        style: {
-          background: '#111827',
-          color: '#fff',
-          fontSize: '14px',
-          fontWeight: '500',
-          borderRadius: '12px',
-          padding: '12px 20px',
-        },
-      }} />
+      <ToastProvider />
+      <ConfirmDialog />
+      <WishlistDrawer />
       <SessionTimeoutProvider>
         <AppRoutes />
       </SessionTimeoutProvider>

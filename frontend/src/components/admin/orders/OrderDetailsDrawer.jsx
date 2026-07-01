@@ -243,6 +243,12 @@ const OrderDetailsDrawer = ({ orderId, onClose }) => {
                           {(order.shippingAddress.phoneNumber || order.shippingAddress.phone) && (
                             <p className="pt-1">Phone: {order.shippingAddress.phoneNumber || order.shippingAddress.phone}</p>
                           )}
+                          <div className="pt-3 mt-3 border-t border-border space-y-1">
+                            <p className="flex justify-between"><span className="text-text-muted">Method:</span> <span className="font-medium text-text-primary capitalize">{order.deliveryMethod === 'express' ? 'Express Delivery' : 'Standard Delivery'}</span></p>
+                            {order.estimatedDelivery && (
+                              <p className="flex justify-between"><span className="text-text-muted">Estimated:</span> <span className="font-medium text-text-primary">{order.estimatedDelivery}</span></p>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <p className="text-sm text-text-muted italic">No shipping address provided.</p>

@@ -64,8 +64,8 @@ const AdminOrders = () => {
                 <th className="p-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-100">
-              {isLoading ? (
+            <tbody className={`divide-y divide-secondary-100 ${isLoading && orders.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isLoading && orders.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
                     <td className="p-4 pl-6"><SkeletonLoader className="h-4 w-16" /></td>

@@ -1,27 +1,25 @@
 import React from 'react';
 import ProductCard from '../../../components/products/ProductCard';
+import ProductGrid from '../../../components/products/ProductGrid';
 import { ProductCardSkeleton } from '../../../components/ui/SkeletonLoader';
 
 const SaleGrid = ({ products, isLoading }) => {
-  const gridClass =
-    'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-5 gap-y-7';
-
   if (isLoading) {
     return (
-      <div className={gridClass}>
-        {[...Array(12)].map((_, i) => (
+      <ProductGrid>
+        {[...Array(15)].map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
-      </div>
+      </ProductGrid>
     );
   }
 
   return (
-    <div className={gridClass}>
+    <ProductGrid>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
-    </div>
+    </ProductGrid>
   );
 };
 

@@ -2,10 +2,12 @@ import React, { useRef, useEffect, startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useUserStore from '../../store/userStore';
+import useWishlistStore from '../../store/wishlistStore';
 import { User, Package, Heart, MapPin, LogOut } from 'lucide-react';
 
 const AccountDropdown = ({ isOpen, onClose }) => {
   const { logout, user: profile } = useAuthStore();
+  const { openWishlist } = useWishlistStore();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,7 +101,10 @@ const AccountDropdown = ({ isOpen, onClose }) => {
           My Orders
         </button>
         <button 
-          onClick={() => handleNavigate('/wishlist')}
+          onClick={() => {
+            handleClose();
+            openWishlist();
+          }}
           className="w-full flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-background hover:text-brand-600 transition-colors"
         >
           <Heart className="w-4 h-4 mr-3 text-text-muted" />

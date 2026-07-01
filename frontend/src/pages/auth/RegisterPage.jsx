@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import PhoneInput from '../../components/ui/PhoneInput';
 import useAuthStore from '../../store/authStore';
 import { useBrandingStore } from '../../store/brandingStore';
-import { validateName, validateEmail, validatePhone, sanitizeNumeric, validatePassword, validateConfirmPassword, isFormValid as checkFormValid } from '../../utils/validators';
+import { validateName, validateEmail, validatePhone, validatePassword, validateConfirmPassword, isFormValid as checkFormValid } from '../../utils/validators';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -58,11 +59,12 @@ const RegisterPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = name === 'phone' ? sanitizeNumeric(value).slice(0, 15) : value;
+    // We no longer sanitize phone numbers because PhoneInput provides an E.164 string (+123...)
+    const parsedValue = value;
 
-    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
 
-    const errorMsg = validateField(name, sanitizedValue);
+    const errorMsg = validateField(name, parsedValue);
     setErrors(prev => ({ ...prev, [name]: errorMsg }));
     
     // Re-validate confirm password if password changes
@@ -202,16 +204,12 @@ const RegisterPage = () => {
           </div>
 
           <div className="space-y-1">
-            <Input
+            <PhoneInput
               label={<span className="font-medium text-[14px] text-text-primary">Phone <span className="text-text-muted font-normal text-[12px]">(Optional)</span></span>}
-              type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="+911234567890"
-              maxLength={15}
               error={errors.phone}
-              className={errors.phone ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
             />
           </div>
         </div>

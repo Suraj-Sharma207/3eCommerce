@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import useConfirmStore from '../../store/confirmStore';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -14,6 +15,7 @@ const AdminSaleBanner = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   
+  const { confirm } = useConfirmStore();
   const fileInputRef = useRef(null);
 
   const fetchBanners = async () => {
@@ -137,7 +139,13 @@ const AdminSaleBanner = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this banner?')) return;
+    const isConfirmed = await confirm({
+      title: 'Delete Banner',
+      description: 'Are you sure you want to delete this banner?',
+      variant: 'danger',
+      confirmText: 'Delete'
+    });
+    if (!isConfirmed) return;
 
     try {
       const response = await api.delete(`/admin/sale-banner/${id}`);

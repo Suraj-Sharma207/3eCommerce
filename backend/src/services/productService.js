@@ -15,8 +15,8 @@ const normalizeCategory = (category) => {
 };
 
 class ProductService {
-  async getProducts({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin }) {
-    const take = parseInt(limit);
+  async getProducts({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin }) {
+    const take = parseInt(limit, 10);
     const filterArgs = { search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin };
 
     // Fetch total items based on current stockStatus filter

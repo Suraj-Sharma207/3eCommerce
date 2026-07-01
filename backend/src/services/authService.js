@@ -1,9 +1,13 @@
 import userRepository from '../repositories/userRepository.js';
 import { hashPassword, comparePassword } from '../utils/bcrypt.js';
-import { generateToken } from '../utils/jwt.js';
+import { generateToken, verifyToken } from '../utils/jwt.js';
+import { getFrontendUrl } from '../utils/urlUtils.js';
 import crypto from 'crypto';
 import emailEvents from '../email/utils/emailEvents.js';
 import prisma from '../lib/prisma.js';
+import securitySettingsService from './securitySettingsService.js';
+import ms from 'ms';
+import { UAParser } from 'ua-parser-js';
 
 class AuthService {
   async register(data) {
@@ -35,7 +39,7 @@ class AuthService {
 
     // Emit event listeners asynchronously
     emailEvents.emit('user.registered', user);
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${getFrontendUrl()}/verify-email?token=${verificationToken}`;
     emailEvents.emit('user.verification_requested', { user, verificationUrl });
 
     // Generate token
@@ -60,7 +64,7 @@ class AuthService {
     };
   }
 
-  async login(data) {
+  async login(data, reqInfo = {}) {
     const { email, password } = data;
     
     // Check if user exists
@@ -69,14 +73,82 @@ class AuthService {
       throw new Error('Invalid email or password.');
     }
 
+    const settings = await securitySettingsService.getSettings();
+
+    // Check account lockout
+    if (settings.accountLockoutEnabled && user.lockoutUntil && user.lockoutUntil > new Date()) {
+      throw new Error(`Account locked until ${user.lockoutUntil.toLocaleTimeString()}. Please try again later.`);
+    }
+
     // Check password
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
+      if (settings.accountLockoutEnabled) {
+        const attempts = user.failedLoginAttempts + 1;
+        const updates = { failedLoginAttempts: attempts };
+        if (attempts >= settings.failedLoginLimit) {
+          updates.lockoutUntil = new Date(Date.now() + ms(settings.lockDuration));
+        }
+        await userRepository.update(user.id, updates);
+      }
+      
+      await prisma.securityLog.create({
+        data: { userId: user.id, action: 'LOGIN_FAILED', ipAddress: reqInfo.ip, details: { reason: 'Invalid password' } }
+      });
+      
       throw new Error('Invalid email or password.');
     }
 
-    // Generate token
-    const token = generateToken({ id: user.id, role: user.role, tokenVersion: user.tokenVersion });
+    // Reset lockout if successful
+    if (user.failedLoginAttempts > 0) {
+      await userRepository.update(user.id, { failedLoginAttempts: 0, lockoutUntil: null });
+    }
+
+    // Parse User Agent
+    let browserName = 'Unknown', osName = 'Unknown', deviceType = 'Desktop';
+    if (reqInfo.userAgent) {
+      const parser = new UAParser(reqInfo.userAgent);
+      browserName = parser.getBrowser().name || 'Unknown';
+      osName = parser.getOS().name || 'Unknown';
+      deviceType = parser.getDevice().type || 'Desktop';
+    }
+
+    // Generate tokens
+    const accessMaxAge = ms(settings.jwtExpiry);
+    const refreshMaxAge = ms(settings.refreshTokenExpiry);
+    
+    // Use JWT options to set dynamic expiry
+    const accessToken = generateToken(
+      { id: user.id, role: user.role, tokenVersion: user.tokenVersion },
+      { expiresIn: settings.jwtExpiry }
+    );
+    
+    const refreshTokenPlain = crypto.randomBytes(64).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+    
+    // Create Session
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshTokenHash,
+        device: deviceType,
+        browser: browserName,
+        operatingSystem: osName,
+        ipAddress: reqInfo.ip || null,
+        expiresAt: new Date(Date.now() + refreshMaxAge)
+      }
+    });
+
+    // Log event
+    await prisma.securityLog.create({
+      data: {
+        userId: user.id,
+        action: 'LOGIN_SUCCESS',
+        ipAddress: reqInfo.ip,
+        browser: browserName,
+        device: deviceType
+      }
+    });
 
     return {
       user: {
@@ -93,7 +165,72 @@ class AuthService {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       },
-      token
+      accessToken,
+      refreshToken: refreshTokenPlain,
+      cookiesConfig: { accessMaxAge, refreshMaxAge }
+    };
+  }
+
+  async logout(refreshTokenPlain) {
+    if (refreshTokenPlain) {
+      const refreshTokenHash = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+      const session = await prisma.session.findFirst({ where: { refreshTokenHash } });
+      if (session) {
+        await prisma.session.delete({ where: { id: session.id } });
+        await prisma.securityLog.create({
+          data: { userId: session.userId, action: 'LOGOUT', ipAddress: session.ipAddress }
+        });
+      }
+    }
+    return { success: true };
+  }
+
+  async refresh(refreshTokenPlain, reqInfo = {}) {
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+    const session = await prisma.session.findFirst({
+      where: { refreshTokenHash, isActive: true },
+      include: { user: true }
+    });
+
+    if (!session) {
+      throw new Error('Invalid refresh token');
+    }
+
+    if (session.expiresAt < new Date()) {
+      await prisma.session.delete({ where: { id: session.id } });
+      throw new Error('Refresh token expired');
+    }
+
+    const settings = await securitySettingsService.getSettings();
+    const accessMaxAge = ms(settings.jwtExpiry);
+    const refreshMaxAge = ms(settings.refreshTokenExpiry);
+
+    // Rotate Refresh Token
+    const newRefreshTokenPlain = crypto.randomBytes(64).toString('hex');
+    const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshTokenPlain).digest('hex');
+
+    await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        refreshTokenHash: newRefreshTokenHash,
+        lastActivity: new Date(),
+        expiresAt: new Date(Date.now() + refreshMaxAge)
+      }
+    });
+
+    const accessToken = generateToken(
+      { id: session.user.id, role: session.user.role, tokenVersion: session.user.tokenVersion },
+      { expiresIn: settings.jwtExpiry }
+    );
+
+    await prisma.securityLog.create({
+      data: { userId: session.user.id, action: 'TOKEN_REFRESHED', ipAddress: reqInfo.ip }
+    });
+
+    return {
+      accessToken,
+      newRefreshToken: newRefreshTokenPlain,
+      cookiesConfig: { accessMaxAge, refreshMaxAge }
     };
   }
 
@@ -142,7 +279,7 @@ class AuthService {
       resetPasswordExpires: resetExpires
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${getFrontendUrl()}/reset-password?token=${resetToken}`;
     emailEvents.emit('user.password_reset_requested', { user, resetUrl });
 
     return { success: true };

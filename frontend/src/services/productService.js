@@ -1,6 +1,6 @@
 import api from './api';
 
-const getProducts = async ({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }) => {
+const getProducts = async ({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }, options = {}) => {
   const params = { page, limit, search };
   
   if (category && category !== 'All') params.category = category;
@@ -14,11 +14,11 @@ const getProducts = async ({ page = 1, limit = 12, search = '', category, brand,
   if (sort) params.sort = sort;
   if (includeInventoryCounts) params.includeInventoryCounts = includeInventoryCounts;
 
-  const response = await api.get('/products', { params });
+  const response = await api.get('/products', { params, ...options });
   return response.data;
 };
 
-const getAdminProducts = async ({ page = 1, limit = 12, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }) => {
+const getAdminProducts = async ({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }, options = {}) => {
   const params = { page, limit, search };
   
   if (category && category !== 'All') params.category = category;
@@ -32,7 +32,7 @@ const getAdminProducts = async ({ page = 1, limit = 12, search = '', category, b
   if (sort) params.sort = sort;
   if (includeInventoryCounts) params.includeInventoryCounts = includeInventoryCounts;
 
-  const response = await api.get('/admin/products', { params });
+  const response = await api.get('/admin/products', { params, ...options });
   return response.data;
 };
 

@@ -1,5 +1,6 @@
 import settingsService from '../services/settingsService.js';
 import { logAudit } from '../services/auditLogger.js';
+import { getFrontendUrl } from '../utils/urlUtils.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import nodemailer from 'nodemailer';
 
@@ -242,10 +243,10 @@ class SettingsController {
         return res.status(400).json({ message: 'Template name is required.' });
       }
 
-      const mockData = mockDataMap[template];
+      const mockData = getMockDataMap()[template];
       if (!mockData) {
         return res.status(400).json({ 
-          message: `Mock data for template "${template}" is not defined. Available templates: ${Object.keys(mockDataMap).join(', ')}` 
+          message: `Mock data for template "${template}" is not defined. Available templates: ${Object.keys(getMockDataMap()).join(', ')}` 
         });
       }
 
@@ -261,10 +262,10 @@ class SettingsController {
   }
 }
 
-const mockDataMap = {
-  welcome: { name: 'John Doe', shopUrl: 'http://localhost:5173/products' },
-  'verify-email': { name: 'John Doe', verificationUrl: 'http://localhost:5173/verify-email?token=testtoken' },
-  'password-reset': { name: 'John Doe', resetUrl: 'http://localhost:5173/reset-password?token=testtoken' },
+const getMockDataMap = () => ({
+  welcome: { name: 'John Doe', shopUrl: `${getFrontendUrl()}/products` },
+  'verify-email': { name: 'John Doe', verificationUrl: `${getFrontendUrl()}/verify-email?token=testtoken` },
+  'password-reset': { name: 'John Doe', resetUrl: `${getFrontendUrl()}/reset-password?token=testtoken` },
   'order-confirmation': {
     name: 'John Doe',
     orderNumber: 'LH-123456-IN',
@@ -298,9 +299,9 @@ const mockDataMap = {
     formattedShipping: '₹99.00',
     formattedTax: '₹12,059.46',
     formattedTotal: '₹79,155.46',
-    trackUrl: 'http://localhost:5173/orders',
-    shopUrl: 'http://localhost:5173/products',
-    invoiceUrl: 'http://localhost:5173/orders'
+    trackUrl: `${getFrontendUrl()}/orders`,
+    shopUrl: `${getFrontendUrl()}/products`,
+    invoiceUrl: `${getFrontendUrl()}/orders`
   },
   'order-shipped': {
     name: 'John Doe',
@@ -314,14 +315,18 @@ const mockDataMap = {
     name: 'John Doe',
     orderNumber: 'LH-123456-IN',
     deliveredDate: 'Friday, June 26, 2026',
-    rateProductUrl: 'http://localhost:5173/orders',
-    shopUrl: 'http://localhost:5173/products'
+    items: [
+      { productName: 'Modern Fabric Sofa', quantity: 1 },
+      { productName: 'Minimalist Coffee Table', quantity: 2 }
+    ],
+    rateProductUrl: `${getFrontendUrl()}/orders`,
+    shopUrl: `${getFrontendUrl()}/products`
   },
   'order-cancelled': {
     name: 'John Doe',
     orderNumber: 'LH-123456-IN',
     cancellationReason: 'Out of stock items could not be fulfilled',
-    shopUrl: 'http://localhost:5173/products'
+    shopUrl: `${getFrontendUrl()}/products`
   },
   refund: {
     name: 'John Doe',
@@ -329,14 +334,14 @@ const mockDataMap = {
     refundAmount: '₹79,155.46',
     paymentMethod: 'Credit Card',
     processedDate: 'June 26, 2026',
-    shopUrl: 'http://localhost:5173'
+    shopUrl: `${getFrontendUrl()}`
   },
   'low-stock': {
     productName: 'Modern Fabric Sofa',
     sku: 'FURN-LIV-1001',
     currentStock: 2,
     threshold: 5,
-    restockUrl: 'http://localhost:5173/admin/products'
+    restockUrl: `${getFrontendUrl()}/admin/products`
   },
   'admin-order': {
     orderNumber: 'LH-123456-IN',
@@ -344,8 +349,8 @@ const mockDataMap = {
     customerEmail: 'johndoe@example.com',
     grandTotal: '₹79,155.46',
     paymentMethod: 'Credit/Debit Card',
-    viewOrderUrl: 'http://localhost:5173/admin/orders'
+    viewOrderUrl: `${getFrontendUrl()}/admin/orders`
   }
-};
+});
 
 export default new SettingsController();

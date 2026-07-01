@@ -1,7 +1,7 @@
 import api from './api';
 
-const getPromotions = async () => {
-  const response = await api.get('/promotions');
+const getPromotions = async (params, options = {}) => {
+  const response = await api.get('/promotions', { params, ...options });
   return response.data;
 };
 

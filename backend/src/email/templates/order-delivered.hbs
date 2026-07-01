@@ -1,8 +1,17 @@
 <h1>Your Order Has Been Delivered!</h1>
+<br>
 <p>Hello {{name}},</p>
+<br>
 <p>We are pleased to inform you that your order <strong>#{{orderNumber}}</strong> was successfully delivered on <strong>{{{deliveredDate}}}</strong>.</p>
-<p>We hope you love your new {{platformName}} products! Your feedback is incredibly valuable to us and helps us maintain our premium quality standards. Please take a quick moment to share your experience.</p>
+<p>We hope you love your new {{platformName}} products!</p>
 
+<ul style="margin-top: 10px; margin-bottom: 20px; color: #4B5563; font-size: 15px;">
+  {{#each items}}
+  <li><strong>{{this.productName}}</strong> (Qty: {{this.quantity}})</li>
+  {{/each}}
+</ul>
+
+<p>Your feedback is incredibly valuable to us and helps us maintain our premium quality standards. Please take a quick moment to share your experience.</p>
 {{> button url=rateProductUrl text="Rate Your Products"}}
 
 <table width="100%" cellpadding="0" cellspacing="0" style="text-align: center; margin-top: 12px;">

@@ -4,6 +4,7 @@ import HeroBanner from '../../components/ecommerce/HeroBanner';
 import HomeSection from '../../components/layout/HomeSection';
 import CategoryCard from '../../components/ecommerce/CategoryCard';
 import ProductCard from '../../components/products/ProductCard';
+import ProductGrid from '../../components/products/ProductGrid';
 import Button from '../../components/ui/Button';
 import { ProductCardSkeleton } from '../../components/ui/SkeletonLoader';
 import useUIStore from '../../store/uiStore';
@@ -57,24 +58,22 @@ const HomePage = () => {
   }, [fetchCategories]);
 
   const renderProductGrid = (items) => {
-    const gridClass = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-x-6 lg:gap-y-8";
-    
     if (isLoading) {
       return (
-        <div className={gridClass}>
-          {[...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)}
-        </div>
+        <ProductGrid maxCols={4}>
+          {[...Array(5)].map((_, i) => <ProductCardSkeleton key={i} />)}
+        </ProductGrid>
       );
     }
     if (!items || items.length === 0) {
       return <div className="text-center text-text-muted py-8">No products found in this section.</div>;
     }
     return (
-      <div className={gridClass}>
+      <ProductGrid maxCols={4}>
         {items.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}
-      </div>
+      </ProductGrid>
     );
   };
 
@@ -88,8 +87,8 @@ const HomePage = () => {
       </div>
 
       {/* Categories Section */}
-      <HomeSection 
-        title="Shop by Category" 
+      <HomeSection
+        title="Shop by Category"
         subtitle="Find exactly what you need"
         hasBackground={true}
         actionButton={<Button variant="outline" href="/products">All Categories</Button>}
@@ -116,8 +115,8 @@ const HomePage = () => {
       </HomeSection>
 
       {/* Featured Products */}
-      <HomeSection 
-        title="Featured Collection" 
+      <HomeSection
+        title="Featured Collection"
         subtitle="Handpicked premium pieces"
         actionButton={<Button variant="outline" href="/products">View Collection</Button>}
       >
@@ -125,8 +124,8 @@ const HomePage = () => {
       </HomeSection>
 
       {/* Trending Now */}
-      <HomeSection 
-        title="Trending Now" 
+      <HomeSection
+        title="Trending Now"
         subtitle="Most loved by our customers"
         actionButton={<Button variant="outline" href="/products?sort=popular">View All</Button>}
       >
@@ -134,8 +133,8 @@ const HomePage = () => {
       </HomeSection>
 
       {/* New Arrivals */}
-      <HomeSection 
-        title="New Arrivals" 
+      <HomeSection
+        title="New Arrivals"
         subtitle="The latest additions to our store"
         hasBackground={true}
         actionButton={<Button variant="outline" href="/products?sort=newest">Discover More</Button>}
@@ -144,8 +143,8 @@ const HomePage = () => {
       </HomeSection>
 
       {/* Sale / Special Offers */}
-      <HomeSection 
-        title="Special Offers" 
+      <HomeSection
+        title="Special Offers"
         subtitle="Grab them before they're gone"
         actionButton={<Button variant="outline" href="/products?sale=true">View Sale</Button>}
       >
@@ -153,8 +152,8 @@ const HomePage = () => {
       </HomeSection>
 
       {/* Best Sellers */}
-      <HomeSection 
-        title="Best Sellers" 
+      <HomeSection
+        title="Best Sellers"
         subtitle="Our most loved furniture"
         hasBackground={true}
         actionButton={<Button variant="outline" href="/products?bestSeller=true">View all</Button>}
@@ -167,16 +166,16 @@ const HomePage = () => {
         <div className="bg-brand-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
-          
+
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">Join Our Newsletter</h2>
             <p className="text-brand-100 text-lg mb-8">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
             </p>
             <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
+              <input
+                type="email"
+                placeholder="Enter your email"
                 className="flex-1 px-6 py-4 rounded-full text-text-brand-600 focus:outline-none focus:ring-2 focus:ring-primary-400"
                 required
               />

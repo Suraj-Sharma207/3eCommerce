@@ -8,12 +8,13 @@ import ShippingTab from './settings/ShippingTab';
 import PaymentTab from './settings/PaymentTab';
 import SmtpTab from './settings/SmtpTab';
 import SecurityTab from './settings/SecurityTab';
+import ActiveSessionsTab from './settings/ActiveSessionsTab';
 import NotificationsTab from './settings/NotificationsTab';
 import AuditLogsTab from './settings/AuditLogsTab';
 import AdminSaleBanner from './AdminSaleBanner';
 import AdminShopBanner from './AdminShopBanner';
 
-const VALID_TABS = ['branding', 'store', 'shipping', 'payment', 'email', 'security', 'notifications', 'audit', 'sale-banner', 'shop-banner'];
+const VALID_TABS = ['branding', 'store', 'shipping', 'payment', 'email', 'security', 'active-sessions', 'notifications', 'audit', 'sale-banner', 'shop-banner'];
 
 const AdminSettings = () => {
   const { tab } = useParams();
@@ -32,6 +33,7 @@ const AdminSettings = () => {
     { id: 'payment', label: 'Payment & Tax', icon: <CreditCard className="w-4 h-4 mr-2" />, component: <PaymentTab /> },
     { id: 'email', label: 'Email (SMTP)', icon: <Mail className="w-4 h-4 mr-2" />, component: <SmtpTab /> },
     { id: 'security', label: 'Security', icon: <Shield className="w-4 h-4 mr-2" />, component: <SecurityTab /> },
+    { id: 'active-sessions', label: 'Active Sessions', icon: <Shield className="w-4 h-4 mr-2" />, component: <ActiveSessionsTab /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4 mr-2" />, component: <NotificationsTab /> },
     { id: 'audit', label: 'Audit Logs', icon: <FileText className="w-4 h-4 mr-2" />, component: <AuditLogsTab /> },
     { id: 'sale-banner', label: 'Sale Banner', icon: <ImageIcon className="w-4 h-4 mr-2" />, component: <AdminSaleBanner /> },

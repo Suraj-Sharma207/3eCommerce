@@ -5,12 +5,13 @@ import { parseError } from '../utils/errorParser';
 
 const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      hasCheckedAuth: false,
 
       login: async (email, password) => {
         set({ isLoading: true, error: null });
@@ -18,15 +19,13 @@ const useAuthStore = create(
           const response = await api.post('/auth/login', { email, password });
           const { user, token } = response.data.data;
           
-          localStorage.setItem('token', token);
-          set({ user, token, isAuthenticated: true, isLoading: false });
+          set({ user, token, isAuthenticated: true });
           return true;
         } catch (error) {
-          set({ 
-            error: parseError(error, 'Login failed'), 
-            isLoading: false 
-          });
+          set({ error: parseError(error, 'Login failed') });
           return false;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -36,22 +35,27 @@ const useAuthStore = create(
           const response = await api.post('/auth/register', { name, email, password, phone });
           const { user, token } = response.data.data;
           
-          localStorage.setItem('token', token);
-          set({ user, token, isAuthenticated: true, isLoading: false });
+          set({ user, token, isAuthenticated: true });
           return true;
         } catch (error) {
-          set({ 
-            error: parseError(error, 'Unable to create your account. Please try again later.'), 
-            isLoading: false 
-          });
+          set({ error: parseError(error, 'Unable to create your account. Please try again later.') });
           return false;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
-      logout: () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        set({ user: null, token: null, isAuthenticated: false });
+      logout: async () => {
+        try {
+          await api.post('/auth/logout');
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+        set({ user: null, token: null, isAuthenticated: false, hasCheckedAuth: false });
+        
+        // Clear all forms of token storage
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         
         // Clear all other stores using dynamic imports to avoid circular deps
         import('./userStore').then(module => module.default.getState().clearProfile());
@@ -60,21 +64,17 @@ const useAuthStore = create(
       },
 
       checkAuth: async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          set({ user: null, token: null, isAuthenticated: false });
-          return false;
-        }
-
+        if (get().hasCheckedAuth) return get().isAuthenticated;
+        
         try {
           const response = await api.get('/auth/me');
           const user = response.data.data.user;
-          set({ user, isAuthenticated: true });
+          set({ user, isAuthenticated: true, hasCheckedAuth: true });
           return true;
         } catch (error) {
-          console.error('Auth check failed:', error);
+          set({ user: null, token: null, isAuthenticated: false, hasCheckedAuth: true });
           localStorage.removeItem('token');
-          set({ user: null, token: null, isAuthenticated: false });
+          sessionStorage.removeItem('token');
           return false;
         }
       },
@@ -83,6 +83,11 @@ const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );

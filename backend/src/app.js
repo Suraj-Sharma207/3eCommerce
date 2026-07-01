@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
+import cookieParser from 'cookie-parser';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 
 // Import routes (will be created soon)
@@ -20,6 +21,7 @@ import promotionRoutes from './routes/promotionRoutes.js';
 import homeRoutes from './routes/homeRoutes.js';
 import saleBannerRoutes from './routes/saleBannerRoutes.js';
 import shopBannerRoutes from './routes/shopBannerRoutes.js';
+import securityAdminRoutes from './routes/securityAdminRoutes.js';
 import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
@@ -31,8 +33,18 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-ID', req.id);
   next();
 });
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
@@ -48,6 +60,7 @@ app.use('/api', limiter);
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.use('/api/home', homeRoutes);
@@ -56,6 +69,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin/security', securityAdminRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);

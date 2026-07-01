@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import useConfirmStore from '../../store/confirmStore';
 import { Upload, Image as ImageIcon, CheckCircle, Trash2, ShieldCheck, Truck, RotateCcw, Armchair } from 'lucide-react';
 import api from '../../services/api';
 
@@ -11,6 +12,7 @@ const AdminShopBanner = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const { confirm } = useConfirmStore();
   const [isLoading, setIsLoading] = useState(true);
 
   const fileInputRef = useRef(null);
@@ -114,7 +116,13 @@ const AdminShopBanner = () => {
   const handleDelete = async () => {
     if (!activeBanner) return;
 
-    if (!window.confirm('Are you sure you want to remove the custom banner? The default shop image will be restored.')) {
+    const isConfirmed = await confirm({
+      title: 'Remove Banner',
+      description: 'Are you sure you want to remove the custom banner? The default shop image will be restored.',
+      variant: 'warning',
+      confirmText: 'Remove'
+    });
+    if (!isConfirmed) {
       return;
     }
 

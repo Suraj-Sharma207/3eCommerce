@@ -2,6 +2,7 @@ import { renderTemplate } from '../utils/templateCompiler.js';
 import emailQueue from '../queue/emailQueue.js';
 import settingsService from '../../services/settingsService.js';
 import { brandingService } from '../../services/brandingService.js';
+import { getFrontendUrl } from '../../utils/urlUtils.js';
 
 class EmailService {
   /**
@@ -59,7 +60,7 @@ class EmailService {
    */
   async sendWelcome(user) {
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
     return await this.sendTemplate(
       user.email,
       `Welcome to ${branding.platformName}!`,
@@ -123,7 +124,7 @@ class EmailService {
   async sendOrderConfirmation(userEmail, order) {
     const symbol = await this.getCurrencySymbol();
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
 
     const formattedItems = order.items.map(item => ({
       ...item,
@@ -167,7 +168,7 @@ class EmailService {
    */
   async sendOrderShipped(userEmail, order, courierInfo = {}) {
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
     
     const courier = courierInfo.courier || `${branding.platformName} Express (DHL)`;
     const trackingNumber = courierInfo.trackingNumber || `LH-${Math.floor(100000 + Math.random() * 900000)}-IN`;
@@ -208,7 +209,7 @@ class EmailService {
    */
   async sendOrderDelivered(userEmail, order, deliveredDateStr = null) {
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
     
     let deliveredDate = deliveredDateStr;
     try {
@@ -233,6 +234,10 @@ class EmailService {
         name: order.user?.name || 'Valued Customer',
         orderNumber: order.orderNumber,
         deliveredDate,
+        items: order.items?.map(item => ({
+          productName: item.product?.name || 'Product',
+          quantity: item.quantity
+        })) || [],
         rateProductUrl: `${websiteUrl}/orders`,
         shopUrl: `${websiteUrl}/products`
       },
@@ -248,7 +253,7 @@ class EmailService {
    */
   async sendOrderCancelled(userEmail, order, cancellationReason = 'Customer requested cancellation') {
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
 
     return await this.sendTemplate(
       userEmail,
@@ -273,7 +278,7 @@ class EmailService {
   async sendRefund(userEmail, order, refundAmountRaw = null) {
     const symbol = await this.getCurrencySymbol();
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
     
     const refundAmount = refundAmountRaw 
       ? this.formatPrice(refundAmountRaw, symbol) 
@@ -307,7 +312,7 @@ class EmailService {
    */
   async sendLowStockAlert(adminEmail, product, threshold) {
     const branding = await brandingService.getBranding();
-    const websiteUrl = branding.websiteUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = branding.websiteUrl || getFrontendUrl();
 
     return await this.sendTemplate(
       adminEmail,
@@ -331,7 +336,7 @@ class EmailService {
    */
   async sendAdminNewOrder(adminEmail, order) {
     const symbol = await this.getCurrencySymbol();
-    const websiteUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const websiteUrl = getFrontendUrl();
 
     return await this.sendTemplate(
       adminEmail,

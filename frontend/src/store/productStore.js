@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import productService from '../services/productService';
+import axios from 'axios';
+
+let productsAbortController = null;
+let adminProductsAbortController = null;
 
 const useProductStore = create((set, get) => ({
   products: [],
@@ -35,7 +39,7 @@ const useProductStore = create((set, get) => ({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 12,
+    itemsPerPage: 15,
   },
 
   fetchHomeProducts: async () => {
@@ -109,6 +113,11 @@ const useProductStore = create((set, get) => ({
   },
 
   fetchProducts: async (page = get().pagination.currentPage) => {
+    if (productsAbortController) {
+      productsAbortController.abort();
+    }
+    productsAbortController = new AbortController();
+
     set({ isLoading: true, error: null });
     const { searchQuery, filters, pagination } = get();
     
@@ -125,6 +134,8 @@ const useProductStore = create((set, get) => ({
         stockStatus,
         ...filters,
         includeInventoryCounts: true
+      }, {
+        signal: productsAbortController.signal
       });
       
       set({
@@ -134,6 +145,7 @@ const useProductStore = create((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
+      if (axios.isCancel(error)) return;
       set({ 
         error: error.response?.data?.message || 'Failed to fetch products', 
         isLoading: false 
@@ -142,6 +154,11 @@ const useProductStore = create((set, get) => ({
   },
 
   fetchAdminProducts: async (page = get().pagination.currentPage) => {
+    if (adminProductsAbortController) {
+      adminProductsAbortController.abort();
+    }
+    adminProductsAbortController = new AbortController();
+
     set({ isLoading: true, error: null });
     const { searchQuery, filters, pagination } = get();
     
@@ -157,6 +174,8 @@ const useProductStore = create((set, get) => ({
         stockStatus,
         ...filters,
         includeInventoryCounts: true
+      }, {
+        signal: adminProductsAbortController.signal
       });
       
       set({
@@ -166,6 +185,7 @@ const useProductStore = create((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
+      if (axios.isCancel(error)) return;
       set({ 
         error: error.response?.data?.message || 'Failed to fetch admin products', 
         isLoading: false 
