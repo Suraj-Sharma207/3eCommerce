@@ -74,7 +74,7 @@ const AnalyticsDrawer = ({ isOpen, onClose, type }) => {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-6 relative">
               {detailedLoading[type] ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted">
                   <LoadingSpinner size="lg" />

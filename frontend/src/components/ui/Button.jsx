@@ -1,5 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Button = ({ 
   children, 
@@ -9,9 +10,22 @@ const Button = ({
   isLoading = false,
   disabled = false,
   className = '', 
-  as: Component = 'button',
+  as,
+  href,
   ...props 
 }) => {
+  let Component = as || 'button';
+  const extraProps = {};
+
+  if (!as && href) {
+    if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+      Component = 'a';
+      extraProps.href = href;
+    } else {
+      Component = Link;
+      extraProps.to = href;
+    }
+  }
   const isIcon = variant === 'icon';
   const borderRadius = isIcon ? 'rounded-[12px]' : 'rounded-[14px]';
   
@@ -40,8 +54,9 @@ const Button = ({
   return (
     <Component 
       className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[finalSize] || sizes.md} ${fullWidth ? 'w-full' : ''} ${className}`}
-      disabled={disabled || isLoading}
+      disabled={Component === 'button' ? (disabled || isLoading) : undefined}
       aria-disabled={disabled || isLoading}
+      {...extraProps}
       {...props}
     >
       {/* Invisible content wrapper maintains width while loading */}

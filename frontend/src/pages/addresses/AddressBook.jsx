@@ -318,11 +318,10 @@ const AddressBook = () => {
         [name]: type === 'checkbox' ? checked : sanitizedValue
       };
       
-      // Real time validation
-      const err = validateField(name, type === 'checkbox' ? checked : sanitizedValue, next);
+      // Clear error on change
       setFormErrors(prevErrs => ({
         ...prevErrs,
-        [name]: err
+        [name]: ''
       }));
       
       // If country changed, re-validate zipcode
@@ -333,6 +332,16 @@ const AddressBook = () => {
       
       return next;
     });
+  };
+
+  const handleBlur = (e) => {
+    const { name, value, type, checked } = e.target;
+    // Real time validation on blur
+    const err = validateField(name, type === 'checkbox' ? checked : value, currentAddress);
+    setFormErrors(prevErrs => ({
+      ...prevErrs,
+      [name]: err
+    }));
   };
 
   const handleCancel = () => {
@@ -421,12 +430,12 @@ const AddressBook = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input 
                   label="Full Name" name="recipientName" 
-                  value={currentAddress.recipientName} onChange={handleChange} 
+                  value={currentAddress.recipientName} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('recipientName')} required 
                 />
                 <PhoneInput 
                   label="Phone Number" name="phoneNumber" 
-                  value={currentAddress.phoneNumber} onChange={handleChange} 
+                  value={currentAddress.phoneNumber} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('phoneNumber')} required 
                 />
                 
@@ -441,28 +450,28 @@ const AddressBook = () => {
                 
                 <Input 
                   label="Address Line 1" name="street" 
-                  value={currentAddress.street} onChange={handleChange} 
+                  value={currentAddress.street} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('street')} required placeholder="Street address, P.O. box, etc." 
                 />
                 <Input 
                   label="Address Line 2 (Optional)" name="addressLine2" 
-                  value={currentAddress.addressLine2} onChange={handleChange} 
+                  value={currentAddress.addressLine2} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('addressLine2')} placeholder="Apartment, suite, unit, etc." 
                 />
                 <Input 
                   label="Landmark (Optional)" name="landmark" 
-                  value={currentAddress.landmark} onChange={handleChange} 
+                  value={currentAddress.landmark} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('landmark')} placeholder="Near..." 
                 />
                 
                 <Input 
                   label="City" name="city" 
-                  value={currentAddress.city} onChange={handleChange} 
+                  value={currentAddress.city} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('city')} required 
                 />
                 <Input 
                   label="State/Province" name="state" 
-                  value={currentAddress.state} onChange={handleChange} 
+                  value={currentAddress.state} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('state')} required 
                 />
                 
@@ -475,7 +484,7 @@ const AddressBook = () => {
 
                 <Input 
                   label="Postal Code" name="zipCode" 
-                  value={currentAddress.zipCode} onChange={handleChange} 
+                  value={currentAddress.zipCode} onChange={handleChange} onBlur={handleBlur}
                   {...getFieldStatus('zipCode')} required 
                 />
               </div>

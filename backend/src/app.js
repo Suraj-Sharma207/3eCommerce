@@ -5,8 +5,9 @@ import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import cookieParser from 'cookie-parser';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
+import { globalLimiter, authLimiter, adminLimiter, readLimiter } from './middleware/rateLimiter.js';
 
-// Import routes (will be created soon)
+// Import routes
 import { getBranding } from './controllers/brandingController.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -25,6 +26,15 @@ import securityAdminRoutes from './routes/securityAdminRoutes.js';
 import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
+
+// Trust Proxy Configuration
+// Set based on environment. If behind Nginx/Cloudflare/ALB, TRUST_PROXY should be '1' or 'true'.
+const trustProxy = process.env.TRUST_PROXY;
+if (trustProxy === 'true' || trustProxy === '1') {
+  app.set('trust proxy', 1);
+} else if (trustProxy) {
+  app.set('trust proxy', trustProxy);
+}
 
 // Security Middlewares
 app.use(helmet());
@@ -48,38 +58,29 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-app.use('/api', limiter);
-
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Routes
-app.use('/api/home', homeRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/admin/security', securityAdminRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/addresses', addressRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/promotions', promotionRoutes);
-app.use('/api/sale-banner', saleBannerRoutes);
-app.use('/api/shop-banner', shopBannerRoutes);
+// Routes with granular rate limiters
+app.use('/api/home', readLimiter, homeRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/products', readLimiter, productRoutes);
+app.use('/api/cart', globalLimiter, cartRoutes);
+app.use('/api/wishlist', globalLimiter, wishlistRoutes);
+app.use('/api/orders', globalLimiter, orderRoutes);
+app.use('/api/admin/security', adminLimiter, securityAdminRoutes);
+app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/users', globalLimiter, userRoutes);
+app.use('/api/addresses', globalLimiter, addressRoutes);
+app.use('/api/settings', readLimiter, settingsRoutes);
+app.use('/api/promotions', readLimiter, promotionRoutes);
+app.use('/api/sale-banner', readLimiter, saleBannerRoutes);
+app.use('/api/shop-banner', readLimiter, shopBannerRoutes);
 
 // Public endpoints
-app.get('/api/branding', getBranding);
+app.get('/api/branding', readLimiter, getBranding);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

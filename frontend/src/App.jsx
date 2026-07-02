@@ -37,7 +37,7 @@ function App() {
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.href = branding?.faviconUrl || branding?.logoUrl || '/vite.svg';
+    link.href = branding?.faviconUrl || '/favicon.ico?v=3';
   }, [branding]);
 
   useEffect(() => {

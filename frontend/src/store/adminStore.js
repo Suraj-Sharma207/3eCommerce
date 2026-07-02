@@ -155,7 +155,7 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  fetchOrders: async (page = get().ordersPagination.currentPage) => {
+  fetchOrders: async (page = get().ordersPagination.currentPage, overrideParams = {}) => {
     if (ordersAbortController) {
       ordersAbortController.abort();
     }
@@ -164,8 +164,57 @@ const useAdminStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     const { searchQuery, ordersPagination } = get();
     const limit = ordersPagination.itemsPerPage;
+    
+    // Support URL search param and filters overrides
+    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+    const filters = overrideParams.filters || {};
+    
+    // Construct query params
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    if (effectiveSearch) queryParams.append('search', effectiveSearch);
+    if (filters.status && filters.status !== 'All') queryParams.append('status', filters.status);
+    if (filters.paymentStatus && filters.paymentStatus !== 'All') queryParams.append('paymentStatus', filters.paymentStatus);
+    if (filters.minAmount) queryParams.append('minAmount', filters.minAmount);
+    if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount);
+    if (filters.sort) queryParams.append('sort', filters.sort);
+    
+    // Add custom date ranges
+    if (filters.dateRange && filters.dateRange !== 'All') {
+      const date = new Date();
+      if (filters.dateRange === 'today') {
+        date.setHours(0,0,0,0);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'yesterday') {
+        const yest = new Date(date);
+        yest.setDate(yest.getDate() - 1);
+        yest.setHours(0,0,0,0);
+        const yestEnd = new Date(date);
+        yestEnd.setDate(yestEnd.getDate() - 1);
+        yestEnd.setHours(23,59,59,999);
+        queryParams.append('minDate', yest.toISOString());
+        queryParams.append('maxDate', yestEnd.toISOString());
+      } else if (filters.dateRange === 'last7') {
+        date.setDate(date.getDate() - 7);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'last30') {
+        date.setDate(date.getDate() - 30);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'thisMonth') {
+        date.setDate(1);
+        date.setHours(0,0,0,0);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'lastMonth') {
+        const lastMonth = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(date.getFullYear(), date.getMonth(), 0);
+        queryParams.append('minDate', lastMonth.toISOString());
+        queryParams.append('maxDate', lastMonthEnd.toISOString());
+      }
+    }
+
     try {
-      const response = await api.get(`/admin/orders?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`, {
+      const response = await api.get(`/admin/orders?${queryParams.toString()}`, {
         signal: ordersAbortController.signal
       });
       set({ 

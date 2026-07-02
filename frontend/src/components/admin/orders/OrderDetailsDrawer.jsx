@@ -106,7 +106,7 @@ const OrderDetailsDrawer = ({ orderId, onClose }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 bottom-0 right-0 w-full sm:w-[500px] md:w-[600px] lg:w-[700px] bg-surface-background z-50 shadow-2xl flex flex-col overflow-hidden"
+            className="fixed top-0 bottom-0 right-0 w-full sm:w-[500px] md:w-[600px] lg:w-[700px] bg-surface-background z-50 shadow-2xl flex flex-col overflow-hidden min-h-0"
           >
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-border bg-white">
@@ -136,7 +136,7 @@ const OrderDetailsDrawer = ({ orderId, onClose }) => {
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-surface-background/50">
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-surface-background/50 min-h-0">
               {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
                   <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />

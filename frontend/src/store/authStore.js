@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import api from '../services/api';
 import { parseError } from '../utils/errorParser';
 
+let checkAuthPromise = null;
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -65,18 +67,25 @@ const useAuthStore = create(
 
       checkAuth: async () => {
         if (get().hasCheckedAuth) return get().isAuthenticated;
+        if (checkAuthPromise) return checkAuthPromise;
         
-        try {
-          const response = await api.get('/auth/me');
-          const user = response.data.data.user;
-          set({ user, isAuthenticated: true, hasCheckedAuth: true });
-          return true;
-        } catch (error) {
-          set({ user: null, token: null, isAuthenticated: false, hasCheckedAuth: true });
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('token');
-          return false;
-        }
+        checkAuthPromise = (async () => {
+          try {
+            const response = await api.get('/auth/me');
+            const user = response.data.data.user;
+            set({ user, isAuthenticated: true, hasCheckedAuth: true });
+            return true;
+          } catch (error) {
+            set({ user: null, token: null, isAuthenticated: false, hasCheckedAuth: true });
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            return false;
+          } finally {
+            checkAuthPromise = null;
+          }
+        })();
+        
+        return checkAuthPromise;
       },
 
       clearError: () => set({ error: null }),

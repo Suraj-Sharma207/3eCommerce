@@ -29,7 +29,7 @@ const useCustomerStore = create((set, get) => ({
     }));
   },
 
-  fetchCustomers: async (page = get().pagination.currentPage) => {
+  fetchCustomers: async (page = get().pagination.currentPage, overrideParams = {}) => {
     if (customersAbortController) {
       customersAbortController.abort();
     }
@@ -38,11 +38,52 @@ const useCustomerStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     const { searchQuery, pagination } = get();
     
+    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+    const filters = overrideParams.filters || {};
+    
+    // Add custom date ranges
+    let minDate, maxDate;
+    if (filters.dateRange && filters.dateRange !== 'All') {
+      const date = new Date();
+      if (filters.dateRange === 'today') {
+        date.setHours(0,0,0,0);
+        minDate = date.toISOString();
+      } else if (filters.dateRange === 'yesterday') {
+        const yest = new Date(date);
+        yest.setDate(yest.getDate() - 1);
+        yest.setHours(0,0,0,0);
+        const yestEnd = new Date(date);
+        yestEnd.setDate(yestEnd.getDate() - 1);
+        yestEnd.setHours(23,59,59,999);
+        minDate = yest.toISOString();
+        maxDate = yestEnd.toISOString();
+      } else if (filters.dateRange === 'last7') {
+        date.setDate(date.getDate() - 7);
+        minDate = date.toISOString();
+      } else if (filters.dateRange === 'last30') {
+        date.setDate(date.getDate() - 30);
+        minDate = date.toISOString();
+      } else if (filters.dateRange === 'thisMonth') {
+        date.setDate(1);
+        date.setHours(0,0,0,0);
+        minDate = date.toISOString();
+      } else if (filters.dateRange === 'lastMonth') {
+        const lastMonth = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(date.getFullYear(), date.getMonth(), 0);
+        minDate = lastMonth.toISOString();
+        maxDate = lastMonthEnd.toISOString();
+      }
+    }
+
     try {
       const { data } = await customerService.getCustomers({
         page,
         limit: pagination.itemsPerPage,
-        search: searchQuery,
+        search: effectiveSearch,
+        status: filters.status && filters.status !== 'All' ? filters.status : undefined,
+        minDate,
+        maxDate,
+        sort: filters.sort
       }, {
         signal: customersAbortController.signal
       });

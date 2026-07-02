@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, User } from 'lucide-react';
 
-const ImageFallback = ({ src, alt, className = '', fallbackClassName = '' }) => {
+const ImageFallback = ({ src, alt, className = '', fallbackClassName = '', type = 'image' }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(!src);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -13,10 +13,18 @@ const ImageFallback = ({ src, alt, className = '', fallbackClassName = '' }) => 
   }, [src]);
 
   if (hasError) {
+    if (type === 'avatar') {
+      return (
+        <div className={`flex items-center justify-center bg-brand-100 text-brand-600 ${className} ${fallbackClassName}`}>
+          <User className="w-1/2 h-1/2 opacity-70" />
+        </div>
+      );
+    }
+    
     return (
       <div className={`flex flex-col items-center justify-center bg-border-light text-secondary-400 ${className} ${fallbackClassName}`}>
         <ImageOff className="w-8 h-8 mb-2 opacity-50" />
-        <span className="text-xs font-medium uppercase tracking-widest opacity-50">Image Unavailable</span>
+        <span className="text-xs font-medium uppercase tracking-widest opacity-50 text-center px-2">Unavailable</span>
       </div>
     );
   }

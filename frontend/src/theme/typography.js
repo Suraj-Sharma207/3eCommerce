@@ -1,6 +1,6 @@
 export const typography = {
   fontFamily: {
-    sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+    sans: ['"Source Sans Pro"', 'sans-serif'],
   },
   fontSize: {
     xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.02em' }],

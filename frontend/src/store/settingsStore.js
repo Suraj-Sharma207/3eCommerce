@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import settingsService from '../services/settingsService';
 
+let fetchPublicConfigPromise = null;
+
 const useSettingsStore = create((set, get) => ({
   publicConfig: null,
   domains: {
@@ -15,12 +17,18 @@ const useSettingsStore = create((set, get) => ({
   isTestingSmtp: false,
 
   fetchPublicConfig: async () => {
-    try {
-      const { data } = await settingsService.getPublicConfig();
-      set({ publicConfig: data || {} });
-    } catch (error) {
-      console.error('Failed to fetch public config');
-    }
+    if (fetchPublicConfigPromise) return fetchPublicConfigPromise;
+    fetchPublicConfigPromise = (async () => {
+      try {
+        const { data } = await settingsService.getPublicConfig();
+        set({ publicConfig: data || {} });
+      } catch (error) {
+        console.error('Failed to fetch public config');
+      } finally {
+        fetchPublicConfigPromise = null;
+      }
+    })();
+    return fetchPublicConfigPromise;
   },
 
   fetchDomainSettings: async (domain) => {

@@ -8,6 +8,37 @@ import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/ui/Pagination';
 import { isFormValid } from '../../utils/validators';
+import useAdminFilters from '../../hooks/useAdminFilters';
+import AdminFilterBar from '../../components/admin/filters/AdminFilterBar';
+import FilterDropdown from '../../components/admin/filters/FilterDropdown';
+
+const statusOptions = [
+  { label: 'All Statuses', value: 'All' },
+  { label: 'Draft', value: 'DRAFT' },
+  { label: 'Enabled', value: 'ENABLED' },
+  { label: 'Disabled', value: 'DISABLED' }
+];
+
+const typeOptions = [
+  { label: 'All Types', value: 'All' },
+  { label: 'Percentage', value: 'PERCENTAGE_DISCOUNT' },
+  { label: 'Flat Discount', value: 'FLAT_DISCOUNT' }
+];
+
+const applyToOptions = [
+  { label: 'All Targets', value: 'All' },
+  { label: 'Entire Store', value: 'STORE' },
+  { label: 'Categories', value: 'CATEGORY' },
+  { label: 'Brands', value: 'BRAND' },
+  { label: 'Specific Products', value: 'PRODUCT' }
+];
+
+const sortOptions = [
+  { label: 'Newest First', value: 'newest' },
+  { label: 'Oldest First', value: 'oldest' },
+  { label: 'Discount (High to Low)', value: 'discount_desc' },
+  { label: 'Discount (Low to High)', value: 'discount_asc' }
+];
 
 const getLocalDateString = (daysToAdd = 0) => {
   const d = new Date();
@@ -29,7 +60,10 @@ const getNextDayString = (dateStr) => {
 };
 
 const AdminOffers = () => {
-  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion, pagination, setItemsPerPage, setSearchQuery, searchQuery } = usePromotionStore();
+  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion, pagination, setItemsPerPage } = usePromotionStore();
+  const { search, setSearch, filters, updateFilter, resetFilters, isInitialized } = useAdminFilters({
+    sort: 'newest'
+  });
   const { confirm } = useConfirmStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -52,11 +86,9 @@ const AdminOffers = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchPromotions(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, fetchPromotions]);
+    if (!isInitialized) return;
+    fetchPromotions(1, { search: filters.search || '', filters });
+  }, [filters, isInitialized, fetchPromotions]);
 
   const handleOpenModal = (promo = null) => {
     setErrors({});
@@ -144,16 +176,37 @@ const AdminOffers = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
         {/* Toolbar */}
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between bg-surface-background">
-          <div className="relative w-full sm:max-w-xs">
-            <input 
-              type="text" 
-              placeholder="Search promotions..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
+        <div className="p-4 border-b border-border bg-surface-background">
+          <AdminFilterBar 
+            search={search} 
+            onSearchChange={setSearch} 
+            onReset={resetFilters}
+          >
+            <FilterDropdown 
+              label="Status" 
+              options={statusOptions} 
+              value={filters.status || 'All'} 
+              onChange={(val) => updateFilter('status', val)} 
             />
-          </div>
+            <FilterDropdown 
+              label="Type" 
+              options={typeOptions} 
+              value={filters.type || 'All'} 
+              onChange={(val) => updateFilter('type', val)} 
+            />
+            <FilterDropdown 
+              label="Target" 
+              options={applyToOptions} 
+              value={filters.applyTo || 'All'} 
+              onChange={(val) => updateFilter('applyTo', val)} 
+            />
+            <FilterDropdown 
+              label="Sort By" 
+              options={sortOptions} 
+              value={filters.sort || 'newest'} 
+              onChange={(val) => updateFilter('sort', val)} 
+            />
+          </AdminFilterBar>
         </div>
 
         <div className="overflow-x-auto">
@@ -218,11 +271,11 @@ const AdminOffers = () => {
             <Pagination 
               currentPage={pagination.currentPage} 
               totalPages={pagination.totalPages} 
-              onPageChange={fetchPromotions} 
+              onPageChange={(page) => fetchPromotions(page, { search, filters })} 
               itemsPerPage={pagination.itemsPerPage}
               onItemsPerPageChange={(limit) => {
                 setItemsPerPage(limit);
-                fetchPromotions(1);
+                fetchPromotions(1, { search, filters });
               }}
             />
           </div>

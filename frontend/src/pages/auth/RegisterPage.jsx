@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, User, Mail, Lock } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import PhoneInput from '../../components/ui/PhoneInput';
@@ -64,19 +64,28 @@ const RegisterPage = () => {
 
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
 
-    const errorMsg = validateField(name, parsedValue);
-    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    // Clear error while typing
+    setErrors(prev => ({ ...prev, [name]: '' }));
     
-    // Re-validate confirm password if password changes
+    if (name === 'password') {
+      setErrors(prev => ({ ...prev, confirmPassword: '' }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const errorMsg = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+
     if (name === 'password' && formData.confirmPassword) {
-       setErrors(prev => ({ ...prev, confirmPassword: validateConfirmPassword(sanitizedValue, formData.confirmPassword) }));
+      setErrors(prev => ({ ...prev, confirmPassword: validateConfirmPassword(value, formData.confirmPassword) }));
     }
   };
 
   const isPasswordValid = formData.password.length > 0 && validatePassword(formData.password) === '';
-  const passwordTouched = formData.password.length > 0;
+  const passwordTouched = formData.password.length > 0 && errors.password !== undefined; // Use errors object to track if we should show styling
 
-  const confirmTouched = formData.confirmPassword.length > 0;
+  const confirmTouched = formData.confirmPassword.length > 0 && errors.confirmPassword !== undefined;
   const passwordsMatch = formData.confirmPassword.length > 0 && validateConfirmPassword(formData.password, formData.confirmPassword) === '';
 
   const isFormValid = () => {
@@ -92,12 +101,12 @@ const RegisterPage = () => {
     }
 
     setErrors(newErrors);
-    
-    return checkFormValid(newErrors, { 
-      name: formData.name, 
-      email: formData.email, 
-      password: formData.password, 
-      confirmPassword: formData.confirmPassword 
+
+    return checkFormValid(newErrors, {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword
     }) && termsAccepted;
   };
 
@@ -118,68 +127,51 @@ const RegisterPage = () => {
     setTimeout(() => setSocialMessage(''), 3000);
   };
 
-  // Determine password field styling and messages
-  let passwordBorderClass = '';
-  let PasswordHelper = () => (
-    <div className="text-[12px] text-gray-500 mt-[6px] mb-[10px] min-h-[36px] flex items-start leading-snug transition-colors duration-300">
-      Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.
-    </div>
-  );
+  // Determine password validation status for compact helper
+  const hasMinLength = formData.password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(formData.password);
+  const hasNumber = /[0-9]/.test(formData.password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(formData.password);
 
-  if (passwordTouched) {
-    if (isPasswordValid) {
-      passwordBorderClass = '!border-success-500 focus:!ring-success-200';
-      PasswordHelper = () => (
-        <div className="text-sm text-success-600 mt-[6px] mb-[10px] min-h-[36px] flex items-center gap-1.5 transition-colors duration-300">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Password looks good.</span>
-        </div>
-      );
-    } else {
-      passwordBorderClass = '!border-danger-500 focus:!ring-danger-200';
-      PasswordHelper = () => (
-        <div className="text-sm text-danger-600 mt-[6px] mb-[10px] min-h-[36px] flex items-start gap-1.5 leading-snug transition-colors duration-300">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.</span>
-        </div>
-      );
-    }
+  let passwordBorderClass = '';
+  if (errors.password) {
+    passwordBorderClass = '!border-danger-500 focus:!ring-danger-200';
+  } else if (passwordTouched && isPasswordValid) {
+    // Optional: could turn green if valid, but requirement says "Do not turn border red". Default to neutral unless we specifically want green.
   }
 
   // Determine confirm password styling
   let confirmBorderClass = '';
-  let ConfirmHelper = () => <div className="min-h-[20px] mt-[6px]" />; // Spacer
+  let ConfirmHelper = () => <div className="min-h-[6px] mt-[4px]" />; // Spacer
 
-  if (confirmTouched) {
-    if (passwordsMatch) {
-      confirmBorderClass = '!border-success-500 focus:!ring-success-200';
-      ConfirmHelper = () => (
-        <div className="text-sm text-success-600 mt-[6px] min-h-[20px] flex items-center gap-1.5 transition-colors duration-300">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Passwords match.</span>
-        </div>
-      );
-    } else {
-      confirmBorderClass = '!border-danger-500 focus:!ring-danger-200';
-      ConfirmHelper = () => (
-        <div className="text-sm text-danger-600 mt-[6px] min-h-[20px] flex items-center gap-1.5 transition-colors duration-300">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium">Passwords do not match.</span>
-        </div>
-      );
-    }
+  if (errors.confirmPassword) {
+    confirmBorderClass = '!border-danger-500 focus:!ring-danger-200';
+    ConfirmHelper = () => (
+      <div className="text-xs text-danger-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300">
+        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="font-medium">Passwords do not match.</span>
+      </div>
+    );
+  } else if (confirmTouched && passwordsMatch) {
+    // Optional: green check
+    ConfirmHelper = () => (
+      <div className="text-xs text-success-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300">
+        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="font-medium">Passwords match.</span>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full flex flex-col justify-center py-2">
-      <div className="mb-6 stagger-1">
-        <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
-        <p className="mt-1 text-[16px] text-text-muted font-medium stagger-2">
-          Join {branding?.platformName || 'Store'} to experience premium shopping.
+    <div className="w-full flex flex-col justify-center">
+      <div className="mb-4 stagger-1 text-center shrink-0">
+        <h2 className="text-[28px] md:text-[32px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
+        <p className="mt-1 text-[14px] text-text-primary-hover font-medium stagger-2">
+          Join {branding?.platformName || 'PRIYAL'} | Home Appliances Pvt Ltd. to experience premium shopping.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
 
         {backendError && (
           <div className="p-3 rounded-lg bg-danger-50 text-danger-700 text-[12px] font-medium flex items-start gap-2 border border-danger-200">
@@ -188,72 +180,92 @@ const RegisterPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-3">
           <div className="space-y-1">
             <Input
-              label={<span className="font-medium text-[14px] text-text-primary">Full Name</span>}
+              label={<span className="font-medium text-[13px] text-text-primary">Full Name</span>}
               type="text"
               name="name"
               required
               value={formData.name}
               onChange={handleChange}
-              placeholder="John Doe"
+              onBlur={handleBlur}
+              placeholder="Enter your full name"
               error={errors.name}
+              leftIcon={<User className="w-4 h-4" />}
+              inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
               className={errors.name ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
             />
           </div>
 
           <div className="space-y-1">
             <PhoneInput
-              label={<span className="font-medium text-[14px] text-text-primary">Phone <span className="text-text-muted font-normal text-[12px]">(Optional)</span></span>}
+              label={<span className="font-medium text-[13px] text-text-primary">Phone <span className="text-text-muted font-normal text-[11px]">(Optional)</span></span>}
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+              onBlur={handleBlur}
               error={errors.phone}
+              inputClassName="!h-[46px] !rounded-[12px] !border-brand-500 focus-within:!ring-brand-500/20"
             />
           </div>
         </div>
 
         <div className="space-y-1 stagger-3">
           <Input
-            label={<span className="font-medium text-[14px] text-text-primary">Email Address</span>}
+            label={<span className="font-medium text-[13px] text-text-primary">Email Address</span>}
             type="email"
             name="email"
             required
             value={formData.email}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="you@example.com"
             error={errors.email}
+            leftIcon={<Mail className="w-4 h-4" />}
+            inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             className={errors.email ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
           />
         </div>
 
         <div className="relative stagger-3">
           <Input
-            label={<span className="font-medium text-[14px] text-text-primary">Password</span>}
+            label={<span className="font-medium text-[13px] text-text-primary">Password</span>}
             type="password"
             name="password"
             required
             value={formData.password}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="Create a strong password"
             className={passwordBorderClass}
-            aria-invalid={!isPasswordValid && passwordTouched}
+            leftIcon={<Lock className="w-4 h-4" />}
+            inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
+            aria-invalid={!!errors.password}
+            error={errors.password}
           />
-          <PasswordHelper />
+          
+          {!errors.password && (
+            <div className="text-[11px] text-text-secondary mt-1.5 leading-snug">
+              <span>Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.</span>
+            </div>
+          )}
         </div>
 
         <div className="relative stagger-3">
           <Input
-            label={<span className="font-medium text-[14px] text-text-primary">Confirm Password</span>}
+            label={<span className="font-medium text-[13px] text-text-primary">Confirm Password</span>}
             type="password"
             name="confirmPassword"
             required
             value={formData.confirmPassword}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="Confirm your password"
             className={confirmBorderClass}
-            aria-invalid={!passwordsMatch && confirmTouched}
+            leftIcon={<Lock className="w-4 h-4" />}
+            inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
+            aria-invalid={!!errors.confirmPassword}
           />
           <ConfirmHelper />
         </div>
@@ -287,55 +299,14 @@ const RegisterPage = () => {
             isLoading={isLoading}
             disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
             aria-disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
-            className="rounded-[12px] h-[48px] text-[16px] font-bold shadow-sm"
+            className="rounded-[12px] h-[48px] text-[15px] font-bold shadow-md bg-[#0F2343] hover:bg-[#1a345c] transition-all"
           >
             Create Account
           </Button>
         </div>
       </form>
 
-      <div className="mt-6 stagger-5">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-light" />
-          </div>
-          <div className="relative flex justify-center text-[12px]">
-            <span className="px-3 bg-white text-text-muted font-medium">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Google')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-[18px] h-[18px]" />
-            <span className="text-[14px] font-semibold text-text-primary">Google</span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Apple')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="w-[18px] h-[18px] opacity-90" />
-            <span className="text-[14px] font-semibold text-text-primary">Apple</span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Facebook')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-[18px] h-[18px]" />
-            <span className="text-[14px] font-semibold text-text-primary">Facebook</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6 text-center stagger-6">
+      <div className="mt-3.5 text-center stagger-6">
         <p className="text-[14px] text-text-secondary font-medium">
           Already have an account?{' '}
           <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">

@@ -50,6 +50,9 @@ const Input = forwardRef(({
           `}
           aria-invalid={!!error}
           aria-describedby={error ? `${id || 'input'}-error` : undefined}
+          onCopy={isPassword ? (e) => e.preventDefault() : props.onCopy}
+          onPaste={isPassword ? (e) => e.preventDefault() : props.onPaste}
+          onCut={isPassword ? (e) => e.preventDefault() : props.onCut}
           {...props}
         />
         {(icon || leftIcon) && (

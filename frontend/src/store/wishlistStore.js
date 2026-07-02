@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
+let fetchWishlistPromise = null;
+
 const useWishlistStore = create((set, get) => ({
   wishlist: null,
   isLoading: false,
@@ -8,17 +10,24 @@ const useWishlistStore = create((set, get) => ({
   error: null,
 
   fetchWishlist: async () => {
+    if (fetchWishlistPromise) return fetchWishlistPromise;
+    
     const { hasFetched } = get();
     if (!hasFetched) {
       set({ isLoading: true, error: null });
     }
     
-    try {
-      const response = await api.get('/wishlist');
-      set({ wishlist: response.data.data, isLoading: false, hasFetched: true });
-    } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch wishlist', isLoading: false, hasFetched: true });
-    }
+    fetchWishlistPromise = (async () => {
+      try {
+        const response = await api.get('/wishlist');
+        set({ wishlist: response.data.data, isLoading: false, hasFetched: true });
+      } catch (error) {
+        set({ error: error.response?.data?.message || 'Failed to fetch wishlist', isLoading: false, hasFetched: true });
+      } finally {
+        fetchWishlistPromise = null;
+      }
+    })();
+    return fetchWishlistPromise;
   },
 
   // UI State for Drawer

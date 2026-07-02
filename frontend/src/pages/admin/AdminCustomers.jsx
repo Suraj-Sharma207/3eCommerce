@@ -6,23 +6,42 @@ import ImageFallback from '../../components/ui/ImageFallback';
 import { formatPrice } from '../../utils/currency';
 import Pagination from '../../components/ui/Pagination';
 import CustomerDetailsDrawer from '../../components/admin/CustomerDetailsDrawer';
+import useAdminFilters from '../../hooks/useAdminFilters';
+import AdminFilterBar from '../../components/admin/filters/AdminFilterBar';
+import FilterDropdown from '../../components/admin/filters/FilterDropdown';
+import DateRangePicker from '../../components/admin/filters/DateRangePicker';
+
+const statusOptions = [
+  { label: 'All Statuses', value: 'All' },
+  { label: 'Active', value: 'active' },
+  { label: 'Disabled', value: 'inactive' }
+];
+
+const sortOptions = [
+  { label: 'Newest First', value: 'newest' },
+  { label: 'Oldest First', value: 'oldest' },
+  { label: 'Name (A to Z)', value: 'name_asc' },
+  { label: 'Name (Z to A)', value: 'name_desc' }
+];
 
 const AdminCustomers = () => {
-  const { customers, isLoading, pagination, fetchCustomers, searchQuery, setSearchQuery, setItemsPerPage } = useCustomerStore();
+  const { customers, isLoading, pagination, fetchCustomers, setItemsPerPage } = useCustomerStore();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
+  const { search, setSearch, filters, updateFilter, resetFilters, isInitialized } = useAdminFilters({
+    sort: 'newest'
+  });
+
   // Debounced search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCustomers(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, fetchCustomers]);
+    if (!isInitialized) return;
+    fetchCustomers(1, { search: filters.search || '', filters });
+  }, [filters, isInitialized, fetchCustomers]);
 
   const handlePageChange = (page) => {
-    fetchCustomers(page);
+    fetchCustomers(page, { search, filters });
   };
 
   const handleOpenDrawer = (id) => {
@@ -48,17 +67,30 @@ const AdminCustomers = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
         
         {/* Toolbar */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input 
-              type="text" 
-              placeholder="Search by name, email, or phone..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm bg-white"
+        <div className="p-4 border-b border-border bg-surface-background">
+          <AdminFilterBar 
+            search={search} 
+            onSearchChange={setSearch} 
+            onReset={resetFilters}
+          >
+            <FilterDropdown 
+              label="Status" 
+              options={statusOptions} 
+              value={filters.status || 'All'} 
+              onChange={(val) => updateFilter('status', val)} 
             />
-          </div>
+            <DateRangePicker 
+              label="Joined"
+              value={filters.dateRange || 'All'} 
+              onChange={(val) => updateFilter('dateRange', val)} 
+            />
+            <FilterDropdown 
+              label="Sort By" 
+              options={sortOptions} 
+              value={filters.sort || 'newest'} 
+              onChange={(val) => updateFilter('sort', val)} 
+            />
+          </AdminFilterBar>
         </div>
 
         {/* Table */}
@@ -74,7 +106,7 @@ const AdminCustomers = () => {
                 <th className="p-4 text-right pr-6">Details</th>
               </tr>
             </thead>
-            <tbody className={`divide-y divide-secondary-100 ${isLoading && customers.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+            <tbody className="divide-y divide-secondary-100">
               {isLoading && customers.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
@@ -95,7 +127,7 @@ const AdminCustomers = () => {
                       </div>
                       <h3 className="text-lg font-extrabold text-text-primary mb-1">No customers found</h3>
                       <p className="text-sm text-text-secondary font-medium">
-                        {searchQuery ? 'Try adjusting your search terms.' : 'You do not have any registered customers yet.'}
+                        {search ? 'Try adjusting your search terms or filters.' : 'You do not have any registered customers yet.'}
                       </p>
                     </div>
                   </td>
@@ -108,7 +140,7 @@ const AdminCustomers = () => {
                     onClick={() => handleOpenDrawer(customer.id)}
                   >
                     <td className="p-4 pl-6 flex items-center gap-4">
-                      <ImageFallback src={customer.avatarUrl} alt={customer.name} className="w-10 h-10 rounded-full object-cover bg-border-light flex-shrink-0" />
+                      <ImageFallback src={customer.avatarUrl} alt={customer.name} type="avatar" className="w-10 h-10 rounded-full object-cover bg-border-light flex-shrink-0" />
                       <div className="font-bold text-text-brand-600 text-sm">{customer.name}</div>
                     </td>
                     <td className="p-4 text-sm">
@@ -150,7 +182,7 @@ const AdminCustomers = () => {
               itemsPerPage={pagination.itemsPerPage}
               onItemsPerPageChange={(limit) => {
                 setItemsPerPage(limit);
-                fetchCustomers(1);
+                fetchCustomers(1, { search, filters });
               }}
             />
           </div>

@@ -115,8 +115,8 @@ class OrderController {
   // Admin Routes Below
   async getAllOrders(req, res, next) {
     try {
-      const { page, limit, search } = req.query;
-      const data = await orderService.getAllOrders({ page, limit, search });
+      const { page, limit, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort } = req.query;
+      const data = await orderService.getAllOrders({ page, limit, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort });
       return successResponse(res, 'All orders retrieved', data, 200);
     } catch (error) {
       next(error);

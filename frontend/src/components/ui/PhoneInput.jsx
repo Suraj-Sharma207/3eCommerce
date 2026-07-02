@@ -6,6 +6,7 @@ const PhoneInput = forwardRef(({
   label,
   error,
   className = '',
+  inputClassName = '',
   id,
   name,
   value,
@@ -51,6 +52,7 @@ const PhoneInput = forwardRef(({
             focus-within:ring-2 focus-within:ring-brand-600 focus-within:border-brand-600
             ${error ? 'border-danger-600 focus-within:ring-danger-600 focus-within:border-danger-600' : 'border-border'}
             ${disabled ? 'bg-surface-background opacity-70 cursor-not-allowed' : ''}
+            ${inputClassName}
           `}
           numberInputProps={{
             className: 'w-full h-full bg-transparent outline-none text-text-primary placeholder:text-text-muted',

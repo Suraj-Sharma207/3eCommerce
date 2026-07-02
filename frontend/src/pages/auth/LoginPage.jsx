@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Mail, Lock } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useAuthStore from '../../store/authStore';
@@ -25,19 +25,35 @@ const LoginPage = () => {
 
   const from = location.state?.from?.pathname || '/';
 
-  const validateEmail = (val) => {
+  const handleEmailChange = (val) => {
     setEmail(val);
-    setEmailError(sharedValidateEmail(val));
+    setEmailError('');
   };
 
-  const validatePassword = (val) => {
+  const handlePasswordChange = (val) => {
     setPassword(val);
-    setPasswordError(sharedValidatePassword(val));
+    setPasswordError('');
+  };
+
+  const handleEmailBlur = () => {
+    setEmailError(sharedValidateEmail(email));
+  };
+
+  const handlePasswordBlur = () => {
+    setPasswordError(sharedValidatePassword(password));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isFormValid({ email: emailError, password: passwordError }, { email, password })) return;
+    
+    const emailValidation = sharedValidateEmail(email);
+    const passwordValidation = sharedValidatePassword(password);
+    
+    if (emailValidation || passwordValidation) {
+      setEmailError(emailValidation);
+      setPasswordError(passwordValidation);
+      return;
+    }
     
     setSocialMessage('');
     
@@ -65,11 +81,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="w-full flex flex-col justify-center py-4">
-      <div className="mb-6 stagger-1">
-        <h2 className="text-[48px] leading-tight font-bold text-text-primary tracking-tight">Welcome Back</h2>
-        <p className="mt-1 text-[16px] text-text-muted stagger-2">
-          Sign in to your account to continue.
+    <div className="w-full flex flex-col justify-center">
+      <div className="mb-6 stagger-1 text-center shrink-0">
+        <h2 className="text-[32px] md:text-[36px] leading-tight font-bold text-text-primary tracking-tight">Welcome Back</h2>
+        <p className="mt-1.5 text-[15px] text-text-muted font-medium stagger-2">
+          Sign in to continue shopping.
         </p>
       </div>
 
@@ -83,27 +99,33 @@ const LoginPage = () => {
 
         <div className="space-y-1 stagger-3">
           <Input
-            label={<span className="font-medium text-[14px] text-text-primary">Email Address</span>}
+            label={<span className="font-medium text-[13px] text-text-primary">Email Address</span>}
             type="email"
             required
             value={email}
-            onChange={(e) => validateEmail(e.target.value)}
+            onChange={(e) => handleEmailChange(e.target.value)}
+            onBlur={handleEmailBlur}
             placeholder="you@example.com"
             error={emailError}
+            leftIcon={<Mail className="w-4 h-4" />}
+            inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             className={emailError ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
           />
         </div>
 
         <div className="space-y-1 relative stagger-3">
           <Input
-            label={<span className="font-medium text-[14px] text-text-primary">Password</span>}
+            label={<span className="font-medium text-[13px] text-text-primary">Password</span>}
             type="password"
             required
             value={password}
-            onChange={(e) => validatePassword(e.target.value)}
+            onChange={(e) => handlePasswordChange(e.target.value)}
+            onBlur={handlePasswordBlur}
             placeholder="Enter your password"
             error={passwordError}
             aria-invalid={!!passwordError}
+            leftIcon={<Lock className="w-4 h-4" />}
+            inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             className={passwordError ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
           />
         </div>
@@ -118,13 +140,13 @@ const LoginPage = () => {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 text-brand-600 focus:ring-brand-600 border-border rounded transition-colors cursor-pointer"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-[14px] font-medium text-text-secondary cursor-pointer hover:text-text-primary transition-colors">
+            <label htmlFor="remember-me" className="ml-2 block text-[13px] font-medium text-text-secondary cursor-pointer hover:text-text-primary transition-colors">
               Remember me
             </label>
           </div>
 
           <div>
-            <button type="button" onClick={() => setSocialMessage('Password reset functionality coming soon.')} className="text-[14px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+            <button type="button" onClick={() => setSocialMessage('Password reset functionality coming soon.')} className="text-[13px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
               Forgot password?
             </button>
           </div>
@@ -135,57 +157,16 @@ const LoginPage = () => {
             type="submit"
             fullWidth
             isLoading={isLoading}
-            disabled={!isFormValid({ email: emailError, password: passwordError }, { email, password })}
-            aria-disabled={!isFormValid({ email: emailError, password: passwordError }, { email, password })}
-            className="rounded-[12px] h-[48px] text-[16px] font-bold shadow-sm"
+            disabled={!!sharedValidateEmail(email) || !!sharedValidatePassword(password)}
+            aria-disabled={!!sharedValidateEmail(email) || !!sharedValidatePassword(password)}
+            className="rounded-[12px] h-[48px] text-[15px] font-bold shadow-md bg-[#0F2343] hover:bg-[#1a345c] transition-all"
           >
             Sign in
           </Button>
         </div>
       </form>
 
-      <div className="mt-6 stagger-5">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-light" />
-          </div>
-          <div className="relative flex justify-center text-[12px]">
-            <span className="px-3 bg-white text-text-muted font-medium">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Google')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-[18px] h-[18px]" />
-            <span className="text-[14px] font-semibold text-text-primary">Google</span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Apple')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="w-[18px] h-[18px] opacity-90" />
-            <span className="text-[14px] font-semibold text-text-primary">Apple</span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSocialClick(e, 'Facebook')}
-            className="w-full flex items-center justify-center gap-2 h-[44px] border border-border rounded-[12px] bg-white hover:bg-surface-background transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 group relative"
-            title="Coming Soon"
-          >
-            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-[18px] h-[18px]" />
-            <span className="text-[14px] font-semibold text-text-primary">Facebook</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6 text-center stagger-6">
+      <div className="mt-5 text-center stagger-6">
         <p className="text-[14px] text-text-secondary font-medium">
           Don't have an account?{' '}
           <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">

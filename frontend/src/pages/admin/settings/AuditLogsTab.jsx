@@ -52,7 +52,7 @@ const AuditLogsTab = () => {
             <p className="text-text-muted text-sm mt-1">No security events have been recorded yet.</p>
           </div>
         ) : (
-          <div className={`divide-y divide-border ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className="divide-y divide-border">
             {logs.map((log) => (
               <div key={log.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-hover transition-colors">
                 <div className="flex items-start gap-3">

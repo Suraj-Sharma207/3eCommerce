@@ -123,7 +123,7 @@ const WishlistDrawer = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full sm:w-[380px] md:w-[460px] bg-white h-[100dvh] shadow-2xl flex flex-col z-10"
+              className="relative w-full sm:w-[380px] md:w-[460px] bg-white shadow-2xl flex flex-col z-10 h-full"
             >
               <div className="flex items-center justify-between p-6 border-b border-border-light">
                 <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
@@ -171,7 +171,7 @@ const WishlistDrawer = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="relative w-full sm:w-[380px] md:w-[460px] bg-white h-[100dvh] shadow-2xl flex flex-col z-10"
+            className="relative w-full sm:w-[380px] md:w-[460px] bg-white shadow-2xl flex flex-col z-10 h-full"
           >
             {/* Header */}
             <div className="flex flex-col border-b border-border-light shrink-0">
@@ -199,7 +199,7 @@ const WishlistDrawer = () => {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 custom-scrollbar">
               {!hasFetched || !wishlist ? (
                 <div className="space-y-4 animate-pulse">
                   {[1, 2, 3].map(i => (

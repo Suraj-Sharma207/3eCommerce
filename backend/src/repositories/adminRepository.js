@@ -365,7 +365,7 @@ class AdminRepository {
     return { ...summary, recent: recent.map(r => ({ ...r, status: r.orderStatus })) };
   }
 
-  async getAllCustomers({ page = 1, limit = 10, search = '' }) {
+  async getAllCustomers({ page = 1, limit = 10, search = '', status, minDate, maxDate, sort }) {
     const skip = (page - 1) * limit;
 
     let whereClause = { role: 'CUSTOMER' };
@@ -380,12 +380,30 @@ class AdminRepository {
         ]
       };
     }
+    
+    if (status === 'active') whereClause.active = true;
+    if (status === 'inactive') whereClause.active = false;
+
+    if (minDate || maxDate) {
+      whereClause.createdAt = {};
+      if (minDate) whereClause.createdAt.gte = new Date(minDate);
+      if (maxDate) {
+        const endDate = new Date(maxDate);
+        endDate.setHours(23, 59, 59, 999);
+        whereClause.createdAt.lte = endDate;
+      }
+    }
+
+    let orderBy = { createdAt: 'desc' };
+    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+    if (sort === 'name_asc') orderBy = { name: 'asc' };
+    if (sort === 'name_desc') orderBy = { name: 'desc' };
 
     const customers = await prisma.user.findMany({
       where: whereClause,
       skip,
       take: parseInt(limit, 10),
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       include: {
         orders: {
           select: { id: true, totalAmount: true }

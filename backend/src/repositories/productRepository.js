@@ -95,12 +95,17 @@ class ProductRepository {
     const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
 
     let orderBy = { createdAt: 'desc' };
+    if (sort === 'newest') orderBy = { createdAt: 'desc' };
+    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
     if (sort === 'price_asc') orderBy = { finalPrice: 'asc' };
     if (sort === 'price_desc') orderBy = { finalPrice: 'desc' };
+    if (sort === 'name_asc') orderBy = { name: 'asc' };
+    if (sort === 'name_desc') orderBy = { name: 'desc' };
+    if (sort === 'stock_desc') orderBy = { stock: 'desc' };
+    if (sort === 'stock_asc') orderBy = { stock: 'asc' };
     if (sort === 'popular') orderBy = { reviewCount: 'desc' };
     if (sort === 'highest_rated') orderBy = { rating: 'desc' };
     if (sort === 'discount') orderBy = { discountPercentage: 'desc' };
-    if (sort === 'newest') orderBy = { createdAt: 'desc' };
 
     const products = await prisma.product.findMany({
       where,

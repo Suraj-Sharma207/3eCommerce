@@ -259,7 +259,7 @@ class OrderRepository {
     });
   }
 
-  async getAllOrders({ skip, take, search }) {
+  async getAllOrders({ skip, take, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }) {
     const where = {};
     if (search) {
       where.OR = [
@@ -269,6 +269,30 @@ class OrderRepository {
         { user: { email: { contains: search, mode: 'insensitive' } } }
       ];
     }
+    if (status && status !== 'All') where.orderStatus = status;
+    if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
+    
+    if (minDate || maxDate) {
+      where.createdAt = {};
+      if (minDate) where.createdAt.gte = new Date(minDate);
+      if (maxDate) {
+        const endDate = new Date(maxDate);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = endDate;
+      }
+    }
+    
+    if (minAmount || maxAmount) {
+      where.totalAmount = {};
+      if (minAmount) where.totalAmount.gte = parseFloat(minAmount);
+      if (maxAmount) where.totalAmount.lte = parseFloat(maxAmount);
+    }
+
+    let orderBy = { createdAt: 'desc' };
+    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+    if (sort === 'amount_desc') orderBy = { totalAmount: 'desc' };
+    if (sort === 'amount_asc') orderBy = { totalAmount: 'asc' };
+
     return await prisma.order.findMany({
       where,
       skip,
@@ -279,11 +303,11 @@ class OrderRepository {
         },
         items: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy
     });
   }
 
-  async countAllOrders({ search } = {}) {
+  async countAllOrders({ search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount } = {}) {
     const where = {};
     if (search) {
       where.OR = [
@@ -293,6 +317,25 @@ class OrderRepository {
         { user: { email: { contains: search, mode: 'insensitive' } } }
       ];
     }
+    if (status && status !== 'All') where.orderStatus = status;
+    if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
+    
+    if (minDate || maxDate) {
+      where.createdAt = {};
+      if (minDate) where.createdAt.gte = new Date(minDate);
+      if (maxDate) {
+        const endDate = new Date(maxDate);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = endDate;
+      }
+    }
+    
+    if (minAmount || maxAmount) {
+      where.totalAmount = {};
+      if (minAmount) where.totalAmount.gte = parseFloat(minAmount);
+      if (maxAmount) where.totalAmount.lte = parseFloat(maxAmount);
+    }
+
     return await prisma.order.count({ where });
   }
 }

@@ -107,8 +107,8 @@ class AdminController {
 
   async getAllCustomers(req, res, next) {
     try {
-      const { page, limit, search } = req.query;
-      const data = await adminService.getAllCustomers({ page, limit, search });
+      const { page, limit, search, status, minDate, maxDate, sort } = req.query;
+      const data = await adminService.getAllCustomers({ page, limit, search, status, minDate, maxDate, sort });
       return successResponse(res, 'Customers retrieved', data, 200);
     } catch (error) {
       next(error);

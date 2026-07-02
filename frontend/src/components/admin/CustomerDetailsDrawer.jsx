@@ -50,7 +50,7 @@ const CustomerDetailsDrawer = ({ isOpen, onClose, customerId }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-8">
           {isLoading || !selectedCustomer ? (
             <div className="space-y-6">
               <div className="flex items-center gap-4">
@@ -70,6 +70,7 @@ const CustomerDetailsDrawer = ({ isOpen, onClose, customerId }) => {
                 <ImageFallback 
                   src={selectedCustomer.avatarUrl} 
                   alt={selectedCustomer.name} 
+                  type="avatar"
                   className="w-20 h-20 rounded-full border border-border object-cover" 
                 />
                 <div>

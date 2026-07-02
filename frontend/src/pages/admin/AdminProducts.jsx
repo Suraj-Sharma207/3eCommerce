@@ -12,10 +12,41 @@ import ProductModal from '../../components/admin/ProductModal';
 import useConfirmStore from '../../store/confirmStore';
 import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
+import useAdminFilters from '../../hooks/useAdminFilters';
+import AdminFilterBar from '../../components/admin/filters/AdminFilterBar';
+import FilterDropdown from '../../components/admin/filters/FilterDropdown';
+import PriceRangeFilter from '../../components/admin/filters/PriceRangeFilter';
+
+const categoryOptions = [
+  { label: 'All Categories', value: 'All' },
+  { label: 'Living Room', value: 'Living Room' },
+  { label: 'Bedroom', value: 'Bedroom' },
+  { label: 'Dining', value: 'Dining' },
+  { label: 'Office', value: 'Office' },
+  { label: 'Lighting', value: 'Lighting' },
+  { label: 'Decor', value: 'Decor' },
+  { label: 'Outdoor', value: 'Outdoor' },
+];
+
+const sortOptions = [
+  { label: 'Newest First', value: 'newest' },
+  { label: 'Oldest First', value: 'oldest' },
+  { label: 'Price (Low to High)', value: 'price_asc' },
+  { label: 'Price (High to Low)', value: 'price_desc' },
+  { label: 'Name (A to Z)', value: 'name_asc' },
+  { label: 'Name (Z to A)', value: 'name_desc' },
+  { label: 'Stock (High to Low)', value: 'stock_desc' },
+  { label: 'Stock (Low to High)', value: 'stock_asc' },
+];
 
 const AdminProducts = () => {
-  const { products, isLoading, updatingProductIds, fetchAdminProducts, createProduct, updateProduct, deleteProduct, pagination, searchQuery, setSearchQuery, setItemsPerPage, filters, setFilters, inventoryCounts } = useProductStore();
+  const { products, isLoading, updatingProductIds, fetchAdminProducts, createProduct, updateProduct, deleteProduct, pagination, setItemsPerPage, inventoryCounts } = useProductStore();
   
+  const { search, setSearch, filters, updateFilter, resetFilters, isInitialized } = useAdminFilters({
+    inventoryTab: 'all',
+    sort: 'newest'
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
   
@@ -31,11 +62,9 @@ const AdminProducts = () => {
   const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchAdminProducts(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, filters.inventoryTab, fetchAdminProducts]);
+    if (!isInitialized) return;
+    fetchAdminProducts(1, { search: filters.search || '', filters });
+  }, [filters, isInitialized, fetchAdminProducts]);
 
   const handleOpenModal = (product = null) => {
     setSelectedProductId(product?.id ?? null);
@@ -110,7 +139,7 @@ const AdminProducts = () => {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setFilters({ inventoryTab: tab.id })}
+              onClick={() => updateFilter('inventoryTab', tab.id)}
               className={`pb-3 text-sm font-bold transition-colors relative whitespace-nowrap ${
                 filters.inventoryTab === tab.id 
                   ? 'text-brand-600' 
@@ -129,17 +158,34 @@ const AdminProducts = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-surface-background">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm"
+        <div className="p-4 border-b border-border bg-surface-background">
+          <AdminFilterBar 
+            search={search} 
+            onSearchChange={setSearch} 
+            onReset={resetFilters}
+          >
+            <FilterDropdown 
+              label="Category" 
+              options={categoryOptions} 
+              value={filters.category || 'All'} 
+              onChange={(val) => updateFilter('category', val)} 
             />
-          </div>
+            <PriceRangeFilter 
+              label="Price" 
+              min={filters.minPrice} 
+              max={filters.maxPrice} 
+              onChange={(min, max) => {
+                updateFilter('minPrice', min);
+                updateFilter('maxPrice', max);
+              }} 
+            />
+            <FilterDropdown 
+              label="Sort By" 
+              options={sortOptions} 
+              value={filters.sort || 'newest'} 
+              onChange={(val) => updateFilter('sort', val)} 
+            />
+          </AdminFilterBar>
         </div>
 
         {/* Table */}
@@ -154,7 +200,7 @@ const AdminProducts = () => {
                 <th className="p-4 text-right pr-6">Actions</th>
               </tr>
             </thead>
-            <tbody className={`divide-y divide-secondary-100 ${isLoading && products.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+            <tbody className="divide-y divide-secondary-100">
               {isLoading && products.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
@@ -169,7 +215,7 @@ const AdminProducts = () => {
                 <tr>
                   <td colSpan="5" className="p-12 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      {filters.inventoryTab === 'outOfStock' && !searchQuery ? (
+                      {filters.inventoryTab === 'outOfStock' && !search ? (
                         <>
                           <div className="w-16 h-16 bg-success-500/10 rounded-full flex items-center justify-center mb-4">
                             <span className="text-3xl">🎉</span>
@@ -244,11 +290,11 @@ const AdminProducts = () => {
             <Pagination 
               currentPage={pagination.currentPage} 
               totalPages={pagination.totalPages} 
-              onPageChange={fetchAdminProducts} 
+              onPageChange={(page) => fetchAdminProducts(page, { search, filters })} 
               itemsPerPage={pagination.itemsPerPage}
               onItemsPerPageChange={(limit) => {
                 setItemsPerPage(limit);
-                fetchAdminProducts(1);
+                fetchAdminProducts(1, { search, filters });
               }}
             />
           </div>

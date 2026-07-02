@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 const abortControllers = {};
 const updateTimeouts = {};
 const previousQuantities = {};
+let fetchCartPromise = null;
 
 const useCartStore = create((set, get) => ({
   cart: null,
@@ -14,13 +15,20 @@ const useCartStore = create((set, get) => ({
   error: null,
 
   fetchCart: async () => {
+    if (fetchCartPromise) return fetchCartPromise;
     set({ isLoading: true, error: null });
-    try {
-      const response = await api.get('/cart');
-      set({ cart: response.data.data, isLoading: false });
-    } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch cart', isLoading: false });
-    }
+    
+    fetchCartPromise = (async () => {
+      try {
+        const response = await api.get('/cart');
+        set({ cart: response.data.data, isLoading: false });
+      } catch (error) {
+        set({ error: error.response?.data?.message || 'Failed to fetch cart', isLoading: false });
+      } finally {
+        fetchCartPromise = null;
+      }
+    })();
+    return fetchCartPromise;
   },
 
   addToCart: async (productId, quantity = 1, productName = null) => {

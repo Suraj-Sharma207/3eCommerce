@@ -107,10 +107,14 @@ const ProfilePage = () => {
     // We no longer sanitize phone numbers because PhoneInput provides an E.164 string (+123...)
     const parsedValue = value;
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
-    
+    setFormErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleProfileBlur = (e) => {
+    const { name, value } = e.target;
     let errorMsg = '';
-    if (name === 'name') errorMsg = validateName(parsedValue, 'Name');
-    if (name === 'phone' && parsedValue) errorMsg = validatePhone(parsedValue);
+    if (name === 'name') errorMsg = validateName(value, 'Name');
+    if (name === 'phone' && value) errorMsg = validatePhone(value);
     setFormErrors(prev => ({ ...prev, [name]: errorMsg }));
   };
 
@@ -118,7 +122,15 @@ const ProfilePage = () => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
     setPassError('');
+    setPassErrors(prev => {
+      const next = { ...prev, [name]: '' };
+      if (name === 'newPassword') next.confirmPassword = '';
+      return next;
+    });
+  };
 
+  const handlePasswordBlur = (e) => {
+    const { name, value } = e.target;
     let errorMsg = '';
     if (name === 'currentPassword' && !value) errorMsg = 'Required';
     if (name === 'newPassword') errorMsg = validatePassword(value);
@@ -434,6 +446,7 @@ const ProfilePage = () => {
                     name="name" 
                     value={formData.name || ''} 
                     onChange={handleProfileChange} 
+                    onBlur={handleProfileBlur}
                     error={formErrors.name}
                     required 
                   />
@@ -450,6 +463,7 @@ const ProfilePage = () => {
                       name="phone" 
                       value={formData.phone || ''} 
                       onChange={handleProfileChange} 
+                      onBlur={handleProfileBlur}
                       error={formErrors.phone}
                     />
                   </div>
@@ -459,6 +473,7 @@ const ProfilePage = () => {
                     name="birthday" 
                     value={formData.birthday || ''} 
                     onChange={handleProfileChange} 
+                    onBlur={handleProfileBlur}
                     max={maxBirthday}
                     error={formErrors.birthday}
                   />
@@ -528,6 +543,7 @@ const ProfilePage = () => {
                   name="currentPassword" 
                   value={passwordData.currentPassword} 
                   onChange={handlePasswordChange} 
+                  onBlur={handlePasswordBlur}
                   required 
                   error={passErrors.currentPassword}
                   aria-invalid={!!passErrors.currentPassword}
@@ -540,6 +556,7 @@ const ProfilePage = () => {
                     name="newPassword" 
                     value={passwordData.newPassword} 
                     onChange={handlePasswordChange} 
+                    onBlur={handlePasswordBlur}
                     required 
                     error={passErrors.newPassword}
                     aria-invalid={!!passErrors.newPassword}
@@ -553,6 +570,7 @@ const ProfilePage = () => {
                   name="confirmPassword" 
                   value={passwordData.confirmPassword} 
                   onChange={handlePasswordChange} 
+                  onBlur={handlePasswordBlur}
                   required 
                   error={passErrors.confirmPassword}
                   aria-invalid={!!passErrors.confirmPassword}

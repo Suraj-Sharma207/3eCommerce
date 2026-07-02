@@ -1,7 +1,10 @@
 import api from './api';
 
-const getCustomers = async (params, options = {}) => {
-  const response = await api.get('/admin/customers', { params, ...options });
+const getCustomers = async ({ status, minDate, maxDate, sort, ...rest } = {}, options = {}) => {
+  const response = await api.get('/admin/customers', { 
+    params: { status, minDate, maxDate, sort, ...rest }, 
+    ...options 
+  });
   return response.data;
 };
 

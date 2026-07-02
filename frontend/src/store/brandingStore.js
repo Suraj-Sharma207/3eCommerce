@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api from '../services/api'; // Assuming you have an api.js
 
+let fetchBrandingPromise = null;
+
 export const useBrandingStore = create((set, get) => ({
   branding: {
     platformName: 'Store', // Default fallback
@@ -10,19 +12,24 @@ export const useBrandingStore = create((set, get) => ({
   uploading: false,
 
   fetchBranding: async () => {
-    try {
-      set({ loading: true });
-      // Fetch public branding settings
-      const response = await api.get('/branding');
-      if (response.data.success && response.data.data) {
-        set({ branding: response.data.data });
+    if (fetchBrandingPromise) return fetchBrandingPromise;
+    fetchBrandingPromise = (async () => {
+      try {
+        set({ loading: true });
+        // Fetch public branding settings
+        const response = await api.get('/branding');
+        if (response.data.success && response.data.data) {
+          set({ branding: response.data.data });
+        }
+      } catch (error) {
+        console.error('Failed to fetch branding', error);
+        // Fallback remains if fetch fails
+      } finally {
+        set({ loading: false });
+        fetchBrandingPromise = null;
       }
-    } catch (error) {
-      console.error('Failed to fetch branding', error);
-      // Fallback remains if fetch fails
-    } finally {
-      set({ loading: false });
-    }
+    })();
+    return fetchBrandingPromise;
   },
 
   updateBranding: async (data) => {

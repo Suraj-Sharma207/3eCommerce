@@ -6,7 +6,7 @@ import { homeCache } from './homeController.js';
 class PromotionController {
   async getPromotions(req, res) {
     try {
-      const { page = 1, limit = 10, search = '' } = req.query;
+      const { page = 1, limit = 10, search = '', status, type, applyTo, sort } = req.query;
       const take = parseInt(limit, 10);
       let currentPage = parseInt(page, 10);
       if (currentPage < 1) currentPage = 1;
@@ -17,11 +17,20 @@ class PromotionController {
       if (search) {
         where = {
           OR: [
-            { name: { contains: search } },
-            { description: { contains: search } }
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } }
           ]
         };
       }
+
+      if (status && status !== 'All') where.status = status;
+      if (type && type !== 'All') where.type = type;
+      if (applyTo && applyTo !== 'All') where.applyTo = applyTo;
+
+      let orderBy = { createdAt: 'desc' };
+      if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+      if (sort === 'discount_desc') orderBy = { discountValue: 'desc' };
+      if (sort === 'discount_asc') orderBy = { discountValue: 'asc' };
 
       const totalItems = await prisma.promotion.count({ where });
       const totalPages = Math.max(1, Math.ceil(totalItems / take));
@@ -41,7 +50,7 @@ class PromotionController {
           categories: true,
           brands: true
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy
       });
 
       return successResponse(res, 'Promotions fetched', {

@@ -36,23 +36,27 @@ const AuthLayout = () => {
   const { branding } = useBrandingStore();
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden bg-surface-background font-sans">
+    <div className="flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden bg-gradient-to-tr from-[#FAF9F6] to-[#F4F2EE] font-sans">
 
       {/* Left side - Form Area */}
-      <div className="flex-1 flex flex-col lg:w-[45%] xl:w-[40%] bg-white relative border-r border-border-light shadow-2xl z-10 overflow-y-auto shrink-0">
-        <div className="p-6 sm:p-8 shrink-0">
-          <Link to="/" className="text-3xl font-extrabold text-brand-600 tracking-tight flex items-center gap-2">
+      <div className="flex-1 flex flex-col lg:w-[42%] xl:w-[38%] relative z-10 overflow-y-auto shrink-0 items-center justify-center p-6 md:p-8">
+        
+        {/* Centered Logo above the card */}
+        <div className="mb-8 flex flex-col items-center shrink-0">
+          <Link to="/" className="text-3xl font-extrabold tracking-tight flex items-center justify-center">
             {branding?.logoUrl ? (
-              <img src={branding.logoUrl} alt={branding?.platformName} className="h-16 md:h-20 w-auto" />
+              <img src={branding.logoUrl} alt={branding?.platformName} className="h-16 md:h-[72px] w-auto object-contain" />
             ) : (
-              branding?.platformName || 'Store'
+              <span className="font-serif italic text-[32px] text-[#0F2343]">{branding?.platformName || 'Priyal'}</span>
             )}
           </Link>
         </div>
 
-        <main className="flex-1 w-full max-w-[480px] mx-auto py-12 flex flex-col justify-center px-6 sm:px-8">
+        {/* Floating Card */}
+        <div className="w-full max-w-[540px] bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-8 md:p-10 flex flex-col relative animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out">
           <AuthTransition />
-        </main>
+        </div>
+
       </div>
 
       {/* Right side - Premium Hero Panel */}

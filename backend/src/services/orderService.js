@@ -57,7 +57,7 @@ class OrderService {
   }
 
   async updateOrderStatus(orderId, status) {
-    const validStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid order status');
     }
@@ -91,13 +91,13 @@ class OrderService {
     return await orderRepository.updatePaymentStatus(orderId, status);
   }
 
-  async getAllOrders({ page = 1, limit = 10, search = '' }) {
+  async getAllOrders({ page = 1, limit = 10, search = '', status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }) {
     const skip = (page - 1) * limit;
     const take = parseInt(limit, 10);
     
     const [orders, totalItems] = await Promise.all([
-      orderRepository.getAllOrders({ skip, take, search }),
-      orderRepository.countAllOrders({ search })
+      orderRepository.getAllOrders({ skip, take, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }),
+      orderRepository.countAllOrders({ search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount })
     ]);
 
     return {

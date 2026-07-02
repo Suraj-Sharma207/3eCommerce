@@ -28,7 +28,7 @@ const usePromotionStore = create((set, get) => ({
     }));
   },
 
-  fetchPromotions: async (page = get().pagination.currentPage) => {
+  fetchPromotions: async (page = get().pagination.currentPage, overrideParams = {}) => {
     if (promotionsAbortController) {
       promotionsAbortController.abort();
     }
@@ -37,11 +37,18 @@ const usePromotionStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     const { searchQuery, pagination } = get();
     
+    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+    const filters = overrideParams.filters || {};
+    
     try {
       const { data } = await promotionService.getPromotions({
         page,
         limit: pagination.itemsPerPage,
-        search: searchQuery
+        search: effectiveSearch,
+        status: filters.status,
+        type: filters.type,
+        applyTo: filters.applyTo,
+        sort: filters.sort
       }, {
         signal: promotionsAbortController.signal
       });

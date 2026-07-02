@@ -3,14 +3,15 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  PENDING:    { label: 'Pending',    bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   dot: 'bg-amber-400'   },
+  PENDING:    { label: 'Pending',    bg: 'bg-slate-50',   text: 'text-slate-700',   border: 'border-slate-200',   dot: 'bg-slate-400'   },
+  CONFIRMED:  { label: 'Confirmed',  bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   dot: 'bg-amber-400'   },
   PROCESSING: { label: 'Processing', bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',    dot: 'bg-blue-500'    },
   SHIPPED:    { label: 'Shipped',    bg: 'bg-brand-50',  text: 'text-brand-700',  border: 'border-brand-200',  dot: 'bg-brand-500'  },
   DELIVERED:  { label: 'Delivered',  bg: 'bg-green-50',   text: 'text-green-700',   border: 'border-green-200',   dot: 'bg-green-500'   },
   CANCELLED:  { label: 'Cancelled',  bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200',     dot: 'bg-red-400'     },
 };
 
-const STATUS_ORDER = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const STATUS_ORDER = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 const StatusDropdown = ({ value, onChange, isLoading = false, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);

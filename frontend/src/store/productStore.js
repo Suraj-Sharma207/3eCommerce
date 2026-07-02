@@ -153,7 +153,7 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  fetchAdminProducts: async (page = get().pagination.currentPage) => {
+  fetchAdminProducts: async (page = get().pagination.currentPage, overrideParams = {}) => {
     if (adminProductsAbortController) {
       adminProductsAbortController.abort();
     }
@@ -163,16 +163,20 @@ const useProductStore = create((set, get) => ({
     const { searchQuery, filters, pagination } = get();
     
     try {
+      // Combine store filters with overrides
+      const effectiveFilters = { ...filters, ...(overrideParams.filters || {}) };
+      const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+      
       let stockStatus;
-      if (filters.inventoryTab === 'active') stockStatus = 'active';
-      else if (filters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+      if (effectiveFilters.inventoryTab === 'active') stockStatus = 'active';
+      else if (effectiveFilters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
 
       const { data } = await productService.getAdminProducts({
         page,
         limit: pagination.itemsPerPage,
-        search: searchQuery,
+        search: effectiveSearch,
         stockStatus,
-        ...filters,
+        ...effectiveFilters,
         includeInventoryCounts: true
       }, {
         signal: adminProductsAbortController.signal
