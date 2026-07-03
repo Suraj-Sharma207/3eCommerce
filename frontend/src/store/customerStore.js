@@ -8,6 +8,7 @@ const useCustomerStore = create((set, get) => ({
   customers: [],
   selectedCustomer: null,
   isLoading: false,
+  isDetailsLoading: false,
   // Per-customer loading: Set of customer IDs currently being updated
   updatingCustomerIds: new Set(),
   error: null,
@@ -58,27 +59,29 @@ const useCustomerStore = create((set, get) => ({
         minDate = yest.toISOString();
         maxDate = yestEnd.toISOString();
       } else if (filters.dateRange === 'last7') {
-        date.setDate(date.getDate() - 7);
-        minDate = date.toISOString();
+        const last7 = new Date(date);
+        last7.setDate(last7.getDate() - 7);
+        minDate = last7.toISOString();
       } else if (filters.dateRange === 'last30') {
-        date.setDate(date.getDate() - 30);
-        minDate = date.toISOString();
+        const last30 = new Date(date);
+        last30.setDate(last30.getDate() - 30);
+        minDate = last30.toISOString();
       } else if (filters.dateRange === 'thisMonth') {
-        date.setDate(1);
-        date.setHours(0,0,0,0);
-        minDate = date.toISOString();
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        minDate = firstDay.toISOString();
       } else if (filters.dateRange === 'lastMonth') {
-        const lastMonth = new Date(date.getFullYear(), date.getMonth() - 1, 1);
-        const lastMonthEnd = new Date(date.getFullYear(), date.getMonth(), 0);
-        minDate = lastMonth.toISOString();
-        maxDate = lastMonthEnd.toISOString();
+        const firstDay = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+        const lastDay = new Date(date.getFullYear(), date.getMonth(), 0);
+        lastDay.setHours(23,59,59,999);
+        minDate = firstDay.toISOString();
+        maxDate = lastDay.toISOString();
       }
     }
 
     try {
       const { data } = await customerService.getCustomers({
         page,
-        limit: pagination.itemsPerPage,
+        limit: overrideParams.limit ?? pagination.itemsPerPage,
         search: effectiveSearch,
         status: filters.status && filters.status !== 'All' ? filters.status : undefined,
         minDate,
@@ -88,13 +91,15 @@ const useCustomerStore = create((set, get) => ({
         signal: customersAbortController.signal
       });
       
-      set({
-        customers: data.customers,
+      set({ 
+        customers: data.customers || [], 
         pagination: data.pagination,
-        isLoading: false,
+        isLoading: false 
       });
     } catch (error) {
-      if (axios.isCancel(error)) return;
+      if (axios.isCancel(error)) {
+        return;
+      }
       set({ 
         error: error.response?.data?.message || 'Failed to fetch customers', 
         isLoading: false 
@@ -103,14 +108,14 @@ const useCustomerStore = create((set, get) => ({
   },
 
   fetchCustomerDetails: async (id) => {
-    set({ isLoading: true, error: null, selectedCustomer: null });
+    set({ isDetailsLoading: true, error: null, selectedCustomer: null });
     try {
       const { data } = await customerService.getCustomerById(id);
-      set({ selectedCustomer: data, isLoading: false });
+      set({ selectedCustomer: data, isDetailsLoading: false });
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'Failed to fetch customer details', 
-        isLoading: false 
+        isDetailsLoading: false 
       });
     }
   },

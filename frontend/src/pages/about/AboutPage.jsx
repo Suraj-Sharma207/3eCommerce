@@ -15,7 +15,7 @@ const AboutPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface-background">
+    <div className="min-h-screen bg-surface-background font-normal">
       <AboutHero />
       <OurStory />
       <Stats />

@@ -72,7 +72,7 @@ const HeroCarousel = ({
 
   return (
     <div
-      className="relative w-full rounded-2xl overflow-hidden shadow-soft"
+      className="relative w-full rounded-2xl overflow-hidden shadow-soft font-normal"
       style={{ minHeight: '340px', height: 'clamp(340px, 55vw, 600px)' }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -92,22 +92,22 @@ const HeroCarousel = ({
       <button
         onClick={prev}
         aria-label="Previous slide"
-        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-brand-900 transition-all duration-150 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-brand-900 transition-all duration-150 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-400 font-normal"
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-5 h-5 font-normal" />
       </button>
 
       {/* Next button */}
       <button
         onClick={next}
         aria-label="Next slide"
-        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-brand-900 transition-all duration-150 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-brand-900 transition-all duration-150 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-400 font-normal"
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-5 h-5 font-normal" />
       </button>
 
       {/* Indicators */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 font-normal">
         <HeroIndicators
           count={slides.length}
           current={current}

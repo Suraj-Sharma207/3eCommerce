@@ -39,8 +39,13 @@ const useProductStore = create((set, get) => ({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 15,
+    itemsPerPage: 10,
   },
+
+  // ── Bulk Selection State ───────────────────────────────────────────────────
+  // Store only IDs (Set<string>) for O(1) lookups — never store full objects
+  selectedProductIds: new Set(),
+  isBulkDeleting: false,
 
   fetchHomeProducts: async () => {
     if (get().hasFetchedHome) return;
@@ -80,6 +85,7 @@ const useProductStore = create((set, get) => ({
     set({ searchQuery: query });
   },
 
+  // itemsPerPage is now driven by URL ?limit param — kept for backward compat
   setItemsPerPage: (limit) => {
     set((state) => ({
       pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
@@ -133,7 +139,7 @@ const useProductStore = create((set, get) => ({
         search: searchQuery,
         stockStatus,
         ...filters,
-        includeInventoryCounts: true
+        includeInventoryCounts: false
       }, {
         signal: productsAbortController.signal
       });
@@ -161,6 +167,9 @@ const useProductStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     const { searchQuery, filters, pagination } = get();
+
+    // Prefer limit from override (URL-driven), fall back to store state
+    const limit = overrideParams.limit ?? pagination.itemsPerPage;
     
     try {
       // Combine store filters with overrides
@@ -173,7 +182,7 @@ const useProductStore = create((set, get) => ({
 
       const { data } = await productService.getAdminProducts({
         page,
-        limit: pagination.itemsPerPage,
+        limit,
         search: effectiveSearch,
         stockStatus,
         ...effectiveFilters,
@@ -183,6 +192,7 @@ const useProductStore = create((set, get) => ({
       });
       
       set({
+        // Always replace — never append
         products: data.products,
         pagination: data.pagination,
         inventoryCounts: data.pagination?.inventoryCounts || get().inventoryCounts,
@@ -213,32 +223,11 @@ const useProductStore = create((set, get) => ({
   createProduct: async (productData) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await productService.createProduct(productData);
-      // Append new product to the list without refetching
-      const newProduct = data?.product || data?.data || data;
-      set((state) => {
-        // Only append to the current view if it belongs there
-        let shouldAppend = false;
-        if (state.filters.inventoryTab === 'all') shouldAppend = true;
-        else if (state.filters.inventoryTab === 'active' && newProduct.stock > 0) shouldAppend = true;
-        else if (state.filters.inventoryTab === 'outOfStock' && newProduct.stock === 0) shouldAppend = true;
-
-        const updatedProducts = shouldAppend ? [newProduct, ...state.products] : state.products;
-        
-        return {
-          isLoading: false,
-          products: updatedProducts,
-          pagination: {
-            ...state.pagination,
-            totalItems: shouldAppend ? state.pagination.totalItems + 1 : state.pagination.totalItems,
-          },
-          inventoryCounts: {
-            all: state.inventoryCounts.all + 1,
-            active: newProduct.stock > 0 ? state.inventoryCounts.active + 1 : state.inventoryCounts.active,
-            outOfStock: newProduct.stock === 0 ? state.inventoryCounts.outOfStock + 1 : state.inventoryCounts.outOfStock,
-          }
-        };
-      });
+      await productService.createProduct(productData);
+      set({ isLoading: false });
+      // Refetch the current page so row count never exceeds the limit
+      const { pagination, fetchAdminProducts } = get();
+      fetchAdminProducts(pagination.currentPage);
       return true;
     } catch (error) {
       set({ 
@@ -318,18 +307,13 @@ const useProductStore = create((set, get) => ({
     const prevInventoryCounts = get().inventoryCounts;
     const deletedProduct = prevProducts.find(p => p.id === id);
 
-    // Optimistically remove the product from the list
+    // Optimistically remove from local view and mark as updating
     set((state) => {
       const wasActive = deletedProduct?.stock > 0;
       const wasOutOfStock = deletedProduct?.stock === 0;
-
       return {
         products: state.products.filter((p) => p.id !== id),
         updatingProductIds: new Set([...state.updatingProductIds, id]),
-        pagination: {
-          ...state.pagination,
-          totalItems: Math.max(0, state.pagination.totalItems - 1),
-        },
         inventoryCounts: {
           all: Math.max(0, state.inventoryCounts.all - 1),
           active: wasActive ? Math.max(0, state.inventoryCounts.active - 1) : state.inventoryCounts.active,
@@ -345,24 +329,111 @@ const useProductStore = create((set, get) => ({
         next.delete(id);
         return { updatingProductIds: next };
       });
+      // Refetch to keep pagination counts correct and fill the gap
+      const { pagination, fetchAdminProducts } = get();
+      fetchAdminProducts(pagination.currentPage);
       return true;
     } catch (error) {
-      // Rollback
+      // Rollback optimistic update
       set((state) => {
         const next = new Set(state.updatingProductIds);
         next.delete(id);
         return {
           updatingProductIds: next,
           products: prevProducts,
-          pagination: {
-            ...state.pagination,
-            totalItems: prevProducts.length,
-          },
-          inventoryCounts: state.inventoryCounts, // Simplified rollback for inventory
+          inventoryCounts: prevInventoryCounts,
           error: error.response?.data?.message || 'Failed to delete product',
         };
       });
       return false;
+    }
+  },
+
+  // ── Bulk Selection Actions ─────────────────────────────────────────────────
+
+  /**
+   * Toggle a single product's selection state.
+   * Uses product ID as key — not row index.
+   */
+  toggleProductSelection: (id) => {
+    set((state) => {
+      const next = new Set(state.selectedProductIds);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return { selectedProductIds: next };
+    });
+  },
+
+  /**
+   * Replace selection with the given array of IDs (used for Select All).
+   * Passing an empty array effectively clears.
+   */
+  selectProductIds: (ids) => {
+    set({ selectedProductIds: new Set(ids) });
+  },
+
+  /**
+   * Clear all selections — called after bulk delete or manual clear.
+   * NOT called on pagination / search / sort / filter changes.
+   */
+  clearSelection: () => {
+    set({ selectedProductIds: new Set() });
+  },
+
+  /**
+   * Bulk-delete all currently selected products.
+   * Calls the transactional admin endpoint, then refetches + clears selection.
+   */
+  bulkDeleteProducts: async () => {
+    const ids = [...get().selectedProductIds];
+    if (ids.length === 0) return { success: false, deleted: 0 };
+
+    set({ isBulkDeleting: true, error: null });
+    try {
+      const result = await productService.bulkDeleteProducts(ids);
+      const deleted = result?.data?.deleted ?? ids.length;
+
+      // Clear selection first
+      set({ selectedProductIds: new Set(), isBulkDeleting: false });
+
+      // Refetch current page — adjust page if it no longer exists
+      const { pagination, fetchAdminProducts, filters } = get();
+      const newFilteredItems = Math.max(0, (pagination.filteredItems || pagination.totalItems) - deleted);
+      const newTotalPages = Math.max(1, Math.ceil(newFilteredItems / (pagination.itemsPerPage || 10)));
+      const safePage = Math.min(pagination.currentPage, newTotalPages);
+      fetchAdminProducts(safePage);
+
+      return { success: true, deleted };
+    } catch (error) {
+      set({
+        isBulkDeleting: false,
+        error: error.response?.data?.message || 'Bulk delete failed',
+      });
+      return { success: false, deleted: 0 };
+    }
+  },
+
+  /**
+   * Fetch all matching product IDs for the current filter context.
+   * Called when the header checkbox is clicked (Select All).
+   */
+  fetchFilteredProductIds: async (queryParams = {}) => {
+    try {
+      let stockStatus;
+      if (queryParams.inventoryTab === 'active') stockStatus = 'active';
+      else if (queryParams.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+
+      const result = await productService.getAdminFilteredProductIds({
+        ...queryParams,
+        stockStatus,
+      });
+      return result?.data?.ids || [];
+    } catch (error) {
+      console.error('Failed to fetch filtered product IDs:', error);
+      return [];
     }
   },
 

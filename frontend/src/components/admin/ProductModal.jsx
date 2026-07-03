@@ -240,18 +240,18 @@ const ImageManager = ({ product }) => {
   const primaryImage = images.find(i => i.isPrimary) ?? images[0];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-normal">
       {/* Primary image preview */}
       {primaryImage && (
-        <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl overflow-hidden bg-surface-background border border-border flex items-center justify-center">
+        <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl overflow-hidden bg-surface-background border border-border flex items-center justify-center font-normal">
           <img
             src={primaryImage.url}
             alt="Primary"
-            className="w-full h-full object-contain object-center"
+            className="w-full h-full object-contain object-center font-normal"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-brand-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
-            <Star className="w-3 h-3 fill-current" />
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-brand-600 text-white text-xs px-2.5 py-1 rounded-full shadow font-normal">
+            <Star className="w-3 h-3 fill-current font-normal" />
             Primary Image
           </div>
         </div>
@@ -259,7 +259,7 @@ const ImageManager = ({ product }) => {
 
       {/* Image grid */}
       {images.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 font-normal">
           {images.map((img) => (
             <div
               key={img.id}
@@ -274,30 +274,30 @@ const ImageManager = ({ product }) => {
                 ${draggedId === img.id ? 'opacity-40' : 'opacity-100'}
               `}
             >
-              <div className="aspect-square bg-surface-background flex items-center justify-center">
+              <div className="aspect-square bg-surface-background flex items-center justify-center font-normal">
                 {img.url ? (
-                  <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover object-center" />
+                  <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover object-center font-normal" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageOff className="w-6 h-6 text-text-muted" />
+                  <div className="w-full h-full flex items-center justify-center font-normal">
+                    <ImageOff className="w-6 h-6 text-text-muted font-medium" />
                   </div>
                 )}
               </div>
 
               {/* Drag handle indicator */}
-              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-80 transition-opacity">
-                <GripVertical className="w-4 h-4 text-white drop-shadow" />
+              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-80 transition-opacity font-normal">
+                <GripVertical className="w-4 h-4 text-white drop-shadow font-normal" />
               </div>
 
               {/* Primary badge */}
               {img.isPrimary && (
-                <div className="absolute top-1 right-1 bg-brand-600 rounded-full p-0.5 shadow">
-                  <Star className="w-3 h-3 text-white fill-current" />
+                <div className="absolute top-1 right-1 bg-brand-600 rounded-full p-0.5 shadow font-normal">
+                  <Star className="w-3 h-3 text-white fill-current font-normal" />
                 </div>
               )}
 
               {/* Hover actions overlay */}
-              <div className="absolute inset-0 bg-secondary-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1.5 pb-2">
+              <div className="absolute inset-0 bg-secondary-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1.5 pb-2 font-normal">
                 {!img.isPrimary && (
                   <button
                     onClick={() => handleSetPrimary(img.id)}
@@ -306,8 +306,8 @@ const ImageManager = ({ product }) => {
                     title="Set as primary"
                   >
                     {settingPrimaryId === img.id
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : <Star className="w-3.5 h-3.5" />
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin font-normal" />
+                      : <Star className="w-3.5 h-3.5 font-normal" />
                     }
                   </button>
                 )}
@@ -318,8 +318,8 @@ const ImageManager = ({ product }) => {
                   title={images.length <= 1 ? 'Cannot delete the only image' : 'Delete image'}
                 >
                   {deletingIds.has(img.id)
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    : <Trash2 className="w-3.5 h-3.5" />
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin font-normal" />
+                    : <Trash2 className="w-3.5 h-3.5 font-normal" />
                   }
                 </button>
               </div>
@@ -347,32 +347,32 @@ const ImageManager = ({ product }) => {
           type="file"
           multiple
           accept="image/jpeg,image/jpg,image/png,image/webp"
-          className="hidden"
+          className="hidden font-normal"
           onChange={handleFileInputChange}
           onClick={(e) => e.stopPropagation()}
         />
 
         {uploadProgress !== null ? (
-          <div className="space-y-2">
-            <Loader2 className="w-8 h-8 text-brand-600 animate-spin mx-auto" />
-            <p className="text-sm font-semibold text-brand-600">Uploading... {uploadProgress}%</p>
-            <div className="w-full bg-border-light rounded-full h-1.5 overflow-hidden">
+          <div className="space-y-2 font-normal">
+            <Loader2 className="w-8 h-8 text-brand-600 animate-spin mx-auto font-normal" />
+            <p className="text-sm text-brand-600 font-normal">Uploading... {uploadProgress}%</p>
+            <div className="w-full bg-border-light rounded-full h-1.5 overflow-hidden font-normal">
               <div
-                className="h-full bg-brand-600 transition-all duration-300 rounded-full"
+                className="h-full bg-brand-600 transition-all duration-300 rounded-full font-normal"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mx-auto">
-              <Upload className="w-6 h-6 text-brand-600" />
+          <div className="space-y-2 font-normal">
+            <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mx-auto font-normal">
+              <Upload className="w-6 h-6 text-brand-600 font-normal" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-text-primary">
+              <p className="text-sm text-text-primary font-normal">
                 {isDragging ? 'Drop images here' : 'Drop images or click to upload'}
               </p>
-              <p className="text-xs text-text-muted mt-1">JPG, PNG, WEBP · Max 5MB per file · Up to 10 images</p>
+              <p className="text-xs text-text-muted mt-1 font-medium">JPG, PNG, WEBP · Max 5MB per file · Up to 10 images</p>
             </div>
           </div>
         )}
@@ -380,36 +380,36 @@ const ImageManager = ({ product }) => {
 
       {/* Status messages */}
       {uploadSuccess && (
-        <div className="flex items-center gap-2 text-sm text-success-600 bg-success-50 px-4 py-2.5 rounded-xl border border-success-200">
-          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-sm text-success-600 bg-success-50 px-4 py-2.5 rounded-xl border border-success-200 font-normal">
+          <CheckCircle className="w-4 h-4 flex-shrink-0 font-normal" />
           Images uploaded successfully!
         </div>
       )}
       {uploadError && (
-        <div className="flex items-center gap-2 text-sm text-danger-600 bg-danger-50 px-4 py-2.5 rounded-xl border border-danger-200">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-sm text-danger-600 bg-danger-50 px-4 py-2.5 rounded-xl border border-danger-200 font-normal">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 font-normal" />
           {uploadError}
         </div>
       )}
       {deleteError && (
-        <div className="flex items-center gap-2 text-sm text-danger-600 bg-danger-50 px-4 py-2.5 rounded-xl border border-danger-200">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-sm text-danger-600 bg-danger-50 px-4 py-2.5 rounded-xl border border-danger-200 font-normal">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 font-normal" />
           {deleteError}
         </div>
       )}
 
-      <p className="text-xs text-text-muted">
+      <p className="text-xs text-text-muted font-medium">
         Drag thumbnails to reorder. Star icon = primary image shown on storefront.
       </p>
 
       {/* Cropper Modal Overlay */}
       {cropFiles.length > 0 && imgSrc && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-secondary-900/80 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-screen">
-            <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-secondary-900/80 backdrop-blur-sm p-4 font-normal">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-screen font-normal">
+            <div className="p-4 border-b border-border flex items-center justify-between font-normal">
               <div>
                 <h3 className="text-lg font-bold text-text-primary">Crop Image</h3>
-                <p className="text-sm text-text-muted">
+                <p className="text-sm text-text-muted font-medium">
                   Image {currentCropIndex + 1} of {cropFiles.length} ({cropFiles[currentCropIndex].name})
                 </p>
               </div>
@@ -417,10 +417,10 @@ const ImageManager = ({ product }) => {
                 onClick={() => { setCropFiles([]); setImgSrc(''); }}
                 className="p-2 text-text-muted hover:text-text-primary hover:bg-surface-background rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 font-normal" />
               </button>
             </div>
-            <div className="flex-1 p-4 bg-surface-background overflow-auto flex flex-col items-center justify-center min-h-[300px]">
+            <div className="flex-1 p-4 bg-surface-background overflow-auto flex flex-col items-center justify-center min-h-[300px] font-normal">
               <ReactCrop
                 crop={crop}
                 onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -433,12 +433,12 @@ const ImageManager = ({ product }) => {
                   src={imgSrc} 
                   alt="Crop preview" 
                   onLoad={onImageLoad}
-                  className="max-h-[60vh] w-auto object-contain"
+                  className="max-h-[60vh] w-auto object-contain font-normal"
                 />
               </ReactCrop>
             </div>
-            <div className="p-4 border-t border-border flex items-center justify-between bg-surface-background">
-              <p className="text-xs text-text-muted">Drag to adjust the 1:1 square crop area.</p>
+            <div className="p-4 border-t border-border flex items-center justify-between bg-surface-background font-normal">
+              <p className="text-xs text-text-muted font-medium">Drag to adjust the 1:1 square crop area.</p>
               <Button onClick={handleFinalizeCrop}>
                 {currentCropIndex + 1 < cropFiles.length ? 'Crop & Next' : 'Crop & Upload'}
               </Button>
@@ -592,37 +592,37 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200 font-normal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-secondary-900/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-secondary-900/40 backdrop-blur-sm transition-opacity font-normal"
         onClick={!isLoading ? onClose : undefined}
       />
 
       {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 font-normal">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-surface-background">
-          <h2 id="modal-title" className="text-xl font-extrabold text-text-primary">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-surface-background font-normal">
+          <h2 id="modal-title" className="text-xl text-text-primary font-bold">
             {isEditing ? 'Edit Product' : 'Add New Product'}
           </h2>
           <button
             onClick={!isLoading ? onClose : undefined}
             disabled={isLoading}
-            className="text-text-muted hover:text-text-primary transition-colors focus:outline-none rounded-lg p-1 hover:bg-border-light disabled:opacity-50"
+            className="text-text-muted hover:text-text-primary transition-colors focus:outline-none rounded-lg p-1 hover:bg-border-light disabled:opacity-50 font-medium"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 font-normal" />
           </button>
         </div>
 
         {/* Tabs — only shown when editing (images tab only available post-creation) */}
         {tabs.length > 1 && (
-          <div className="flex border-b border-border bg-surface-background px-6">
+          <div className="flex border-b border-border bg-surface-background px-6 font-normal">
             {tabs.map(tab => (
               <button
                 key={tab.id}
@@ -642,11 +642,11 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
         )}
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 font-normal">
 
           {/* Details Tab */}
           {activeTab === 'details' && (
-            <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
+            <form id="product-form" onSubmit={handleSubmit} className="space-y-4 font-normal">
 
               <div className={`grid grid-cols-1 ${isEditing ? 'sm:grid-cols-2' : ''} gap-4`}>
                 <Input
@@ -662,29 +662,29 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                   aria-invalid={touched.name && !!errors.name}
                 />
                 {isEditing && (
-                  <div className="flex flex-col gap-1.5 relative group">
-                    <label className="text-sm font-semibold text-text-primary">SKU</label>
-                    <div className="relative">
+                  <div className="flex flex-col gap-1.5 relative group font-normal">
+                    <label className="text-sm text-text-primary font-normal">SKU</label>
+                    <div className="relative font-normal">
                       <input
                         type="text"
                         disabled
                         value={formData.sku || ''}
-                        className="w-full h-[48px] px-4 pl-11 rounded-[12px] text-base border border-border bg-surface-background text-text-muted cursor-not-allowed"
+                        className="w-full h-[48px] px-4 pl-11 rounded-[12px] text-base border border-border bg-surface-background text-text-muted cursor-not-allowed font-medium"
                       />
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted font-medium" />
                     </div>
-                    <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-secondary-900 text-white text-xs rounded py-1.5 px-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                    <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-secondary-900 text-white text-xs rounded py-1.5 px-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none font-normal">
                       System-generated SKU. This identifier cannot be modified.
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-text-primary" htmlFor="product-category">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-normal">
+                <div className="flex flex-col gap-1.5 font-normal">
+                  <label className="text-sm text-text-primary font-normal" htmlFor="product-category">
                     Category
-                    <span className="text-danger-600 ml-0.5">*</span>
+                    <span className="text-danger-600 ml-0.5 font-normal">*</span>
                   </label>
                   <select
                     id="product-category"
@@ -706,7 +706,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                     ))}
                   </select>
                   {touched.category && errors.category && (
-                    <span className="text-xs text-danger-600 mt-1">{errors.category}</span>
+                    <span className="text-xs text-danger-600 mt-1 font-normal">{errors.category}</span>
                   )}
                 </div>
                 <Input
@@ -723,7 +723,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-normal">
                 <Input
                   label="Price (₹)"
                   id="product-price"
@@ -769,10 +769,10 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-text-primary" htmlFor="product-description">
+              <div className="space-y-1.5 font-normal">
+                <label className="text-sm text-text-primary font-normal" htmlFor="product-description">
                   Description
-                  <span className="text-danger-600 ml-0.5">*</span>
+                  <span className="text-danger-600 ml-0.5 font-normal">*</span>
                 </label>
                 <textarea
                   id="product-description"
@@ -791,85 +791,85 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
                   aria-invalid={touched.description && !!errors.description}
                 />
                 {touched.description && errors.description && (
-                  <span className="text-xs text-danger-600 block mt-1">{errors.description}</span>
+                  <span className="text-xs text-danger-600 block mt-1 font-normal">{errors.description}</span>
                 )}
               </div>
 
               {/* Info callout: Images managed in Images tab */}
               {!isEditing && (
-                <div className="flex items-start gap-3 bg-brand-50 border border-brand-200 rounded-xl px-4 py-3">
-                  <Upload className="w-4 h-4 text-brand-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-brand-700 font-medium">
+                <div className="flex items-start gap-3 bg-brand-50 border border-brand-200 rounded-xl px-4 py-3 font-normal">
+                  <Upload className="w-4 h-4 text-brand-600 mt-0.5 flex-shrink-0 font-normal" />
+                  <p className="text-xs text-brand-700 font-normal">
                     After creating this product, you can upload images from the <strong>Images</strong> tab in the edit modal.
                   </p>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 font-normal">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="active"
                     checked={formData.active}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">Active</span>
+                  <span className="text-sm text-text-primary font-normal">Active</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="featured"
                     checked={formData.featured}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">Featured Product</span>
+                  <span className="text-sm text-text-primary font-normal">Featured Product</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="trending"
                     checked={formData.trending}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">Trending Product</span>
+                  <span className="text-sm text-text-primary font-normal">Trending Product</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="bestSeller"
                     checked={formData.bestSeller}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">Best Seller</span>
+                  <span className="text-sm text-text-primary font-normal">Best Seller</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="newArrival"
                     checked={formData.newArrival}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">New Arrival</span>
+                  <span className="text-sm text-text-primary font-normal">New Arrival</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer font-normal">
                   <input
                     type="checkbox"
                     name="recommended"
                     checked={formData.recommended}
                     onChange={handleChange}
-                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600"
+                    className="w-4 h-4 text-brand-600 rounded border-border focus:ring-brand-600 font-normal"
                   />
-                  <span className="text-sm font-medium text-text-primary">Recommended</span>
+                  <span className="text-sm text-text-primary font-normal">Recommended</span>
                 </label>
               </div>
 
@@ -883,7 +883,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, isLoading }) => {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border bg-surface-background flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-border bg-surface-background flex justify-end gap-3 font-normal">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             {activeTab === 'images' ? 'Close' : 'Cancel'}
           </Button>

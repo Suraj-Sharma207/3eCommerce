@@ -11,7 +11,7 @@ const discounts = [
 
 const DiscountFilters = ({ selectedDiscount, setSelectedDiscount }) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 font-normal">
       {discounts.map((discount) => {
         const active = selectedDiscount === discount.value;
         return (

@@ -1,9 +1,22 @@
 import { brandingService } from '../services/brandingService.js';
 import cloudinary from '../config/cloudinary.js';
+import { cacheGet, cacheSet, cacheDel } from '../services/cacheService.js';
+
+const BRANDING_CACHE_KEY = 'branding:all';
 
 export const getBranding = async (req, res, next) => {
   try {
+    const cached = await cacheGet(BRANDING_CACHE_KEY);
+    if (cached) {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+      return res.status(200).json({
+        success: true,
+        data: cached
+      });
+    }
+
     const branding = await brandingService.getBranding();
+    await cacheSet(BRANDING_CACHE_KEY, branding, 3600); // 1 hour TTL
     res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
     res.status(200).json({
       success: true,
@@ -17,6 +30,7 @@ export const getBranding = async (req, res, next) => {
 export const updateBranding = async (req, res, next) => {
   try {
     const branding = await brandingService.updateBranding(req.body);
+    await cacheDel(BRANDING_CACHE_KEY);
     res.status(200).json({
       success: true,
       message: 'Branding updated successfully',
@@ -43,6 +57,7 @@ export const uploadLogo = async (req, res, next) => {
     });
 
     const branding = await brandingService.updateLogo(result.secure_url, result.public_id);
+    await cacheDel(BRANDING_CACHE_KEY);
 
     res.status(200).json({
       success: true,
@@ -74,6 +89,7 @@ export const uploadEmailLogo = async (req, res, next) => {
     });
 
     const branding = await brandingService.updateEmailLogo(result.secure_url, result.public_id);
+    await cacheDel(BRANDING_CACHE_KEY);
 
     res.status(200).json({
       success: true,

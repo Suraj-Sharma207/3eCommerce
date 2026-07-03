@@ -6,6 +6,12 @@ import { authorize } from '../middleware/roleMiddleware.js';
 import { validate } from '../middleware/validationMiddleware.js';
 import { productSchema } from '../validations/productValidation.js';
 import uploadProduct from '../middleware/uploadProduct.js';
+import multer from 'multer';
+
+const uploadDoc = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 const router = express.Router();
 
@@ -28,6 +34,12 @@ router.get('/:id', productController.getProductById);
 router.post('/', protect, authorize('ADMIN'), validate(productSchema), productController.createProduct);
 router.put('/:id', protect, authorize('ADMIN'), validate(productSchema), productController.updateProduct);
 router.delete('/:id', protect, authorize('ADMIN'), productController.deleteProduct);
+
+// Bulk Import routes
+router.get('/import-template/csv', protect, authorize('ADMIN'), productController.downloadCsvTemplate);
+router.get('/import-template/xlsx', protect, authorize('ADMIN'), productController.downloadExcelTemplate);
+router.post('/import-preview', protect, authorize('ADMIN'), uploadDoc.single('file'), productController.importPreview);
+router.post('/import-row', protect, authorize('ADMIN'), productController.importRow);
 
 // ── Admin image management routes ───────────────────────────────────────────
 router.post(

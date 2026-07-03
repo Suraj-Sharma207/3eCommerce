@@ -49,9 +49,9 @@ const ConfirmDialog = () => {
 
   const getIcon = () => {
     switch(variant) {
-      case 'danger': return <AlertTriangle className="w-6 h-6 text-red-600" />;
-      case 'warning': return <AlertCircle className="w-6 h-6 text-amber-600" />;
-      default: return <Info className="w-6 h-6 text-blue-600" />;
+      case 'danger': return <AlertTriangle className="w-6 h-6 text-red-600 font-normal" />;
+      case 'warning': return <AlertCircle className="w-6 h-6 text-amber-600 font-normal" />;
+      default: return <Info className="w-6 h-6 text-blue-600 font-normal" />;
     }
   };
 
@@ -72,36 +72,36 @@ const ConfirmDialog = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200 font-normal">
       <div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 font-normal"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
         aria-describedby="dialog-description"
       >
-        <div className="p-6">
-          <div className="flex items-start gap-4">
+        <div className="p-6 font-normal">
+          <div className="flex items-start gap-4 font-normal">
             <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${getIconBg()}`}>
               {getIcon()}
             </div>
-            <div className="flex-1 mt-1">
+            <div className="flex-1 mt-1 font-normal">
               <h3 id="dialog-title" className="text-lg font-bold text-slate-900 mb-2">
                 {title}
               </h3>
-              <p id="dialog-description" className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+              <p id="dialog-description" className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
                 {description}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-100">
+        <div className="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-100 font-normal">
           {!isAlert && (
             <button
               ref={cancelBtnRef}
               onClick={onCancel}
-              className="px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 bg-white border border-slate-300 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1"
+              className="px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-200 bg-white border border-slate-300 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 font-normal"
             >
               {cancelText}
             </button>

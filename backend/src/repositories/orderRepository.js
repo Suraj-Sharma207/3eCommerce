@@ -297,11 +297,17 @@ class OrderRepository {
       where,
       skip,
       take,
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        createdAt: true,
+        totalAmount: true,
+        paymentStatus: true,
+        orderStatus: true,
+        userId: true,
         user: {
           select: { id: true, name: true, email: true }
-        },
-        items: true
+        }
       },
       orderBy
     });

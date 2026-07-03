@@ -9,7 +9,8 @@ import { validateName, validatePhone, validatePassword, validateConfirmPassword,
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PageContainer from '../../components/layout/PageContainer';
 import AvatarUploader from '../../components/common/AvatarUploader';
-import { User, Mail, Phone, Calendar, Edit2, Shield, CheckCircle2, AlertCircle, Save, X, MapPin, Package, Heart } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Edit2, Shield, CheckCircle2, AlertCircle, Save, X, MapPin, Package, Heart, Cookie } from 'lucide-react';
+import { useCookieConsent } from '../../components/cookies/CookieContext';
 
 const PasswordStrengthMeter = ({ password }) => {
   const getStrength = (pass) => {
@@ -38,8 +39,8 @@ const PasswordStrengthMeter = ({ password }) => {
   };
 
   return (
-    <div className="mt-2 space-y-1">
-      <div className="flex h-1.5 w-full gap-1">
+    <div className="mt-2 space-y-1 font-normal">
+      <div className="flex h-1.5 w-full gap-1 font-normal">
         {[1, 2, 3, 4, 5].map((i) => (
           <div 
             key={i} 
@@ -47,7 +48,7 @@ const PasswordStrengthMeter = ({ password }) => {
           />
         ))}
       </div>
-      <p className="text-xs text-text-muted text-right h-4">{getLabel(strength)}</p>
+      <p className="text-xs text-text-muted text-right h-4 font-medium">{getLabel(strength)}</p>
     </div>
   );
 };
@@ -55,6 +56,7 @@ const PasswordStrengthMeter = ({ password }) => {
 const ProfilePage = () => {
   const { fetchProfile, fetchStats, updateProfile, changePassword, isLoading, error: backendError, stats } = useUserStore();
   const { user: profile } = useAuthStore();
+  const { openPreferences } = useCookieConsent();
   
   const [currentView, setCurrentView] = useState('overview'); // 'overview' | 'edit' | 'security'
   
@@ -253,9 +255,9 @@ const ProfilePage = () => {
   // If initial load finished but profile is still completely missing, show error screen
   if (!profile) {
     return (
-      <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
-        <div className="bg-red-50 text-red-700 p-8 rounded-2xl border border-red-200 text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+      <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8 font-normal">
+        <div className="bg-red-50 text-red-700 p-8 rounded-2xl border border-red-200 text-center font-normal">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4 font-normal" />
           <h2 className="text-2xl font-bold mb-2">Could not load profile</h2>
           <p>{backendError || 'An unexpected error occurred while fetching your profile.'}</p>
         </div>
@@ -264,52 +266,52 @@ const ProfilePage = () => {
   }
 
   return (
-    <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
+    <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8 font-normal">
       
       {globalMessage && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl font-medium border border-green-200">
-          <CheckCircle2 className="w-5 h-5" />
+        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200 font-normal">
+          <CheckCircle2 className="w-5 h-5 font-normal" />
           {globalMessage}
         </div>
       )}
       {backendError && profile && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl font-medium border border-red-200">
-          <AlertCircle className="w-5 h-5" />
+        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 font-normal">
+          <AlertCircle className="w-5 h-5 font-normal" />
           {backendError}
         </div>
       )}
 
       {currentView === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden p-8">
-              <div className="flex flex-col sm:flex-row gap-8">
-                <div className="flex-shrink-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-normal">
+          <div className="lg:col-span-2 space-y-8 font-normal">
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden p-8 font-normal">
+              <div className="flex flex-col sm:flex-row gap-8 font-normal">
+                <div className="flex-shrink-0 font-normal">
                   {profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt={profile.name} className="w-32 h-32 rounded-full object-cover border border-border shadow-sm" />
+                    <img src={profile.avatarUrl} alt={profile.name} className="w-32 h-32 rounded-full object-cover border border-border shadow-sm font-normal" />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-4xl font-bold border border-brand-100 shadow-sm">
+                    <div className="w-32 h-32 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-4xl border border-brand-100 shadow-sm font-normal">
                       {getInitials(profile.name)}
                     </div>
                   )}
                 </div>
-                <div className="space-y-4 flex-1">
+                <div className="space-y-4 flex-1 font-normal">
                   <div>
-                    <h3 className="text-3xl font-semibold text-text-primary tracking-tight">{profile.name}</h3>
-                    <p className="text-text-muted mt-1">Customer Account • Member since {getMemberSince()}</p>
+                    <h3 className="text-3xl text-text-primary tracking-tight font-bold">{profile.name}</h3>
+                    <p className="text-text-muted mt-1 font-medium">Customer Account • Member since {getMemberSince()}</p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm pt-2">
-                    <div className="flex items-center gap-3 text-text-secondary">
-                      <Mail className="w-4 h-4 text-text-muted" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm pt-2 font-normal">
+                    <div className="flex items-center gap-3 text-text-secondary font-normal">
+                      <Mail className="w-4 h-4 text-text-muted font-medium" />
                       {profile.email}
                     </div>
-                    <div className="flex items-center gap-3 text-text-secondary">
-                      <Phone className="w-4 h-4 text-text-muted" />
+                    <div className="flex items-center gap-3 text-text-secondary font-normal">
+                      <Phone className="w-4 h-4 text-text-muted font-medium" />
                       {profile.phone || 'No phone number'}
                     </div>
                     {profile?.birthday && (
-                      <div className="flex items-center gap-3 text-text-secondary">
-                        <Calendar className="w-4 h-4 text-text-muted" />
+                      <div className="flex items-center gap-3 text-text-secondary font-normal">
+                        <Calendar className="w-4 h-4 text-text-muted font-medium" />
                         {new Date(profile.birthday).toLocaleDateString()}
                       </div>
                     )}
@@ -319,14 +321,14 @@ const ProfilePage = () => {
             </div>
 
             {defaultAddress && (
-              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8">
-                <div className="p-6 border-b border-border-light flex items-center justify-between">
-                  <h2 className="text-xl font-medium text-text-primary flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-text-muted" /> Default Shipping Address
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8 font-normal">
+                <div className="p-6 border-b border-border-light flex items-center justify-between font-normal">
+                  <h2 className="text-xl text-text-primary flex items-center gap-2 font-bold">
+                    <MapPin className="w-5 h-5 text-text-muted font-medium" /> Default Shipping Address
                   </h2>
                 </div>
-                <div className="p-6 text-sm text-text-secondary space-y-1">
-                  <p className="font-medium text-text-primary text-base">{defaultAddress.recipientName}</p>
+                <div className="p-6 text-sm text-text-secondary space-y-1 font-normal">
+                  <p className="text-text-primary text-base font-normal">{defaultAddress.recipientName}</p>
                   <p>{defaultAddress.street}</p>
                   {defaultAddress.addressLine2 && <p>{defaultAddress.addressLine2}</p>}
                   <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}</p>
@@ -335,68 +337,77 @@ const ProfilePage = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8">
-              <div className="p-6 border-b border-border-light">
-                <h2 className="text-xl font-medium text-text-primary">Quick Actions</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden mt-8 font-normal">
+              <div className="p-6 border-b border-border-light font-normal">
+                <h2 className="text-xl text-text-primary font-bold">Quick Actions</h2>
               </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 font-normal">
                 <button 
                   onClick={() => setCurrentView('edit')}
                   className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
                 >
-                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <Edit2 className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm font-normal">
+                    <Edit2 className="w-5 h-5 font-normal" />
                   </div>
-                  <span className="font-medium text-sm">Edit Profile</span>
+                  <span className="text-sm font-normal">Edit Profile</span>
                 </button>
                 <Link 
                   to="/addresses"
-                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200 font-normal"
                 >
-                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <MapPin className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm font-normal">
+                    <MapPin className="w-5 h-5 font-normal" />
                   </div>
-                  <span className="font-medium text-sm">Manage Addresses</span>
+                  <span className="text-sm font-normal">Manage Addresses</span>
                 </Link>
                 <button 
                   onClick={() => setCurrentView('security')}
                   className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200"
                 >
-                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <Shield className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm font-normal">
+                    <Shield className="w-5 h-5 font-normal" />
                   </div>
-                  <span className="font-medium text-sm">Change Password</span>
+                  <span className="text-sm font-normal">Change Password</span>
+                </button>
+                <button 
+                  onClick={openPreferences}
+                  className="flex flex-col items-center justify-center gap-3 p-6 bg-surface-background text-text-secondary hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 hover:shadow-md hover:-translate-y-1 border border-transparent rounded-[20px] transition-all duration-200 font-normal"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm font-normal">
+                    <Cookie className="w-5 h-5 font-normal" />
+                  </div>
+                  <span className="text-sm font-normal">Privacy Settings</span>
                 </button>
               </div>
             </div>
           </div>
           
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-              <div className="p-6 border-b border-border-light">
-                <h2 className="text-lg font-medium text-text-primary">Recent Activity</h2>
+          <div className="space-y-8 font-normal">
+            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+              <div className="p-6 border-b border-border-light font-normal">
+                <h2 className="text-lg text-text-primary font-bold">Recent Activity</h2>
               </div>
-              <div className="p-6 space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Package className="w-5 h-5" />
+              <div className="p-6 space-y-6 font-normal">
+                <div className="flex items-center gap-4 font-normal">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-normal">
+                    <Package className="w-5 h-5 font-normal" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-primary">
+                    <p className="text-sm text-text-primary font-normal">
                       {stats ? `${stats.totalOrders} Total Orders` : 'Loading...'}
                     </p>
-                    <Link to="/orders" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View order history</Link>
+                    <Link to="/orders" className="text-xs text-brand-600 hover:text-brand-700 font-normal">View order history</Link>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
-                    <Heart className="w-5 h-5" />
+                <div className="flex items-center gap-4 font-normal">
+                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-normal">
+                    <Heart className="w-5 h-5 font-normal" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-primary">
+                    <p className="text-sm text-text-primary font-normal">
                       {stats ? `${stats.wishlistCount} Wishlist Items` : 'Loading...'}
                     </p>
-                    <Link to="/wishlist" className="text-xs text-brand-600 hover:text-brand-700 font-medium">View wishlist</Link>
+                    <Link to="/wishlist" className="text-xs text-brand-600 hover:text-brand-700 font-normal">View wishlist</Link>
                   </div>
                 </div>
               </div>
@@ -406,25 +417,25 @@ const ProfilePage = () => {
       )}
 
       {currentView === 'edit' && (
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between">
-              <h2 className="text-2xl font-medium text-text-primary">Edit Profile</h2>
-              <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
-                <X className="w-5 h-5" />
+        <div className="max-w-3xl mx-auto font-normal">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between font-normal">
+              <h2 className="text-2xl text-text-primary font-bold">Edit Profile</h2>
+              <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors font-medium">
+                <X className="w-5 h-5 font-normal" />
               </button>
             </div>
-            <div className="p-6 sm:p-8">
-              <form onSubmit={submitProfile} className="space-y-8">
+            <div className="p-6 sm:p-8 font-normal">
+              <form onSubmit={submitProfile} className="space-y-8 font-normal">
                 {isProfileDirty && (
-                  <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl font-medium border border-amber-200">
-                    <AlertCircle className="w-5 h-5" />
+                  <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 font-normal">
+                    <AlertCircle className="w-5 h-5 font-normal" />
                     You have unsaved changes.
                   </div>
                 )}
 
-                <div className="mb-8">
-                  <h3 className="text-sm font-semibold text-text-primary mb-4">Profile Photo</h3>
+                <div className="mb-8 font-normal">
+                  <h3 className="text-sm text-text-primary mb-4 font-bold">Profile Photo</h3>
                   <AvatarUploader 
                     currentAvatarUrl={profile.avatarUrl} 
                     name={profile.name} 
@@ -440,7 +451,7 @@ const ProfilePage = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-normal">
                   <Input 
                     label="Full Name" 
                     name="name" 
@@ -455,9 +466,9 @@ const ProfilePage = () => {
                     value={profile.email} 
                     disabled 
                     readOnly
-                    className="bg-surface-background opacity-70 cursor-not-allowed"
+                    className="bg-surface-background opacity-70 cursor-not-allowed font-normal"
                   />
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 font-normal">
                     <PhoneInput 
                       label="Phone Number" 
                       name="phone" 
@@ -477,13 +488,13 @@ const ProfilePage = () => {
                     max={maxBirthday}
                     error={formErrors.birthday}
                   />
-                  <div className="space-y-1">
-                    <label className="block text-sm font-semibold text-text-brand-600">Gender</label>
+                  <div className="space-y-1 font-normal">
+                    <label className="block text-sm text-text-brand-600 font-normal">Gender</label>
                     <select 
                       name="gender" 
                       value={formData.gender || ''} 
                       onChange={handleProfileChange} 
-                      className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
+                      className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm font-normal"
                     >
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
@@ -494,7 +505,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 pt-6 justify-end">
+                <div className="flex items-center gap-4 pt-6 justify-end font-normal">
                   <Button type="button" variant="outline" onClick={cancelProfileEdit}>
                     Cancel
                   </Button>
@@ -503,7 +514,7 @@ const ProfilePage = () => {
                     disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })} 
                     aria-disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })}
                     isLoading={isLoading} 
-                    className="min-w-[140px]"
+                    className="min-w-[140px] font-normal"
                   >
                     Save Changes
                   </Button>
@@ -515,24 +526,24 @@ const ProfilePage = () => {
       )}
 
       {currentView === 'security' && (
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center text-text-secondary">
-                  <Shield className="w-5 h-5" />
+        <div className="max-w-2xl mx-auto font-normal">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+            <div className="p-6 sm:p-8 border-b border-border-light flex items-center justify-between font-normal">
+              <div className="flex items-center gap-3 font-normal">
+                <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center text-text-secondary font-normal">
+                  <Shield className="w-5 h-5 font-normal" />
                 </div>
-                <h2 className="text-2xl font-medium text-text-primary">Change Password</h2>
+                <h2 className="text-2xl text-text-primary font-bold">Change Password</h2>
               </div>
               <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 font-normal" />
               </button>
             </div>
-            <div className="p-6 sm:p-8">
-              <form onSubmit={submitPassword} className="space-y-6">
+            <div className="p-6 sm:p-8 font-normal">
+              <form onSubmit={submitPassword} className="space-y-6 font-normal">
                 {passError && (
-                  <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200 mb-6">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> 
+                  <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200 mb-6 font-normal">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 font-normal" /> 
                     <span>{passError}</span>
                   </div>
                 )}
@@ -549,7 +560,7 @@ const ProfilePage = () => {
                   aria-invalid={!!passErrors.currentPassword}
                 />
                 
-                <div className="space-y-1">
+                <div className="space-y-1 font-normal">
                   <Input 
                     label="New Password" 
                     type="password" 
@@ -576,7 +587,7 @@ const ProfilePage = () => {
                   aria-invalid={!!passErrors.confirmPassword}
                 />
                 
-                <div className="flex items-center gap-4 pt-6 justify-end">
+                <div className="flex items-center gap-4 pt-6 justify-end font-normal">
                   <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
                     Cancel
                   </Button>
@@ -585,7 +596,7 @@ const ProfilePage = () => {
                     disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })} 
                     aria-disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })}
                     isLoading={isLoading} 
-                    className="min-w-[160px]"
+                    className="min-w-[160px] font-normal"
                   >
                     Update Password
                   </Button>

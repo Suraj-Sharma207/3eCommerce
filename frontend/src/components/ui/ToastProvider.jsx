@@ -52,8 +52,8 @@ const ToastProvider = () => {
             <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
                <Icon className={`w-5 h-5 ${iconColor} ${t.type === 'loading' ? 'animate-spin' : ''}`} />
             </div>
-            <div className="flex-1 min-w-0 pr-2">
-               <p className="text-sm font-semibold text-slate-800 leading-snug break-words">
+            <div className="flex-1 min-w-0 pr-2 font-normal">
+               <p className="text-sm text-slate-800 leading-snug break-words font-normal">
                   {resolveValue(t.message, t)}
                </p>
             </div>

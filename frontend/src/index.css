@@ -44,11 +44,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-600 text-white hover:bg-brand-700 font-medium py-2 px-4 rounded-md transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-brand-600 text-white hover:bg-brand-700 font-normal py-2 px-4 rounded-md transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-secondary {
-    @apply bg-white text-text-primary border border-border hover:bg-surface-background font-medium py-2 px-4 rounded-md transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-white text-text-primary border border-border hover:bg-surface-background font-normal py-2 px-4 rounded-md transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .input-field {

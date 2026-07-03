@@ -1,6 +1,78 @@
 import prisma from '../lib/prisma.js';
 
 class AdminRepository {
+  async getKpis() {
+    const [totalRevenue, totalOrders, totalCustomers, totalProducts, orderStatuses] = await Promise.all([
+      prisma.order.aggregate({ where: { paymentStatus: 'PAID' }, _sum: { totalAmount: true } }),
+      prisma.order.count(),
+      prisma.user.count({ where: { role: 'CUSTOMER' } }),
+      prisma.product.count(),
+      prisma.order.groupBy({ by: ['orderStatus'], _count: { orderStatus: true } })
+    ]);
+
+    const deliveredOrders = orderStatuses.find(s => s.orderStatus === 'DELIVERED')?._count?.orderStatus || 0;
+    const cancelledOrders = orderStatuses.find(s => s.orderStatus === 'CANCELLED')?._count?.orderStatus || 0;
+
+    return {
+      revenue: totalRevenue._sum.totalAmount || 0,
+      orders: totalOrders,
+      customers: totalCustomers,
+      products: totalProducts,
+      deliveredOrders,
+      cancelledOrders
+    };
+  }
+
+  async getRecentOrders() {
+    return prisma.order.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true } } }
+    });
+  }
+
+  async getTopProducts() {
+    const topProducts = await prisma.product.findMany({
+      orderBy: { totalSold: 'desc' },
+      take: 5,
+      include: { images: { orderBy: { displayOrder: 'asc' } } }
+    });
+    let populatedTopProducts = [];
+    if (topProducts.length > 0) {
+      const { mapProduct } = await import('../utils/productMapper.js');
+      populatedTopProducts = topProducts.map(p => ({
+        product: mapProduct(p),
+        totalSold: p.totalSold,
+        revenue: p.totalRevenue
+      }));
+    }
+    return populatedTopProducts;
+  }
+
+  async getOrderStatuses() {
+    const orderStatuses = await prisma.order.groupBy({
+      by: ['orderStatus'],
+      _count: { orderStatus: true }
+    });
+    return orderStatuses.map(status => ({
+      name: status.orderStatus,
+      value: status._count.orderStatus
+    }));
+  }
+
+  async getExtendedStats() {
+    const [mostViewed, highestRevenue, highestSelling, mostWishlisted, mostAddedToCart, lowestStock, neverSold] = await Promise.all([
+      prisma.product.findFirst({ orderBy: { totalViews: 'desc' }, select: { name: true, totalViews: true } }),
+      prisma.product.findFirst({ orderBy: { totalRevenue: 'desc' }, select: { name: true, totalRevenue: true } }),
+      prisma.product.findFirst({ orderBy: { totalSold: 'desc' }, select: { name: true, totalSold: true } }),
+      prisma.product.findFirst({ orderBy: { wishlistCount: 'desc' }, select: { name: true, wishlistCount: true } }),
+      prisma.product.findFirst({ orderBy: { cartCount: 'desc' }, select: { name: true, cartCount: true } }),
+      prisma.product.findFirst({ where: { stock: { gt: 0 } }, orderBy: { stock: 'asc' }, select: { name: true, stock: true } }),
+      prisma.product.findMany({ where: { totalSold: 0 }, take: 5, select: { name: true } })
+    ]);
+    return { mostViewed, highestRevenue, highestSelling, mostWishlisted, mostAddedToCart, lowestStock, neverSold };
+  }
+
   async getDashboardMetrics() {
     const isDev = process.env.NODE_ENV === 'development';
 
@@ -366,7 +438,13 @@ class AdminRepository {
   }
 
   async getAllCustomers({ page = 1, limit = 10, search = '', status, minDate, maxDate, sort }) {
-    const skip = (page - 1) * limit;
+    // Safe integer clamping
+    let take = parseInt(limit, 10);
+    if (!Number.isFinite(take) || take < 1) take = 10;
+    if (take > 50000) take = 50000;
+
+    let currentPage = parseInt(page, 10);
+    if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
 
     let whereClause = { role: 'CUSTOMER' };
 
@@ -399,51 +477,92 @@ class AdminRepository {
     if (sort === 'name_asc') orderBy = { name: 'asc' };
     if (sort === 'name_desc') orderBy = { name: 'desc' };
 
+    // filteredItems = matching current filters
+    const filteredItems = await prisma.user.count({ where: whereClause });
+
+    // totalItems = all customers (role = CUSTOMER, no other filters)
+    // Avoid running a second count query if no filters were applied
+    const hasAdditionalFilters = Object.keys(whereClause).length > 1;
+    const totalItems = hasAdditionalFilters 
+      ? await prisma.user.count({ where: { role: 'CUSTOMER' } })
+      : filteredItems;
+
+    const totalPages = Math.max(1, Math.ceil(filteredItems / take));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const skip = (currentPage - 1) * take;
     const customers = await prisma.user.findMany({
       where: whereClause,
       skip,
-      take: parseInt(limit, 10),
-      orderBy,
-      include: {
-        orders: {
-          select: { id: true, totalAmount: true }
-        },
-        wishlist: {
-          select: { id: true } // just need to check existence or count items if we include items
+      take,
+      orderBy
+    });
+
+    const customerIds = customers.map(c => c.id);
+
+    // Fetch order aggregates (total spend and order count) efficiently via DB engine
+    const orderAggregates = await prisma.order.groupBy({
+      by: ['userId'],
+      _sum: { totalAmount: true },
+      _count: { _all: true },
+      where: { userId: { in: customerIds } }
+    });
+
+    // Fetch wishlist counts efficiently
+    const wishlistAggregates = await prisma.wishlist.findMany({
+      where: { userId: { in: customerIds } },
+      select: {
+        userId: true,
+        _count: {
+          select: { items: true }
         }
       }
     });
 
-    const total = await prisma.user.count({ where: whereClause });
-
-    // Populate full wishlist item counts
-    const populatedCustomers = await Promise.all(customers.map(async (c) => {
-      let wishlistCount = 0;
-      if (c.wishlist) {
-        wishlistCount = await prisma.wishlistItem.count({ where: { wishlistId: c.wishlist.id } });
+    const orderStatsMap = new Map();
+    for (const agg of orderAggregates) {
+      if (agg.userId) {
+        orderStatsMap.set(agg.userId, {
+          totalSpend: agg._sum.totalAmount || 0,
+          orderCount: agg._count._all || 0
+        });
       }
+    }
 
-      const totalSpend = c.orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const wishlistStatsMap = new Map();
+    for (const wish of wishlistAggregates) {
+      if (wish.userId) {
+        wishlistStatsMap.set(wish.userId, wish._count?.items || 0);
+      }
+    }
+
+    // Populate spend and clean up fields
+    const populatedCustomers = customers.map((c) => {
+      const stats = orderStatsMap.get(c.id) || { totalSpend: 0, orderCount: 0 };
+      const wishlistCount = wishlistStatsMap.get(c.id) || 0;
 
       return {
         ...c,
-        totalSpend,
-        orderCount: c.orders.length,
+        totalSpend: stats.totalSpend,
+        orderCount: stats.orderCount,
         wishlistCount,
         password: undefined // Never send password
       };
-    }));
+    });
 
     return {
       customers: populatedCustomers,
       pagination: {
-        totalItems: total,
-        totalPages: Math.ceil(total / limit),
-        currentPage: parseInt(page),
-        itemsPerPage: parseInt(limit, 10)
+        totalItems,
+        filteredItems,
+        totalPages,
+        currentPage,
+        itemsPerPage: take,
+        pageSize: take,
       }
     };
   }
+
 
   async getCustomerById(id) {
     const customer = await prisma.user.findUnique({

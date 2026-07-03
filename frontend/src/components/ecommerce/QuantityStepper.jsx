@@ -72,13 +72,13 @@ const QuantityStepper = memo(({
         onClick={handleDecrease}
         disabled={disabled || internalQ <= min}
         whileTap={{ scale: (disabled || internalQ <= min) ? 1 : 0.9 }}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-50 text-brand-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 shrink-0"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-50 text-brand-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 shrink-0 font-normal"
         aria-label="Decrease quantity"
       >
-        <Minus className="w-4 h-4" strokeWidth={2.5} />
+        <Minus className="w-4 h-4 font-normal" strokeWidth={2.5} />
       </motion.button>
 
-      <div className="flex-1 flex justify-center items-center overflow-hidden min-w-[32px] select-none">
+      <div className="flex-1 flex justify-center items-center overflow-hidden min-w-[32px] select-none font-normal">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={internalQ}
@@ -101,7 +101,7 @@ const QuantityStepper = memo(({
         className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-50 text-brand-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 shrink-0"
         aria-label="Increase quantity"
       >
-        <Plus className="w-4 h-4" strokeWidth={2.5} />
+        <Plus className="w-4 h-4 font-normal" strokeWidth={2.5} />
       </motion.button>
     </div>
   );

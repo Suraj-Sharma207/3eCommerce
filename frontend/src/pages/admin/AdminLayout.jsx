@@ -3,10 +3,12 @@ import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { useBrandingStore } from '../../store/brandingStore';
 import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X, Layout } from 'lucide-react';
+import useConfirmStore from '../../store/confirmStore';
 
 const AdminLayout = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { branding } = useBrandingStore();
+  const { confirm } = useConfirmStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -17,6 +19,19 @@ const AdminLayout = () => {
   if (user?.role !== 'ADMIN') {
     return <Navigate to="/" replace />;
   }
+
+  const handleLogout = async () => {
+    const isConfirmed = await confirm({
+      title: 'Confirm Logout',
+      description: 'Are you sure you want to log out of the Admin Portal?',
+      confirmText: 'Log Out',
+      cancelText: 'Cancel'
+    });
+    if (isConfirmed) {
+      setIsSidebarOpen(false);
+      logout();
+    }
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -29,11 +44,11 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="h-[100dvh] bg-surface-background flex overflow-hidden">
+    <div className="h-[100dvh] bg-surface-background flex overflow-hidden font-normal">
       {/* Mobile Sidebar Overlay Backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300 font-normal"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -46,12 +61,12 @@ const AdminLayout = () => {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="h-20 flex items-center justify-between px-8 border-b border-border-light flex-shrink-0">
-          <NavLink to="/" className="text-2xl font-black tracking-tighter text-text-brand-600 flex items-center gap-2">
+        <div className="h-20 flex items-center justify-between px-8 border-b border-border-light flex-shrink-0 font-normal">
+          <NavLink to="/" className="text-2xl tracking-tighter text-text-brand-600 flex items-center gap-2 font-normal">
             {branding?.logoUrl ? (
-              <img src={branding.logoUrl} alt={branding?.platformName || 'Admin'} className="h-10 w-auto" />
+              <img src={branding.logoUrl} alt={branding?.platformName || 'Admin'} className="h-10 w-auto font-normal" />
             ) : (
-              <span>{branding?.platformName || 'Luxe'}<span className="text-brand-600">Admin</span></span>
+              <span>{branding?.platformName || 'Luxe'}<span className="text-brand-600 font-normal">Admin</span></span>
             )}
           </NavLink>
           <button 
@@ -59,11 +74,11 @@ const AdminLayout = () => {
             className="lg:hidden p-2 -mr-2 rounded-xl text-text-secondary hover:bg-surface-background transition-colors"
             aria-label="Close sidebar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 font-normal" />
           </button>
         </div>
         
-        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto font-normal">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path) || (item.path === '/admin/dashboard' && location.pathname === '/admin');
@@ -79,57 +94,54 @@ const AdminLayout = () => {
                     : 'text-text-secondary hover:bg-border-light hover:text-text-brand-600'}
                 `}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-5 h-5 font-normal" />
                 {item.name}
               </NavLink>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-border-light">
+        <div className="p-4 border-t border-border-light font-normal">
           <button 
-            onClick={() => {
-              setIsSidebarOpen(false);
-              logout();
-            }}
+            onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-semibold text-danger-600 hover:bg-danger-50 transition-colors"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 font-normal" />
             Logout
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 flex flex-col h-full">
-        <header className="h-20 flex-shrink-0 bg-white border-b border-border flex items-center justify-between px-4 md:px-8 z-10">
-          <div className="flex items-center gap-2">
+      <main className="flex-1 min-w-0 flex flex-col h-full font-normal">
+        <header className="h-20 flex-shrink-0 bg-white border-b border-border flex items-center justify-between px-4 md:px-8 z-10 font-normal">
+          <div className="flex items-center gap-2 font-normal">
             <button 
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden p-2 -ml-2 rounded-xl text-text-secondary hover:bg-surface-background transition-colors mr-1"
               aria-label="Open sidebar"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6 font-normal" />
             </button>
             <h2 className="text-xl font-bold text-text-brand-600">Admin Portal</h2>
           </div>
           
-          <NavLink to="/admin/profile" className="flex items-center gap-4 hover:bg-surface-background p-2 rounded-xl transition-colors">
-            <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold overflow-hidden border border-brand-200">
+          <NavLink to="/admin/profile" className="flex items-center gap-4 hover:bg-surface-background p-2 rounded-xl transition-colors font-normal">
+            <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 overflow-hidden border border-brand-200 font-normal">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover font-normal" />
               ) : (
                 user.name?.charAt(0) || 'A'
               )}
             </div>
-            <div className="text-sm hidden sm:block">
-              <p className="font-bold text-text-brand-600">{user.name}</p>
-              <p className="text-text-muted">{user.role}</p>
+            <div className="text-sm hidden sm:block font-normal">
+              <p className="text-text-brand-600 font-normal">{user.name}</p>
+              <p className="text-text-muted font-medium">{user.role}</p>
             </div>
           </NavLink>
         </header>
         
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto overscroll-contain">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto overscroll-contain font-normal">
           <Outlet />
         </div>
       </main>

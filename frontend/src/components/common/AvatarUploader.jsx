@@ -93,13 +93,13 @@ const AvatarUploader = ({
   const displayUrl = previewUrl || currentAvatarUrl;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col items-center gap-4 w-full font-normal">
       <input
         ref={inputRef}
         type="file"
         accept="image/jpeg, image/png, image/webp"
         onChange={handleChange}
-        className="hidden"
+        className="hidden font-normal"
         disabled={disabled || isUploading}
       />
       
@@ -115,40 +115,40 @@ const AvatarUploader = ({
           <img 
             src={displayUrl} 
             alt="Avatar" 
-            className="w-full h-full object-cover aspect-square" 
+            className="w-full h-full object-cover aspect-square font-normal" 
           />
         ) : (
-          <div className="w-full h-full bg-brand-50 text-brand-600 flex items-center justify-center text-3xl font-bold">
+          <div className="w-full h-full bg-brand-50 text-brand-600 flex items-center justify-center text-3xl font-normal">
             {getInitials(name)}
           </div>
         )}
 
         {!disabled && !isUploading && (
           <div className={`absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white transition-opacity duration-200 ${previewFile ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`}>
-            <Camera className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-medium uppercase tracking-wider">Change Photo</span>
+            <Camera className="w-6 h-6 mb-1 font-normal" />
+            <span className="text-[10px] uppercase tracking-wider font-normal">Change Photo</span>
           </div>
         )}
 
         {isUploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-            <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm font-normal">
+            <Loader2 className="w-8 h-8 text-brand-600 animate-spin font-normal" />
           </div>
         )}
       </div>
 
       {previewFile && (
-        <div className="w-full max-w-[320px] bg-white border border-border rounded-xl p-4 flex flex-col items-center shadow-sm animate-in zoom-in-95 duration-200">
-          <div className="flex items-center gap-2 text-text-primary font-bold mb-1">
-            <AlertCircle className="w-4 h-4 text-amber-500" />
+        <div className="w-full max-w-[320px] bg-white border border-border rounded-xl p-4 flex flex-col items-center shadow-sm animate-in zoom-in-95 duration-200 font-normal">
+          <div className="flex items-center gap-2 text-text-primary mb-1 font-normal">
+            <AlertCircle className="w-4 h-4 text-amber-500 font-normal" />
             Unsaved changes
           </div>
-          <p className="text-xs text-text-secondary text-center mb-4">Your new profile photo is ready to be saved.</p>
-          <div className="flex gap-3 w-full">
-            <Button type="button" variant="outline" onClick={handleCancel} disabled={isUploading} className="flex-1 text-sm py-2">
+          <p className="text-xs text-text-secondary text-center mb-4 font-normal">Your new profile photo is ready to be saved.</p>
+          <div className="flex gap-3 w-full font-normal">
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isUploading} className="flex-1 text-sm py-2 font-normal">
               Cancel
             </Button>
-            <Button type="button" onClick={handleSave} isLoading={isUploading} className="flex-1 text-sm py-2">
+            <Button type="button" onClick={handleSave} isLoading={isUploading} className="flex-1 text-sm py-2 font-normal">
               {isUploading ? 'Uploading...' : 'Save Photo'}
             </Button>
           </div>

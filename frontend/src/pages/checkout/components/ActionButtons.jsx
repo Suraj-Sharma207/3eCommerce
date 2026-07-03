@@ -6,15 +6,15 @@ import Button from '../../../components/ui/Button';
 
 const ActionButtons = ({ orderId }) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-500 w-full">
+    <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-500 w-full font-normal">
       {/* Primary: Track Order / View Orders */}
       <Button 
         as={Link} 
         to={`/orders`} 
         size="lg" 
-        className="flex-1 shadow-sm hover:shadow-md transition-all duration-300"
+        className="flex-1 shadow-sm hover:shadow-md transition-all duration-300 font-normal"
       >
-        <Package className="w-4 h-4 mr-2" />
+        <Package className="w-4 h-4 mr-2 font-normal" />
         View My Orders
       </Button>
 
@@ -24,9 +24,9 @@ const ActionButtons = ({ orderId }) => {
         to="/products" 
         variant="outline" 
         size="lg" 
-        className="flex-1 group bg-white hover:bg-gray-50 transition-all duration-300"
+        className="flex-1 group bg-white hover:bg-gray-50 transition-all duration-300 font-normal"
       >
-        <ShoppingBag className="w-4 h-4 mr-2 text-text-muted group-hover:text-text-brand-600 transition-colors" />
+        <ShoppingBag className="w-4 h-4 mr-2 text-text-muted group-hover:text-text-brand-600 transition-colors font-medium" />
         Continue Shopping
       </Button>
 
@@ -34,13 +34,13 @@ const ActionButtons = ({ orderId }) => {
       <Button 
         variant="ghost" 
         size="lg" 
-        className="flex-1 bg-white border-transparent hover:bg-gray-100 transition-all duration-300 text-text-secondary"
+        className="flex-1 bg-white border-transparent hover:bg-gray-100 transition-all duration-300 text-text-secondary font-normal"
         onClick={() => {
           // Placeholder for invoice download
           toast.info("Invoice generation will be available shortly.");
         }}
       >
-        <Download className="w-4 h-4 mr-2" />
+        <Download className="w-4 h-4 mr-2 font-normal" />
         Invoice
       </Button>
     </div>

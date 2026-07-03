@@ -26,27 +26,27 @@ const FAQ = () => {
 
   return (
     <HomeSection title="Frequently Asked Questions" subtitle="Everything you need to know">
-      <div className="max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4 font-normal">
         {faqs.map((faq, index) => (
           <div 
             key={index} 
-            className="border border-border-light rounded-2xl overflow-hidden bg-white shadow-sm transition-all"
+            className="border border-border-light rounded-2xl overflow-hidden bg-white shadow-sm transition-all font-normal"
           >
             <button
-              className="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none"
+              className="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none font-normal"
               onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
             >
-              <span className="font-bold text-text-primary pr-4">{faq.question}</span>
+              <span className="text-text-primary pr-4 font-normal">{faq.question}</span>
               {openIndex === index ? (
-                <ChevronUp className="w-5 h-5 text-brand-600 flex-shrink-0" />
+                <ChevronUp className="w-5 h-5 text-brand-600 flex-shrink-0 font-normal" />
               ) : (
-                <ChevronDown className="w-5 h-5 text-text-muted flex-shrink-0" />
+                <ChevronDown className="w-5 h-5 text-text-muted flex-shrink-0 font-medium" />
               )}
             </button>
             <div 
               className={`px-6 overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'pb-4 max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
             >
-              <p className="text-text-secondary">{faq.answer}</p>
+              <p className="text-text-secondary font-normal">{faq.answer}</p>
             </div>
           </div>
         ))}

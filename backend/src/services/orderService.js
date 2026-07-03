@@ -25,8 +25,10 @@ class OrderService {
         // Emit order.created event
         emailEvents.emit('order.created', order);
 
-        import('../controllers/homeController.js').then(({ homeCache }) => {
-          homeCache.clear();
+        import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
+          cacheInvalidateByPattern('home:*');
+          cacheInvalidateByPattern('products:*');
+          cacheInvalidateByPattern('admin:dashboard:*');
         });
 
         // Check for low stock on any of the ordered items
@@ -62,6 +64,10 @@ class OrderService {
       throw new Error('Invalid order status');
     }
     const order = await orderRepository.updateOrderStatus(orderId, status);
+    
+    import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
+      cacheInvalidateByPattern('admin:dashboard:*');
+    });
 
     // Emit status transition events
     try {
@@ -69,7 +75,10 @@ class OrderService {
         emailEvents.emit('order.shipped', { order });
       } else if (status === 'DELIVERED') {
         emailEvents.emit('order.delivered', { order, deliveredDate: new Date().toLocaleDateString() });
-        import('../controllers/homeController.js').then(({ homeCache }) => homeCache.clear());
+        import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
+          cacheInvalidateByPattern('home:*');
+          cacheInvalidateByPattern('products:*');
+        });
       } else if (status === 'CANCELLED') {
         emailEvents.emit('order.cancelled', { order, cancellationReason: 'Fulfillment cancellation' });
         if (order.paymentStatus === 'PAID') {
@@ -92,21 +101,44 @@ class OrderService {
   }
 
   async getAllOrders({ page = 1, limit = 10, search = '', status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }) {
-    const skip = (page - 1) * limit;
-    const take = parseInt(limit, 10);
-    
-    const [orders, totalItems] = await Promise.all([
-      orderRepository.getAllOrders({ skip, take, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }),
-      orderRepository.countAllOrders({ search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount })
-    ]);
+    // Safe integer clamping
+    let take = parseInt(limit, 10);
+    if (!Number.isFinite(take) || take < 1) take = 10;
+    if (take > 50000) take = 50000;
+
+    let currentPage = parseInt(page, 10);
+    if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
+
+    // filteredItems = total matching current filters
+    const filteredItems = await orderRepository.countAllOrders({ search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount });
+
+    // totalItems = all orders (no filters)
+    const totalItemsCacheKey = 'admin:orders:total_count';
+    let totalItems;
+    const { cacheGet, cacheSet } = await import('./cacheService.js');
+    const cachedTotal = await cacheGet(totalItemsCacheKey);
+    if (cachedTotal !== null) {
+      totalItems = cachedTotal;
+    } else {
+      totalItems = await orderRepository.countAllOrders({});
+      await cacheSet(totalItemsCacheKey, totalItems, 300); // 5 mins
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filteredItems / take));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const skip = (currentPage - 1) * take;
+    const orders = await orderRepository.getAllOrders({ skip, take, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort });
 
     return {
       orders,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalItems / take),
+        currentPage,
+        totalPages,
         totalItems,
-        itemsPerPage: take
+        filteredItems,
+        itemsPerPage: take,
+        pageSize: take,
       }
     };
   }

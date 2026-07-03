@@ -23,8 +23,8 @@ const SortDropdown = ({ options, value, order, onChange }) => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <div className="flex items-center">
+    <div className="relative font-normal" ref={dropdownRef}>
+      <div className="flex items-center font-normal">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -33,9 +33,9 @@ const SortDropdown = ({ options, value, order, onChange }) => {
             ${value ? 'bg-brand-50 border-brand-200' : ''}
           `}
         >
-          <span className="flex items-center gap-1.5 truncate">
-            <ArrowDownAZ className="w-4 h-4 text-text-muted shrink-0" />
-            <span className="font-bold truncate max-w-[100px]">{selectedOption?.label || 'Sort'}</span>
+          <span className="flex items-center gap-1.5 truncate font-normal">
+            <ArrowDownAZ className="w-4 h-4 text-text-muted shrink-0 font-medium" />
+            <span className="truncate max-w-[100px] font-normal">{selectedOption?.label || 'Sort'}</span>
           </span>
         </button>
         <button
@@ -47,12 +47,12 @@ const SortDropdown = ({ options, value, order, onChange }) => {
             ${value ? 'bg-brand-50 border-brand-200 hover:bg-brand-100' : ''}
           `}
         >
-          {order === 'asc' ? <ArrowUp className="w-4 h-4 text-text-muted shrink-0" /> : <ArrowDown className="w-4 h-4 text-text-muted shrink-0" />}
+          {order === 'asc' ? <ArrowUp className="w-4 h-4 text-text-muted shrink-0 font-medium" /> : <ArrowDown className="w-4 h-4 text-text-muted shrink-0 font-medium" />}
         </button>
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden">
+        <div className="absolute right-0 z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden font-normal">
           {options.map((option) => (
             <button
               key={option.value}
@@ -65,7 +65,7 @@ const SortDropdown = ({ options, value, order, onChange }) => {
               <span className={value === option.value ? 'font-bold text-brand-600' : 'text-text-primary'}>
                 {option.label}
               </span>
-              {value === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0" />}
+              {value === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0 font-normal" />}
             </button>
           ))}
         </div>

@@ -2,7 +2,7 @@ import api from './api';
 
 const getProducts = async ({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }, options = {}) => {
   const params = { page, limit, search };
-  
+
   if (category && category !== 'All') params.category = category;
   if (brand && brand !== 'All') params.brand = brand;
   if (minRating !== undefined && minRating !== '') params.minRating = minRating;
@@ -20,7 +20,7 @@ const getProducts = async ({ page = 1, limit = 15, search = '', category, brand,
 
 const getAdminProducts = async ({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort, includeInventoryCounts }, options = {}) => {
   const params = { page, limit, search };
-  
+
   if (category && category !== 'All') params.category = category;
   if (brand && brand !== 'All') params.brand = brand;
   if (minRating !== undefined && minRating !== '') params.minRating = minRating;
@@ -33,6 +33,35 @@ const getAdminProducts = async ({ page = 1, limit = 15, search = '', category, b
   if (includeInventoryCounts) params.includeInventoryCounts = includeInventoryCounts;
 
   const response = await api.get('/admin/products', { params, ...options });
+  return response.data;
+};
+
+/**
+ * Fetch ALL matching product IDs (no pagination) for the current filter state.
+ * Used by the enterprise "Select All" header checkbox.
+ */
+const getAdminFilteredProductIds = async ({ search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sale, sort } = {}, options = {}) => {
+  const params = { search };
+  if (category && category !== 'All') params.category = category;
+  if (brand && brand !== 'All') params.brand = brand;
+  if (minRating !== undefined && minRating !== '') params.minRating = minRating;
+  if (minPrice !== undefined && minPrice !== '') params.minPrice = minPrice;
+  if (maxPrice !== undefined && maxPrice !== '') params.maxPrice = maxPrice;
+  if (inStock) params.inStock = inStock;
+  if (stockStatus) params.stockStatus = stockStatus;
+  if (sale) params.sale = sale;
+  if (sort) params.sort = sort;
+
+  const response = await api.get('/admin/products/ids', { params, ...options });
+  return response.data;
+};
+
+/**
+ * Bulk-delete products by ID array.
+ * DELETE /admin/products/bulk  { productIds: string[] }
+ */
+const bulkDeleteProducts = async (productIds) => {
+  const response = await api.delete('/admin/products/bulk', { data: { productIds } });
   return response.data;
 };
 
@@ -131,9 +160,47 @@ const getProductImages = async (productId) => {
   return response.data;
 };
 
+const importPreview = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await api.post('/products/import-preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+const importRow = async (row) => {
+  const response = await api.post('/products/import-row', row);
+  return response.data;
+};
+
+const downloadCsvTemplate = async () => {
+  const response = await api.get('/products/import-template/csv', { responseType: 'blob' });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'product_import_template.csv');
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
+const downloadExcelTemplate = async () => {
+  const response = await api.get('/products/import-template/xlsx', { responseType: 'blob' });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'product_import_template.xlsx');
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
 export default {
   getProducts,
   getAdminProducts,
+  getAdminFilteredProductIds,
+  bulkDeleteProducts,
   getProductById,
   getProductsHome,
   createProduct,
@@ -146,4 +213,8 @@ export default {
   reorderProductImages,
   getProductImages,
   getRecommendedProducts,
+  importPreview,
+  importRow,
+  downloadCsvTemplate,
+  downloadExcelTemplate,
 };

@@ -108,28 +108,40 @@ router.post('/logout-all', async (req, res, next) => {
 router.get('/audit-logs', async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const take = parseInt(limit, 10);
-    const skip = (parseInt(page, 10) - 1) * take;
 
-    const [logs, totalItems] = await Promise.all([
-      prisma.securityLog.findMany({
-        include: {
-          user: { select: { id: true, name: true, email: true, role: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take
-      }),
-      prisma.securityLog.count()
-    ]);
+    // Safe integer clamping
+    let take = parseInt(limit, 10);
+    if (!Number.isFinite(take) || take < 1) take = 10;
+    if (take > 50000) take = 50000;
+
+    let currentPage = parseInt(page, 10);
+    if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
+
+    // totalItems = filteredItems (audit logs have no additional filters)
+    const totalItems = await prisma.securityLog.count();
+    const totalPages = Math.max(1, Math.ceil(totalItems / take));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const skip = (currentPage - 1) * take;
+
+    const logs = await prisma.securityLog.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take
+    });
 
     return successResponse(res, 'Audit logs retrieved', {
       logs,
       pagination: {
-        currentPage: parseInt(page, 10),
-        totalPages: Math.ceil(totalItems / take),
+        currentPage,
+        totalPages,
         totalItems,
-        itemsPerPage: take
+        filteredItems: totalItems,
+        itemsPerPage: take,
+        pageSize: take,
       }
     }, 200);
   } catch (error) {

@@ -25,13 +25,13 @@ const CouponCard = ({ onApplyCoupon }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-5 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-5 shadow-sm font-normal">
       <h3 className="font-bold text-[#1B2340] text-sm mb-4">Have a referral code?</h3>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-            <Tag className="w-4 h-4" />
+      <div className="flex gap-2 font-normal">
+        <div className="relative flex-1 font-normal">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 font-normal">
+            <Tag className="w-4 h-4 font-normal" />
           </div>
           <input
             type="text"
@@ -51,21 +51,21 @@ const CouponCard = ({ onApplyCoupon }) => {
           onClick={handleApply}
           disabled={!code.trim() || status === 'loading' || status === 'success'}
           isLoading={status === 'loading'}
-          className="px-5 rounded-xl bg-[#1B2340] hover:bg-[#252f52] border-none text-white font-bold shrink-0"
+          className="px-5 rounded-xl bg-[#1B2340] hover:bg-[#252f52] border-none text-white shrink-0 font-normal"
         >
           Apply
         </Button>
       </div>
 
       {status === 'success' && (
-        <div className="flex items-center gap-2 mt-3 text-sm text-emerald-600 font-semibold">
-          <CheckCircle2 className="w-4 h-4" />
+        <div className="flex items-center gap-2 mt-3 text-sm text-emerald-600 font-normal">
+          <CheckCircle2 className="w-4 h-4 font-normal" />
           {message}
         </div>
       )}
       {status === 'error' && (
-        <div className="flex items-center gap-2 mt-3 text-sm text-red-500 font-semibold">
-          <AlertCircle className="w-4 h-4" />
+        <div className="flex items-center gap-2 mt-3 text-sm text-red-500 font-normal">
+          <AlertCircle className="w-4 h-4 font-normal" />
           {message}
         </div>
       )}

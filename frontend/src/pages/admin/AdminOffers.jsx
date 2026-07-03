@@ -7,6 +7,9 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/ui/Pagination';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import TableLoadingOverlay from '../../components/ui/TableLoadingOverlay';
 import { isFormValid } from '../../utils/validators';
 import useAdminFilters from '../../hooks/useAdminFilters';
 import AdminFilterBar from '../../components/admin/filters/AdminFilterBar';
@@ -60,14 +63,34 @@ const getNextDayString = (dateStr) => {
 };
 
 const AdminOffers = () => {
-  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion, pagination, setItemsPerPage } = usePromotionStore();
-  const { search, setSearch, filters, updateFilter, resetFilters, isInitialized } = useAdminFilters({
+  const { promotions, isLoading, fetchPromotions, createPromotion, updatePromotion, deletePromotion, pagination } = usePromotionStore();
+  const { search, setSearch, filters, updateFilter, resetFilters, setPage, setLimit, isInitialized } = useAdminFilters({
     sort: 'newest'
   });
   const { confirm } = useConfirmStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
+  const DEFAULT_LIMIT = 10;
+  const currentPage = parseInt(filters.page, 10) || 1;
+  const itemsPerPage = parseInt(filters.limit, 10) || DEFAULT_LIMIT;
+
+  const hasActiveFilters = Boolean(
+    search ||
+    (filters.status && filters.status !== 'All') ||
+    (filters.type && filters.type !== 'All') ||
+    (filters.applyTo && filters.applyTo !== 'All')
+  );
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    fetchPromotions(currentPage, { 
+      search: filters.search || search || '', 
+      filters,
+      limit: itemsPerPage
+    });
+  }, [filters, isInitialized, fetchPromotions]);
+
   const initialForm = {
     name: '',
     description: '',
@@ -84,11 +107,6 @@ const AdminOffers = () => {
 
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    fetchPromotions(1, { search: filters.search || '', filters });
-  }, [filters, isInitialized, fetchPromotions]);
 
   const handleOpenModal = (promo = null) => {
     setErrors({});
@@ -164,19 +182,20 @@ const AdminOffers = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-extrabold text-text-brand-600 flex items-center gap-2">
-          <Tag className="w-6 h-6" /> Offers & Promotions
+    <div className="space-y-6 font-normal">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-normal">
+        <h1 className="text-2xl text-text-brand-600 flex items-center gap-2 font-bold">
+          <Tag className="w-6 h-6 font-normal" /> Offers & Promotions
         </h1>
         <Button onClick={() => handleOpenModal()} className="shrink-0">
-          <Plus className="w-4 h-4 mr-2" /> New Campaign
+          <Plus className="w-4 h-4 mr-2 font-normal" /> New Campaign
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className={`bg-white rounded-2xl shadow-sm border border-border flex flex-col relative ${isLoading ? 'overflow-hidden' : ''}`} style={{ maxHeight: '80vh' }}>
+        <TableLoadingOverlay isLoading={isLoading} text="Loading offers..." />
         {/* Toolbar */}
-        <div className="p-4 border-b border-border bg-surface-background">
+        <div className="p-4 border-b border-border bg-surface-background font-normal">
           <AdminFilterBar 
             search={search} 
             onSearchChange={setSearch} 
@@ -209,35 +228,31 @@ const AdminOffers = () => {
           </AdminFilterBar>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider font-bold border-b border-border">
-                <th className="p-4 pl-6">Offer Details</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Duration</th>
-                <th className="p-4 text-right">Actions</th>
+        <div className={`flex-1 min-h-0 relative ${isLoading ? 'overflow-hidden' : 'overflow-auto'}`}>
+          <table className="w-full text-left border-collapse font-normal">
+            <thead className="sticky top-0 z-10 font-normal">
+              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider border-b border-border font-medium">
+                <th className="p-4 pl-6 font-normal">Offer Details</th>
+                <th className="p-4 font-normal">Status</th>
+                <th className="p-4 font-normal">Duration</th>
+                <th className="p-4 text-right font-normal">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-100">
-              {isLoading ? (
+            <tbody className="divide-y divide-secondary-100 font-normal">
+              {promotions.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-12 text-center text-text-muted">Loading...</td>
-                </tr>
-              ) : promotions.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="p-12 text-center text-text-muted">
+                  <td colSpan="4" className="p-12 text-center text-text-muted font-medium">
                     No promotions found.
                   </td>
                 </tr>
               ) : (
                 promotions.map((promo) => (
-                  <tr key={promo.id} className="hover:bg-surface-background transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-text-primary">{promo.name}</div>
-                      <div className="text-xs text-text-muted">{promo.type} • {promo.applyTo}</div>
+                  <tr key={promo.id} className="hover:bg-surface-background transition-colors font-normal">
+                    <td className="px-6 py-4 font-normal">
+                      <div className="text-text-primary font-normal">{promo.name}</div>
+                      <div className="text-xs text-text-muted font-medium">{promo.type} • {promo.applyTo}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 font-normal">
                       <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
                         promo.status === 'ENABLED' ? 'bg-green-100 text-green-800' :
                         promo.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
@@ -246,16 +261,16 @@ const AdminOffers = () => {
                         {promo.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-text-secondary whitespace-nowrap font-normal">
                       <div>{new Date(promo.startDate).toLocaleDateString()}</div>
-                      <div className="text-xs text-text-muted">to {new Date(promo.endDate).toLocaleDateString()}</div>
+                      <div className="text-xs text-text-muted font-medium">to {new Date(promo.endDate).toLocaleDateString()}</div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right font-normal">
                       <button onClick={() => handleOpenModal(promo)} className="p-2 text-text-muted hover:text-brand-600 transition-colors">
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4 font-normal" />
                       </button>
                       <button onClick={() => handleDelete(promo.id)} className="p-2 text-text-muted hover:text-error transition-colors">
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 font-normal" />
                       </button>
                     </td>
                   </tr>
@@ -265,17 +280,24 @@ const AdminOffers = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Sticky Pagination Footer */}
         {pagination && pagination.totalPages > 0 && (
-          <div className="p-4 border-t border-border bg-surface-background">
-            <Pagination 
-              currentPage={pagination.currentPage} 
-              totalPages={pagination.totalPages} 
-              onPageChange={(page) => fetchPromotions(page, { search, filters })} 
-              itemsPerPage={pagination.itemsPerPage}
+          <div className="shrink-0 border-t border-border bg-white shadow-[0_-1px_4px_rgba(0,0,0,0.06)] px-4 py-3 font-normal">
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              filteredItems={pagination.filteredItems}
+              isFiltered={hasActiveFilters}
+              label="Offers"
+              onPageChange={(page) => {
+                setPage(page);
+                fetchPromotions(page, { search: filters.search || search || '', filters, limit: itemsPerPage });
+              }}
+              itemsPerPage={itemsPerPage}
               onItemsPerPageChange={(limit) => {
-                setItemsPerPage(limit);
-                fetchPromotions(1, { search, filters });
+                setLimit(limit);
+                fetchPromotions(1, { search: filters.search || search || '', filters, limit });
               }}
             />
           </div>
@@ -283,30 +305,30 @@ const AdminOffers = () => {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? 'Edit Campaign' : 'Create Campaign'}>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 font-normal">
+          <div className="grid grid-cols-2 gap-4 font-normal">
             <Input label="Campaign Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary">Status</label>
-              <select className="w-full px-4 py-3 rounded-[12px] border border-border" value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}>
+            <div className="space-y-1.5 font-normal">
+              <label className="text-sm text-text-primary font-normal">Status</label>
+              <select className="w-full px-4 py-3 rounded-[12px] border border-border font-normal" value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}>
                 <option value="DRAFT">Draft</option>
                 <option value="ENABLED">Enabled</option>
                 <option value="DISABLED">Disabled</option>
               </select>
             </div>
             
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary">Type</label>
-              <select className="w-full px-4 py-3 rounded-[12px] border border-border" value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}>
+            <div className="space-y-1.5 font-normal">
+              <label className="text-sm text-text-primary font-normal">Type</label>
+              <select className="w-full px-4 py-3 rounded-[12px] border border-border font-normal" value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}>
                 <option value="PERCENTAGE_DISCOUNT">Percentage Discount</option>
                 <option value="FLAT_DISCOUNT">Flat Discount</option>
               </select>
             </div>
             <Input label="Discount Value" type="number" value={formData.discountValue} onChange={(e) => setFormData({...formData, discountValue: e.target.value})} required />
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary">Apply To</label>
-              <select className="w-full px-4 py-3 rounded-[12px] border border-border" value={formData.applyTo} onChange={(e) => setFormData({...formData, applyTo: e.target.value})}>
+            <div className="space-y-1.5 font-normal">
+              <label className="text-sm text-text-primary font-normal">Apply To</label>
+              <select className="w-full px-4 py-3 rounded-[12px] border border-border font-normal" value={formData.applyTo} onChange={(e) => setFormData({...formData, applyTo: e.target.value})}>
                 <option value="STORE">Entire Store</option>
                 <option value="CATEGORY">Specific Categories</option>
                 <option value="BRAND">Specific Brands</option>
@@ -340,18 +362,18 @@ const AdminOffers = () => {
             />
             
             {formData.applyTo === 'CATEGORY' && (
-              <div className="col-span-2">
+              <div className="col-span-2 font-normal">
                 <Input label="Categories (Comma separated)" value={formData.categories} onChange={(e) => setFormData({...formData, categories: e.target.value})} placeholder="Living Room, Bedroom" />
               </div>
             )}
             {formData.applyTo === 'BRAND' && (
-              <div className="col-span-2">
+              <div className="col-span-2 font-normal">
                 <Input label="Brands (Comma separated)" value={formData.brands} onChange={(e) => setFormData({...formData, brands: e.target.value})} placeholder="FurnitureCo, LuxeDesign" />
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-4 border-t font-normal">
             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button type="submit" isLoading={isLoading} disabled={!isFormValid(errors, { name: formData.name, discountValue: formData.discountValue, startDate: formData.startDate, endDate: formData.endDate })}>Save Campaign</Button>
           </div>

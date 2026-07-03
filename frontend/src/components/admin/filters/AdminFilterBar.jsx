@@ -9,11 +9,11 @@ const AdminFilterBar = ({
   onReset
 }) => {
   return (
-    <div className="w-full">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="w-full font-normal">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-normal">
         {/* Search Input */}
-        <div className="relative w-full md:max-w-sm shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+        <div className="relative w-full md:max-w-sm shrink-0 font-normal">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted font-medium" />
           <input 
             type="text" 
             placeholder="Search..." 
@@ -24,7 +24,7 @@ const AdminFilterBar = ({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto font-normal">
           {children}
           {onReset && <ResetFiltersButton onReset={onReset} />}
         </div>

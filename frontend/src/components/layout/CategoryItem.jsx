@@ -6,7 +6,7 @@ const CategoryItem = ({ category, isActive }) => {
   return (
     <Link
       to={`/products?category=${encodeURIComponent(category.name)}`}
-      className="relative px-4 py-3 group whitespace-nowrap outline-none flex items-center h-full"
+      className="relative px-4 py-3 group whitespace-nowrap outline-none flex items-center h-full font-normal"
     >
       <span
         className={`text-sm font-medium transition-colors duration-200 ${
@@ -20,12 +20,12 @@ const CategoryItem = ({ category, isActive }) => {
       {isActive && (
         <motion.div
           layoutId="activeCategory"
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600 rounded-t-full"
+          className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600 rounded-t-full font-normal"
           initial={false}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         />
       )}
-      <div className="absolute inset-0 rounded-md ring-2 ring-brand-500 opacity-0 group-focus-visible:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 rounded-md ring-2 ring-brand-500 opacity-0 group-focus-visible:opacity-100 transition-opacity font-normal" />
     </Link>
   );
 };

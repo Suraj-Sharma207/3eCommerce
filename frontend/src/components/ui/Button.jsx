@@ -66,8 +66,8 @@ const Button = ({
       
       {/* Absolute positioned spinner */}
       {isLoading && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 animate-spin" />
+        <span className="absolute inset-0 flex items-center justify-center font-normal">
+          <Loader2 className="w-5 h-5 animate-spin font-normal" />
         </span>
       )}
     </Component>

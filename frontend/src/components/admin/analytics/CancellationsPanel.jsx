@@ -11,16 +11,16 @@ const CancellationsPanel = () => {
   const { summary, cancelRate, refundAmount } = data;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-normal">
       {/* Summary Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 font-normal">
         <StatCard title="Total Cancelled" value={summary.total} highlight />
         <StatCard title="Today" value={summary.today} />
         <StatCard title="This Week" value={summary.thisWeek} />
         <StatCard title="This Month" value={summary.thisMonth} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 font-normal">
         <StatCard 
           title="Cancellation Rate" 
           value={`${cancelRate.toFixed(1)}%`} 
@@ -37,7 +37,7 @@ const CancellationsPanel = () => {
 
 const StatCard = ({ title, value, highlight }) => (
   <div className={`p-4 rounded-xl border border-border ${highlight ? 'bg-danger-50' : 'bg-white'}`}>
-    <p className="text-xs font-bold text-text-muted mb-1">{title}</p>
+    <p className="text-xs text-text-muted mb-1 font-medium">{title}</p>
     <p className={`text-lg font-extrabold ${highlight ? 'text-danger-600' : 'text-text-primary'}`}>{value}</p>
   </div>
 );

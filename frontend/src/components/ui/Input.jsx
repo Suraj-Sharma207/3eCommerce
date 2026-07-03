@@ -27,12 +27,12 @@ const Input = forwardRef(({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-sm font-semibold text-text-primary" htmlFor={id}>
+        <label className="text-sm text-text-primary font-normal" htmlFor={id}>
           {label}
-          {props.required && <span className="text-danger-600 ml-0.5">*</span>}
+          {props.required && <span className="text-danger-600 ml-0.5 font-normal">*</span>}
         </label>
       )}
-      <div className="relative">
+      <div className="relative font-normal">
         <input
           ref={ref}
           id={id}
@@ -56,32 +56,32 @@ const Input = forwardRef(({
           {...props}
         />
         {(icon || leftIcon) && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-medium">
             {icon || leftIcon}
           </div>
         )}
         {(isPassword || rightIcon) && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted font-medium">
             {isPassword ? (
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="hover:text-text-secondary focus:outline-none"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <Eye className="w-5 h-5 font-normal" /> : <EyeOff className="w-5 h-5 font-normal" />}
               </button>
             ) : rightIcon}
           </div>
         )}
       </div>
       {helperText && !error && (
-        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
+        <p className="text-xs text-gray-500 mt-1 font-normal">{helperText}</p>
       )}
       {description && !helperText && !error && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-gray-500 mt-1 font-normal">{description}</p>
       )}
       {error && (
-        <span id={`${id || 'input'}-error`} className="text-xs text-danger-600 mt-1">{error}</span>
+        <span id={`${id || 'input'}-error`} className="text-xs text-danger-600 mt-1 font-normal">{error}</span>
       )}
     </div>
   );

@@ -4,7 +4,7 @@ import { formatPrice } from '../../utils/currency';
 
 const RevenueChart = memo(({ data }) => {
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-[300px] w-full font-normal">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <defs>

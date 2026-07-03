@@ -25,25 +25,25 @@ const ALL_RATINGS = [4, 3, 2, 1];
 // Premium Skeleton Component for Loading State
 const SkeletonLoader = () => {
   return (
-    <div className="space-y-8 animate-pulse w-full max-w-[1600px] mx-auto px-4">
+    <div className="space-y-8 animate-pulse w-full max-w-[1600px] mx-auto px-4 font-normal">
       {/* Skeleton Hero */}
-      <div className="h-[280px] bg-slate-200 rounded-[32px] w-full" />
+      <div className="h-[280px] bg-slate-200 rounded-[32px] w-full font-normal" />
 
       {/* Skeleton Content */}
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 font-normal">
         {/* Skeleton Sidebar */}
-        <div className="w-full lg:w-[320px] shrink-0 h-[600px] bg-slate-200 rounded-[28px]" />
+        <div className="w-full lg:w-[320px] shrink-0 h-[600px] bg-slate-200 rounded-[28px] font-normal" />
 
         {/* Skeleton Grid */}
-        <div className="flex-1 space-y-6">
-          <div className="h-16 bg-slate-200 rounded-2xl w-full" />
+        <div className="flex-1 space-y-6 font-normal">
+          <div className="h-16 bg-slate-200 rounded-2xl w-full font-normal" />
           <ProductGrid>
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="space-y-4">
-                <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full" />
-                <div className="h-4 bg-slate-200 rounded w-2/3" />
-                <div className="h-4 bg-slate-200 rounded w-1/2" />
-                <div className="h-8 bg-slate-200 rounded-full w-full" />
+              <div key={i} className="space-y-4 font-normal">
+                <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full font-normal" />
+                <div className="h-4 bg-slate-200 rounded w-2/3 font-normal" />
+                <div className="h-4 bg-slate-200 rounded w-1/2 font-normal" />
+                <div className="h-8 bg-slate-200 rounded-full w-full font-normal" />
               </div>
             ))}
           </ProductGrid>
@@ -87,12 +87,11 @@ const ProductList = () => {
     fetchProducts,
     pagination,
     filters,
-    setFilters,
     clearFilters: clearStoreFilters,
     searchQuery,
     setSearchQuery
   } = useProductStore();
-  const { categories: categoriesList, fetchCategories } = useCategoryStore();
+  const { categories: categoriesList } = useCategoryStore();
 
   // Sidebar open state (mostly mobile drawer)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -146,41 +145,61 @@ const ProductList = () => {
     return availabilityParam ? availabilityParam.split(',') : [];
   }, [availabilityParam]);
 
-  // Fetch categories on mount
+  // Categories are now loaded centrally from App.jsx
+
+  // Sync URL params to store filters and trigger fetch.
+  // Uses a ref-guarded approach to batch setFilters + setSearchQuery + fetchProducts
+  // into a single synchronous update, preventing re-render cascades that caused
+  // duplicate fetchProducts calls.
+  const fetchScheduledRef = React.useRef(false);
+
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    // Prevent duplicate fetches within the same render cycle
+    if (fetchScheduledRef.current) return;
+    fetchScheduledRef.current = true;
 
-  // Sync URL params to store filters and trigger fetch
-  useEffect(() => {
-    let backendCategory = 'All';
-    if (categoryParam !== null) {
-      backendCategory = categoryParam ? parseCategoryParam(categoryParam).join(',') : '';
-    }
+    // Use microtask to batch all state updates before the fetch
+    queueMicrotask(() => {
+      fetchScheduledRef.current = false;
 
-    const backendMinRating = selectedRatings.length > 0
-      ? Math.min(...selectedRatings)
-      : '';
+      let backendCategory = 'All';
+      if (categoryParam !== null) {
+        backendCategory = categoryParam ? parseCategoryParam(categoryParam).join(',') : '';
+      }
 
-    const backendInStock = selectedAvailability.includes('inStock');
-    const backendSale = selectedAvailability.includes('sale');
+      const parsedRatings = ratingsParam ? ratingsParam.split(',').map(Number) : [];
+      const backendMinRating = parsedRatings.length > 0
+        ? Math.min(...parsedRatings)
+        : '';
 
-    if (searchParam !== searchQuery) {
-      setSearchQuery(searchParam);
-    }
+      const parsedAvailability = availabilityParam ? availabilityParam.split(',') : [];
+      const backendInStock = parsedAvailability.includes('inStock');
+      const backendSale = parsedAvailability.includes('sale');
 
-    setFilters({
-      category: backendCategory,
-      minRating: backendMinRating,
-      inStock: backendInStock,
-      sale: backendSale,
-      minPrice: minPriceParam,
-      maxPrice: maxPriceParam,
-      sort: sortParam,
+      // Batch: sync search query if changed
+      if (searchParam !== useProductStore.getState().searchQuery) {
+        setSearchQuery(searchParam);
+      }
+
+      // Batch: sync filters — use direct store setState to avoid triggering
+      // the pagination reset that setFilters() applies (page is URL-driven)
+      useProductStore.setState((state) => ({
+        filters: {
+          ...state.filters,
+          category: backendCategory,
+          minRating: backendMinRating,
+          inStock: backendInStock,
+          sale: backendSale,
+          minPrice: minPriceParam,
+          maxPrice: maxPriceParam,
+          sort: sortParam,
+        }
+      }));
+
+      // Single fetch with the correct page
+      fetchProducts(pageParam);
     });
-
-    fetchProducts(pageParam);
-  }, [categoryParam, minPriceParam, maxPriceParam, selectedRatings, selectedAvailability, sortParam, pageParam, searchParam]);
+  }, [categoryParam, minPriceParam, maxPriceParam, ratingsParam, availabilityParam, sortParam, pageParam, searchParam]);
 
   // Debounced price range filters sync to URL
   useEffect(() => {
@@ -436,16 +455,16 @@ const ProductList = () => {
   }
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 select-none">
+    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 select-none font-normal">
 
       {/* 1. Premium Hero Header */}
-      <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full">
+      <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full font-normal">
         {bannerStatus === 'loading' || bannerStatus === 'error' ? (
-          <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-slate-200 animate-pulse" />
+          <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-slate-200 animate-pulse font-normal" />
         ) : bannerStatus === 'empty' ? (
-          <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-surface-background flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-surface-background flex flex-col items-center justify-center p-8 text-center font-normal">
             <h3 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">No Shop Banner Uploaded</h3>
-            <p className="text-text-secondary text-sm sm:text-base">
+            <p className="text-text-secondary text-sm sm:text-base font-normal">
               Please upload a Shop Banner from<br />
               <strong>Admin → Settings → Shop Banner</strong>
             </p>
@@ -454,27 +473,27 @@ const ProductList = () => {
           <img
             src={shopBanner?.image}
             alt="Shop Banner"
-            className="w-full h-auto block select-none pointer-events-none"
+            className="w-full h-auto block select-none pointer-events-none font-normal"
             draggable={false}
           />
         )}
       </div>
 
       {/* 2. Toolbar */}
-      <div className="bg-white rounded-2xl border border-border p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-border p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 font-normal">
 
         {/* Left Count */}
-        <div className="text-sm font-bold text-text-secondary">
-          Showing <span className="text-text-primary">{startItem}–{endItem}</span> of <span className="text-text-primary">{pagination.totalItems}</span> Products
+        <div className="text-sm text-text-secondary font-normal">
+          Showing <span className="text-text-primary font-normal">{startItem}–{endItem}</span> of <span className="text-text-primary font-normal">{pagination.totalItems}</span> Products
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end font-normal">
 
           {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-bold text-text-secondary whitespace-nowrap">Sort by:</span>
-            <div className="relative">
+          <div className="flex items-center gap-2 shrink-0 font-normal">
+            <span className="text-xs text-text-secondary whitespace-nowrap font-normal">Sort by:</span>
+            <div className="relative font-normal">
               <select
                 value={filters.sort}
                 onChange={(e) => handleSortChange(e.target.value)}
@@ -484,34 +503,34 @@ const ProductList = () => {
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary pointer-events-none" />
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary pointer-events-none font-normal" />
             </div>
           </div>
 
           {/* Grid/List View Toggles */}
-          <div className="flex items-center gap-1.5 bg-[#F1F5F9] p-1 rounded-xl shrink-0">
+          <div className="flex items-center gap-1.5 bg-[#F1F5F9] p-1 rounded-xl shrink-0 font-normal">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-brand-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
               aria-label="Grid View"
             >
-              <Grid className="w-4 h-4" />
+              <Grid className="w-4 h-4 font-normal" />
             </button>
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-brand-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
               aria-label="List View"
             >
-              <List className="w-4 h-4" />
+              <List className="w-4 h-4 font-normal" />
             </button>
           </div>
 
           {/* Mobile Filter toggle button */}
           <button
-            className="md:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-text-brand-600 font-bold text-xs bg-[#F8FAFC]"
+            className="md:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-text-brand-600 text-xs bg-[#F8FAFC] font-normal"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
-            <Filter className="w-3.5 h-3.5" />
+            <Filter className="w-3.5 h-3.5 font-normal" />
             Filters
           </button>
 
@@ -519,7 +538,7 @@ const ProductList = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col md:flex-row gap-8 font-normal">
 
         {/* 3 & 4. Sticky Filter Sidebar */}
         <div className={`
@@ -529,61 +548,61 @@ const ProductList = () => {
 
           {/* Mobile close button */}
           {isFilterOpen && (
-            <div className="flex items-center justify-between pb-4 border-b border-border md:hidden mb-4">
-              <span className="font-black text-text-brand-600 text-lg">Filters</span>
+            <div className="flex items-center justify-between pb-4 border-b border-border md:hidden mb-4 font-normal">
+              <span className="text-text-brand-600 text-lg font-normal">Filters</span>
               <button
                 onClick={() => setIsFilterOpen(false)}
                 className="p-1.5 rounded-xl hover:bg-slate-100"
               >
-                <X className="w-5 h-5 text-text-primary" />
+                <X className="w-5 h-5 text-text-primary font-normal" />
               </button>
             </div>
           )}
 
           {/* Sidebar container */}
-          <div className="bg-white rounded-[28px] border border-border p-6 shadow-sm space-y-6">
+          <div className="bg-white rounded-[28px] border border-border p-6 shadow-sm space-y-6 font-normal">
 
             {/* Header / Clear All */}
-            <div className="flex items-center justify-between pb-4 border-b border-border-light">
-              <span className="font-extrabold text-text-brand-600 text-base">Filters</span>
+            <div className="flex items-center justify-between pb-4 border-b border-border-light font-normal">
+              <span className="text-text-brand-600 text-base font-normal">Filters</span>
               <button
                 onClick={handleClearAllFilters}
-                className="text-xs font-bold text-danger-600 hover:text-danger-700 underline underline-offset-2 transition-colors"
+                className="text-xs text-danger-600 hover:text-danger-700 underline underline-offset-2 transition-colors font-normal"
               >
                 Clear All
               </button>
             </div>
 
             {/* Accordion 1: Categories */}
-            <div className="border-b border-border-light pb-4">
+            <div className="border-b border-border-light pb-4 font-normal">
               <button
                 onClick={() => toggleSection('categories')}
                 className="w-full flex items-center justify-between text-sm font-extrabold text-text-brand-600 py-1"
               >
                 <span>Categories</span>
-                {expandedSections.categories ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {expandedSections.categories ? <ChevronUp className="w-4 h-4 font-normal" /> : <ChevronDown className="w-4 h-4 font-normal" />}
               </button>
 
               {expandedSections.categories && (
-                <div className="space-y-2 mt-3 animate-fade-in">
-                  <label className="flex items-center justify-between cursor-pointer group py-0.5">
-                    <div className="flex items-center gap-3">
+                <div className="space-y-2 mt-3 animate-fade-in font-normal">
+                  <label className="flex items-center justify-between cursor-pointer group py-0.5 font-normal">
+                    <div className="flex items-center gap-3 font-normal">
                       <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${selectedCategories.length === categoriesList.length
                         ? 'bg-brand-900 border-brand-900'
                         : 'border-border group-hover:border-brand-600'
                         }`}>
-                        {selectedCategories.length === categoriesList.length && <Check className="w-3 h-3 text-white" />}
+                        {selectedCategories.length === categoriesList.length && <Check className="w-3 h-3 text-white font-normal" />}
                       </div>
                       <span className={`text-xs ${selectedCategories.length === categoriesList.length ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                         All Categories
                       </span>
                     </div>
-                    <span className="text-[10px] text-text-muted font-semibold bg-[#F1F5F9] px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] text-text-muted bg-[#F1F5F9] px-2 py-0.5 rounded-full font-medium">
                       {categoriesList.reduce((acc, c) => acc + (c.count || 0), 0)}
                     </span>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      className="sr-only font-normal"
                       checked={selectedCategories.length === categoriesList.length}
                       onChange={() => handleCategoryToggle('All')}
                     />
@@ -593,24 +612,24 @@ const ProductList = () => {
                     const cat = catObj.name;
                     const isChecked = selectedCategories.includes(cat);
                     return (
-                      <label key={cat} className="flex items-center justify-between cursor-pointer group py-0.5">
-                        <div className="flex items-center gap-3">
+                      <label key={cat} className="flex items-center justify-between cursor-pointer group py-0.5 font-normal">
+                        <div className="flex items-center gap-3 font-normal">
                           <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${isChecked
                             ? 'bg-brand-900 border-brand-900'
                             : 'border-border group-hover:border-brand-600'
                             }`}>
-                            {isChecked && <Check className="w-3 h-3 text-white" />}
+                            {isChecked && <Check className="w-3 h-3 text-white font-normal" />}
                           </div>
                           <span className={`text-xs ${isChecked ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                             {cat}
                           </span>
                         </div>
-                        <span className="text-[10px] text-text-muted font-semibold bg-[#F1F5F9] px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] text-text-muted bg-[#F1F5F9] px-2 py-0.5 rounded-full font-medium">
                           {catObj.count}
                         </span>
                         <input
                           type="checkbox"
-                          className="sr-only"
+                          className="sr-only font-normal"
                           checked={isChecked}
                           onChange={() => handleCategoryToggle(cat)}
                         />
@@ -622,30 +641,30 @@ const ProductList = () => {
             </div>
 
             {/* Accordion 2: Rating */}
-            <div className="border-b border-border-light pb-4">
+            <div className="border-b border-border-light pb-4 font-normal">
               <button
                 onClick={() => toggleSection('rating')}
                 className="w-full flex items-center justify-between text-sm font-extrabold text-text-brand-600 py-1"
               >
                 <span>Rating</span>
-                {expandedSections.rating ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {expandedSections.rating ? <ChevronUp className="w-4 h-4 font-normal" /> : <ChevronDown className="w-4 h-4 font-normal" />}
               </button>
 
               {expandedSections.rating && (
-                <div className="space-y-2.5 mt-3 animate-fade-in">
-                  <label className="flex items-center gap-3 cursor-pointer group py-0.5">
+                <div className="space-y-2.5 mt-3 animate-fade-in font-normal">
+                  <label className="flex items-center gap-3 cursor-pointer group py-0.5 font-normal">
                     <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${selectedRatings.length === 0
                       ? 'bg-brand-900 border-brand-900'
                       : 'border-border group-hover:border-brand-600'
                       }`}>
-                      {selectedRatings.length === 0 && <Check className="w-3 h-3 text-white" />}
+                      {selectedRatings.length === 0 && <Check className="w-3 h-3 text-white font-normal" />}
                     </div>
                     <span className={`text-xs ${selectedRatings.length === 0 ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                       All Ratings
                     </span>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      className="sr-only font-normal"
                       checked={selectedRatings.length === 0}
                       onChange={() => handleRatingToggle('All')}
                     />
@@ -654,18 +673,18 @@ const ProductList = () => {
                   {ALL_RATINGS.map(rating => {
                     const isChecked = selectedRatings.length === 0 || selectedRatings.includes(rating);
                     return (
-                      <label key={rating} className="flex items-center gap-3 cursor-pointer group py-0.5">
+                      <label key={rating} className="flex items-center gap-3 cursor-pointer group py-0.5 font-normal">
                         <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${isChecked
                           ? 'bg-brand-900 border-brand-900'
                           : 'border-border group-hover:border-brand-600'
                           }`}>
-                          {isChecked && <Check className="w-3 h-3 text-white" />}
+                          {isChecked && <Check className="w-3 h-3 text-white font-normal" />}
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 font-normal">
                           <span className={`text-xs ${isChecked ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                             {rating} Stars & Up
                           </span>
-                          <div className="flex items-center text-amber-500">
+                          <div className="flex items-center text-amber-500 font-normal">
                             {[...Array(5)].map((_, idx) => (
                               <Star
                                 key={idx}
@@ -676,7 +695,7 @@ const ProductList = () => {
                         </div>
                         <input
                           type="checkbox"
-                          className="sr-only"
+                          className="sr-only font-normal"
                           checked={isChecked}
                           onChange={() => handleRatingToggle(rating)}
                         />
@@ -688,33 +707,33 @@ const ProductList = () => {
             </div>
 
             {/* Accordion 3: Price Range */}
-            <div className="border-b border-border-light pb-4">
+            <div className="border-b border-border-light pb-4 font-normal">
               <button
                 onClick={() => toggleSection('price')}
                 className="w-full flex items-center justify-between text-sm font-extrabold text-text-brand-600 py-1"
               >
                 <span>Price Range</span>
-                {expandedSections.price ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {expandedSections.price ? <ChevronUp className="w-4 h-4 font-normal" /> : <ChevronDown className="w-4 h-4 font-normal" />}
               </button>
 
               {expandedSections.price && (
-                <div className="space-y-4 mt-3 animate-fade-in">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-4 mt-3 animate-fade-in font-normal">
+                  <div className="grid grid-cols-2 gap-3 font-normal">
                     <div>
-                      <label className="text-[10px] font-bold text-text-secondary mb-1 block uppercase tracking-wider">Min (₹)</label>
+                      <label className="text-[10px] text-text-secondary mb-1 block uppercase tracking-wider font-normal">Min (₹)</label>
                       <input
                         type="number"
-                        className="w-full px-3 py-2 border border-border rounded-xl bg-slate-50 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white"
+                        className="w-full px-3 py-2 border border-border rounded-xl bg-slate-50 text-xs focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white font-normal"
                         placeholder="0"
                         value={minPriceInput}
                         onChange={(e) => setMinPriceInput(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-text-secondary mb-1 block uppercase tracking-wider">Max (₹)</label>
+                      <label className="text-[10px] text-text-secondary mb-1 block uppercase tracking-wider font-normal">Max (₹)</label>
                       <input
                         type="number"
-                        className="w-full px-3 py-2 border border-border rounded-xl bg-slate-50 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white"
+                        className="w-full px-3 py-2 border border-border rounded-xl bg-slate-50 text-xs focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white font-normal"
                         placeholder="50000"
                         value={maxPriceInput}
                         onChange={(e) => setMaxPriceInput(e.target.value)}
@@ -732,42 +751,42 @@ const ProductList = () => {
                 className="w-full flex items-center justify-between text-sm font-extrabold text-text-brand-600 py-1"
               >
                 <span>Availability</span>
-                {expandedSections.availability ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {expandedSections.availability ? <ChevronUp className="w-4 h-4 font-normal" /> : <ChevronDown className="w-4 h-4 font-normal" />}
               </button>
 
               {expandedSections.availability && (
-                <div className="space-y-2.5 mt-3 animate-fade-in">
-                  <label className="flex items-center gap-3 cursor-pointer group py-0.5">
+                <div className="space-y-2.5 mt-3 animate-fade-in font-normal">
+                  <label className="flex items-center gap-3 cursor-pointer group py-0.5 font-normal">
                     <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${selectedAvailability.includes('inStock')
                       ? 'bg-brand-900 border-brand-900'
                       : 'border-border group-hover:border-brand-600'
                       }`}>
-                      {selectedAvailability.includes('inStock') && <Check className="w-3 h-3 text-white" />}
+                      {selectedAvailability.includes('inStock') && <Check className="w-3 h-3 text-white font-normal" />}
                     </div>
                     <span className={`text-xs ${selectedAvailability.includes('inStock') ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                       In Stock
                     </span>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      className="sr-only font-normal"
                       checked={selectedAvailability.includes('inStock')}
                       onChange={() => handleAvailabilityToggle('inStock')}
                     />
                   </label>
 
-                  <label className="flex items-center gap-3 cursor-pointer group py-0.5">
+                  <label className="flex items-center gap-3 cursor-pointer group py-0.5 font-normal">
                     <div className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center transition-colors ${selectedAvailability.includes('sale')
                       ? 'bg-brand-900 border-brand-900'
                       : 'border-border group-hover:border-brand-600'
                       }`}>
-                      {selectedAvailability.includes('sale') && <Check className="w-3 h-3 text-white" />}
+                      {selectedAvailability.includes('sale') && <Check className="w-3 h-3 text-white font-normal" />}
                     </div>
                     <span className={`text-xs ${selectedAvailability.includes('sale') ? 'font-bold text-brand-900' : 'text-text-secondary group-hover:text-text-primary font-medium'}`}>
                       On Sale
                     </span>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      className="sr-only font-normal"
                       checked={selectedAvailability.includes('sale')}
                       onChange={() => handleAvailabilityToggle('sale')}
                     />
@@ -780,29 +799,29 @@ const ProductList = () => {
         </div>
 
         {/* Right Product Grid Container */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 font-normal">
 
           {/* 7. Active Filter Chips */}
           {activeChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-border-light shadow-inner">
-              <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider pl-1.5 mr-1">Active Filters:</span>
+            <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-border-light shadow-inner font-normal">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider pl-1.5 mr-1 font-normal">Active Filters:</span>
               {activeChips.map((chip) => (
                 <div
                   key={chip.id}
-                  className="flex items-center gap-1.5 bg-white border border-border pl-3 pr-1.5 py-1 rounded-xl text-xs font-bold text-brand-900 shadow-sm transition-all hover:bg-slate-50"
+                  className="flex items-center gap-1.5 bg-white border border-border pl-3 pr-1.5 py-1 rounded-xl text-xs text-brand-900 shadow-sm transition-all hover:bg-slate-50 font-normal"
                 >
                   <span>{chip.label}</span>
                   <button
                     onClick={chip.onRemove}
-                    className="p-0.5 rounded-full hover:bg-slate-100 hover:text-danger-600 transition-colors"
+                    className="p-0.5 rounded-full hover:bg-slate-100 hover:text-danger-600 transition-colors font-normal"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3.5 h-3.5 font-normal" />
                   </button>
                 </div>
               ))}
               <button
                 onClick={handleClearAllFilters}
-                className="text-xs font-bold text-danger-600 hover:text-danger-700 underline underline-offset-2 ml-auto pr-1.5 transition-colors"
+                className="text-xs text-danger-600 hover:text-danger-700 underline underline-offset-2 ml-auto pr-1.5 transition-colors font-normal"
               >
                 Clear All
               </button>
@@ -810,26 +829,26 @@ const ProductList = () => {
           )}
 
           {error && (
-            <div className="bg-danger-50 text-danger-700 px-4 py-3 rounded-2xl border border-danger-100 text-sm font-bold text-left">
+            <div className="bg-danger-50 text-danger-700 px-4 py-3 rounded-2xl border border-danger-100 text-sm text-left font-normal">
               {error}
             </div>
           )}
 
-          {isLoading && products.length === 0 ? (
+          {isLoading ? (
             /* 10. Skeleton Loaders for Products */
             <ProductGrid>
               {[...Array(10)].map((_, i) => (
-                <div key={i} className="space-y-4 animate-pulse">
-                  <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full" />
-                  <div className="h-4 bg-slate-200 rounded w-2/3" />
-                  <div className="h-4 bg-slate-200 rounded w-1/2" />
-                  <div className="h-8 bg-slate-200 rounded-full w-full" />
+                <div key={i} className="space-y-4 animate-pulse font-normal">
+                  <div className="aspect-[4/5] bg-slate-200 rounded-[22px] w-full font-normal" />
+                  <div className="h-4 bg-slate-200 rounded w-2/3 font-normal" />
+                  <div className="h-4 bg-slate-200 rounded w-1/2 font-normal" />
+                  <div className="h-8 bg-slate-200 rounded-full w-full font-normal" />
                 </div>
               ))}
             </ProductGrid>
           ) : products.length > 0 ? (
             /* 5. Product Grid - responsive columns */
-            <div className={`space-y-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="space-y-8 font-normal">
               <ProductGrid>
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
@@ -837,7 +856,7 @@ const ProductList = () => {
               </ProductGrid>
 
               {/* 8. Premium Pagination */}
-              <div className="flex justify-center pt-8">
+              <div className="flex justify-center pt-8 font-normal">
                 <Pagination
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
@@ -848,21 +867,21 @@ const ProductList = () => {
             </div>
           ) : (
             /* 9. Empty State */
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-[28px] border border-border text-center shadow-sm max-w-xl mx-auto my-8 space-y-5">
-              <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center text-brand-600 shadow-inner">
-                <ShoppingBag className="w-8 h-8" />
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-[28px] border border-border text-center shadow-sm max-w-xl mx-auto my-8 space-y-5 font-normal">
+              <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center text-brand-600 shadow-inner font-normal">
+                <ShoppingBag className="w-8 h-8 font-normal" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-text-brand-600">No Products Found</h3>
-                <p className="text-sm text-text-secondary font-medium max-w-sm">
+              <div className="space-y-2 font-normal">
+                <h3 className="text-xl text-text-brand-600 font-bold">No Products Found</h3>
+                <p className="text-sm text-text-secondary max-w-sm font-normal">
                   We couldn't find any products matching your current filters. Try resetting the filters or modifying inputs.
                 </p>
               </div>
               <button
                 onClick={handleClearAllFilters}
-                className="px-6 py-2.5 bg-brand-900 text-white rounded-xl font-bold hover:bg-brand-950 transition-colors shadow-md flex items-center gap-2 text-sm"
+                className="px-6 py-2.5 bg-brand-900 text-white rounded-xl hover:bg-brand-950 transition-colors shadow-md flex items-center gap-2 text-sm font-normal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 font-normal" />
                 Reset Filters
               </button>
             </div>

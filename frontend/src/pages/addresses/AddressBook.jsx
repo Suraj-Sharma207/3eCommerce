@@ -360,41 +360,41 @@ const AddressBook = () => {
   };
 
   if (isLoading && addresses.length === 0 && !isEditing) {
-    return <div className="p-12 flex justify-center"><LoadingSpinner /></div>;
+    return <div className="p-12 flex justify-center font-normal"><LoadingSpinner /></div>;
   }
 
   return (
-    <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8">
+    <PageContainer className="py-8 lg:py-12 max-w-5xl space-y-8 font-normal">
       {globalMessage && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl font-medium border border-green-200">
-          <CheckCircle2 className="w-5 h-5" />
+        <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200 font-normal">
+          <CheckCircle2 className="w-5 h-5 font-normal" />
           {globalMessage}
         </div>
       )}
       
       {backendError && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl font-medium border border-red-200">
-          <AlertCircle className="w-5 h-5" />
+        <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 font-normal">
+          <AlertCircle className="w-5 h-5 font-normal" />
           {backendError}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-normal">
         <div>
-          <h1 className="text-3xl font-medium text-text-primary">Address Book</h1>
-          <p className="text-text-muted mt-2">Manage your shipping and billing addresses.</p>
+          <h1 className="text-3xl text-text-primary font-bold">Address Book</h1>
+          <p className="text-text-muted mt-2 font-medium">Manage your shipping and billing addresses.</p>
         </div>
         {!isEditing && (
-          <Button onClick={handleAddNew} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Add New Address
+          <Button onClick={handleAddNew} className="flex items-center gap-2 font-normal">
+            <Plus className="w-4 h-4 font-normal" /> Add New Address
           </Button>
         )}
       </div>
 
       {isEditing ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-border-light flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-xl font-medium text-text-primary">
+        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+          <div className="p-6 sm:p-8 border-b border-border-light flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-normal">
+            <h2 className="text-xl text-text-primary font-bold">
               {currentAddress.id ? 'Edit Address' : 'Add New Address'}
             </h2>
             {!currentAddress.id && (
@@ -402,32 +402,32 @@ const AddressBook = () => {
                 type="button"
                 onClick={handleDetectLocation}
                 disabled={isDetectingLocation}
-                className="flex items-center gap-2 px-4 py-2 border-2 border-brand-600 text-brand-700 rounded-full font-medium hover:bg-brand-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 border-2 border-brand-600 text-brand-700 rounded-full hover:bg-brand-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-normal"
                 aria-label="Use Current Location"
               >
                 {isDetectingLocation ? (
                   <>
-                    <LoadingSpinner size="sm" className="w-4 h-4" />
+                    <LoadingSpinner size="sm" className="w-4 h-4 font-normal" />
                     Detecting Location...
                   </>
                 ) : (
                   <>
-                    <Navigation className="w-4 h-4" />
+                    <Navigation className="w-4 h-4 font-normal" />
                     Use Current Location
                   </>
                 )}
               </button>
             )}
           </div>
-          <div className="p-6 sm:p-8 relative">
+          <div className="p-6 sm:p-8 relative font-normal">
             {isLoading && (
-              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center font-normal">
                 <LoadingSpinner size="lg" />
               </div>
             )}
             
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSave} className="space-y-6 font-normal">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-normal">
                 <Input 
                   label="Full Name" name="recipientName" 
                   value={currentAddress.recipientName} onChange={handleChange} onBlur={handleBlur}
@@ -439,9 +439,9 @@ const AddressBook = () => {
                   {...getFieldStatus('phoneNumber')} required 
                 />
                 
-                <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-text-brand-600">Label</label>
-                  <select name="label" value={currentAddress.label} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm">
+                <div className="space-y-1 font-normal">
+                  <label className="block text-sm text-text-brand-600 font-normal">Label</label>
+                  <select name="label" value={currentAddress.label} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm font-normal">
                     <option value="Home">Home</option>
                     <option value="Work">Work</option>
                     <option value="Other">Other</option>
@@ -475,9 +475,9 @@ const AddressBook = () => {
                   {...getFieldStatus('state')} required 
                 />
                 
-                <div className="space-y-1">
-                  <label className="block text-sm font-semibold text-text-brand-600">Country</label>
-                  <select name="country" value={currentAddress.country} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm">
+                <div className="space-y-1 font-normal">
+                  <label className="block text-sm text-text-brand-600 font-normal">Country</label>
+                  <select name="country" value={currentAddress.country} onChange={handleChange} className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-brand-600 outline-none transition-all shadow-sm font-normal">
                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -489,20 +489,20 @@ const AddressBook = () => {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-6 mt-6 p-6 bg-surface-background rounded-xl border border-border-light">
-                <label className="flex items-center gap-3 text-sm font-medium text-text-primary cursor-pointer">
-                  <input type="checkbox" name="isDefaultShipping" checked={currentAddress.isDefaultShipping} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer" />
+              <div className="flex flex-col sm:flex-row gap-6 mt-6 p-6 bg-surface-background rounded-xl border border-border-light font-normal">
+                <label className="flex items-center gap-3 text-sm text-text-primary cursor-pointer font-normal">
+                  <input type="checkbox" name="isDefaultShipping" checked={currentAddress.isDefaultShipping} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer font-normal" />
                   Set as Default Shipping Address
                 </label>
-                <label className="flex items-center gap-3 text-sm font-medium text-text-primary cursor-pointer">
-                  <input type="checkbox" name="isDefaultBilling" checked={currentAddress.isDefaultBilling} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer" />
+                <label className="flex items-center gap-3 text-sm text-text-primary cursor-pointer font-normal">
+                  <input type="checkbox" name="isDefaultBilling" checked={currentAddress.isDefaultBilling} onChange={handleChange} className="w-5 h-5 text-brand-600 border-gray-300 rounded focus:ring-brand-600 cursor-pointer font-normal" />
                   Set as Default Billing Address
                 </label>
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t border-border-light">
+              <div className="flex justify-end gap-4 pt-6 border-t border-border-light font-normal">
                 <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button type="submit" disabled={!isFormValid || !isDirty} isLoading={isLoading} className="min-w-[140px]">
+                <Button type="submit" disabled={!isFormValid || !isDirty} isLoading={isLoading} className="min-w-[140px] font-normal">
                   Save Address
                 </Button>
               </div>
@@ -510,50 +510,50 @@ const AddressBook = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-normal">
           {addresses.length > 0 ? (
             addresses.map(address => (
               <div key={address.id} className={`bg-white rounded-2xl border p-6 sm:p-8 relative group hover:shadow-md transition-shadow ${address.isDefaultShipping ? 'border-brand-200' : 'border-border'}`}>
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="bg-border-light text-text-secondary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                <div className="flex justify-between items-start mb-6 font-normal">
+                  <div className="flex flex-wrap items-center gap-2 font-normal">
+                    <span className="bg-border-light text-text-secondary px-3 py-1 rounded-full text-xs uppercase tracking-wider font-normal">
                       {address.label}
                     </span>
-                    {address.isDefaultShipping && <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium border border-green-200">Default Shipping</span>}
-                    {address.isDefaultBilling && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium border border-blue-200">Default Billing</span>}
+                    {address.isDefaultShipping && <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs border border-green-200 font-normal">Default Shipping</span>}
+                    {address.isDefaultBilling && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs border border-blue-200 font-normal">Default Billing</span>}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 font-normal">
                     <button onClick={() => handleEdit(address)} className="p-2 text-text-muted hover:text-brand-600 bg-surface-background hover:bg-brand-50 rounded-lg transition-colors">
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-4 h-4 font-normal" />
                     </button>
                     <button onClick={() => handleDelete(address.id)} className="p-2 text-text-muted hover:text-red-600 bg-surface-background hover:bg-red-50 rounded-lg transition-colors" disabled={isLoading}>
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 font-normal" />
                     </button>
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-lg text-text-primary mb-2">{address.recipientName}</h3>
-                <div className="text-text-secondary text-sm space-y-1.5">
+                <h3 className="text-lg text-text-primary mb-2 font-bold">{address.recipientName}</h3>
+                <div className="text-text-secondary text-sm space-y-1.5 font-normal">
                   <p>{address.street}</p>
                   {address.addressLine2 && <p>{address.addressLine2}</p>}
-                  {address.landmark && <p className="italic text-text-muted">Landmark: {address.landmark}</p>}
+                  {address.landmark && <p className="italic text-text-muted font-medium">Landmark: {address.landmark}</p>}
                   <p>{address.city}, {address.state} {address.zipCode}</p>
                   <p>{address.country}</p>
-                  <p className="pt-4 text-text-primary flex items-center gap-2 font-medium">
+                  <p className="pt-4 text-text-primary flex items-center gap-2 font-normal">
                     Phone: <span className="text-text-secondary font-normal">{address.phoneNumber}</span>
                   </p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-neutral-300">
-              <div className="w-20 h-20 bg-surface-background rounded-full flex items-center justify-center mb-6">
-                <MapPin className="w-10 h-10 text-text-muted" />
+            <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-neutral-300 font-normal">
+              <div className="w-20 h-20 bg-surface-background rounded-full flex items-center justify-center mb-6 font-normal">
+                <MapPin className="w-10 h-10 text-text-muted font-medium" />
               </div>
-              <h3 className="text-xl font-medium text-text-primary mb-2">No addresses saved</h3>
-              <p className="text-text-muted mb-8 max-w-sm">Add a shipping address to make your checkout experience faster and easier.</p>
-              <Button onClick={handleAddNew} className="flex items-center gap-2">
-                <Plus className="w-5 h-5" /> Add New Address
+              <h3 className="text-xl text-text-primary mb-2 font-bold">No addresses saved</h3>
+              <p className="text-text-muted mb-8 max-w-sm font-medium">Add a shipping address to make your checkout experience faster and easier.</p>
+              <Button onClick={handleAddNew} className="flex items-center gap-2 font-normal">
+                <Plus className="w-5 h-5 font-normal" /> Add New Address
               </Button>
             </div>
           )}

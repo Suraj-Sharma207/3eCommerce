@@ -18,7 +18,7 @@ const FilterDropdown = ({ label, options, value, onChange }) => {
   const selectedOption = options.find(opt => opt.value === value) || options[0];
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative font-normal" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -27,15 +27,15 @@ const FilterDropdown = ({ label, options, value, onChange }) => {
           ${value && value !== 'All' ? 'bg-brand-50 border-brand-200' : ''}
         `}
       >
-        <span className="flex items-center gap-1.5 truncate">
-          <span className="text-text-muted">{label}:</span>
-          <span className="font-bold truncate max-w-[100px]">{selectedOption?.label || 'All'}</span>
+        <span className="flex items-center gap-1.5 truncate font-normal">
+          <span className="text-text-muted font-medium">{label}:</span>
+          <span className="truncate max-w-[100px] font-normal">{selectedOption?.label || 'All'}</span>
         </span>
         <ChevronDown className={`w-4 h-4 ml-2 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full min-w-[160px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden">
+        <div className="absolute z-50 w-full min-w-[160px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden font-normal">
           {options.map((option) => (
             <button
               key={option.value}
@@ -48,7 +48,7 @@ const FilterDropdown = ({ label, options, value, onChange }) => {
               <span className={value === option.value ? 'font-bold text-brand-600' : 'text-text-primary'}>
                 {option.label}
               </span>
-              {value === option.value && <Check className="w-4 h-4 text-brand-600" />}
+              {value === option.value && <Check className="w-4 h-4 text-brand-600 font-normal" />}
             </button>
           ))}
         </div>

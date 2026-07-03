@@ -10,29 +10,29 @@ import ImageFallback from '../../components/ui/ImageFallback';
 import { getOptimizedUrl } from '../../utils/cloudinary';
 
 const OrdersSkeleton = () => (
-  <PageContainer className="py-8 lg:py-12 max-w-5xl">
-    <div className="h-10 w-48 bg-neutral-200 rounded animate-pulse mb-8"></div>
-    <div className="space-y-6">
+  <PageContainer className="py-8 lg:py-12 max-w-5xl font-normal">
+    <div className="h-10 w-48 bg-neutral-200 rounded animate-pulse mb-8 font-normal"></div>
+    <div className="space-y-6 font-normal">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="bg-surface-background px-6 py-4 border-b border-border flex justify-between items-center">
-            <div className="flex gap-8">
-              <div className="space-y-2">
-                <div className="h-3 w-16 bg-neutral-200 rounded animate-pulse"></div>
-                <div className="h-4 w-24 bg-neutral-200 rounded animate-pulse"></div>
+        <div key={i} className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm font-normal">
+          <div className="bg-surface-background px-6 py-4 border-b border-border flex justify-between items-center font-normal">
+            <div className="flex gap-8 font-normal">
+              <div className="space-y-2 font-normal">
+                <div className="h-3 w-16 bg-neutral-200 rounded animate-pulse font-normal"></div>
+                <div className="h-4 w-24 bg-neutral-200 rounded animate-pulse font-normal"></div>
               </div>
-              <div className="space-y-2 hidden sm:block">
-                <div className="h-3 w-12 bg-neutral-200 rounded animate-pulse"></div>
-                <div className="h-4 w-16 bg-neutral-200 rounded animate-pulse"></div>
+              <div className="space-y-2 hidden sm:block font-normal">
+                <div className="h-3 w-12 bg-neutral-200 rounded animate-pulse font-normal"></div>
+                <div className="h-4 w-16 bg-neutral-200 rounded animate-pulse font-normal"></div>
               </div>
             </div>
-            <div className="h-8 w-24 bg-neutral-200 rounded-lg animate-pulse"></div>
+            <div className="h-8 w-24 bg-neutral-200 rounded-lg animate-pulse font-normal"></div>
           </div>
-          <div className="p-6">
-            <div className="h-5 w-40 bg-neutral-200 rounded animate-pulse mb-6"></div>
-            <div className="flex gap-4 overflow-hidden">
+          <div className="p-6 font-normal">
+            <div className="h-5 w-40 bg-neutral-200 rounded animate-pulse mb-6 font-normal"></div>
+            <div className="flex gap-4 overflow-hidden font-normal">
               {[...Array(3)].map((_, j) => (
-                <div key={j} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 bg-neutral-200 rounded-xl animate-pulse"></div>
+                <div key={j} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 bg-neutral-200 rounded-xl animate-pulse font-normal"></div>
               ))}
             </div>
           </div>
@@ -55,7 +55,7 @@ const OrdersPage = () => {
 
   if (orders.length === 0) {
     return (
-      <PageContainer className="py-20">
+      <PageContainer className="py-20 font-normal">
         <EmptyState 
           title="No orders yet"
           message="You haven't placed any orders with us."
@@ -67,27 +67,27 @@ const OrdersPage = () => {
   }
 
   return (
-    <PageContainer className="py-8 lg:py-12 max-w-5xl">
-      <h1 className="text-3xl font-medium text-text-primary mb-8">My Orders</h1>
+    <PageContainer className="py-8 lg:py-12 max-w-5xl font-normal">
+      <h1 className="text-3xl text-text-primary mb-8 font-bold">My Orders</h1>
 
-      <div className="space-y-6">
+      <div className="space-y-6 font-normal">
         {orders.map((order) => (
-          <div key={order.id} className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <div key={order.id} className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow font-normal">
             
             {/* Header */}
-            <div className="bg-surface-background px-6 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            <div className="bg-surface-background px-6 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-normal">
+              <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-normal">
                 <div>
-                  <span className="block text-text-muted text-xs mb-1">Order Placed</span>
-                  <span className="font-medium text-text-primary">{new Date(order.createdAt).toLocaleDateString()}</span>
+                  <span className="block text-text-muted text-xs mb-1 font-medium">Order Placed</span>
+                  <span className="text-text-primary font-normal">{new Date(order.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div>
-                  <span className="block text-text-muted text-xs mb-1">Total</span>
-                  <span className="font-medium text-text-primary">{formatPrice(order.totalAmount)}</span>
+                  <span className="block text-text-muted text-xs mb-1 font-medium">Total</span>
+                  <span className="text-text-primary font-normal">{formatPrice(order.totalAmount)}</span>
                 </div>
                 <div>
-                  <span className="block text-text-muted text-xs mb-1">Order #</span>
-                  <span className="font-medium text-text-primary">{order.orderNumber}</span>
+                  <span className="block text-text-muted text-xs mb-1 font-medium">Order #</span>
+                  <span className="text-text-primary font-normal">{order.orderNumber}</span>
                 </div>
               </div>
               
@@ -96,18 +96,18 @@ const OrdersPage = () => {
                 to={`/orders/${order.id}`}
                 variant="outline"
                 size="sm"
-                className="group"
+                className="group font-normal"
               >
                 View Details
-                <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform font-normal" />
               </Button>
             </div>
 
             {/* Body */}
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Package className="w-5 h-5 text-text-muted" />
-                <h3 className="font-medium text-text-primary text-sm flex items-center">
+            <div className="p-6 font-normal">
+              <div className="flex items-center gap-3 mb-6 font-normal">
+                <Package className="w-5 h-5 text-text-muted font-medium" />
+                <h3 className="text-text-primary text-sm flex items-center font-bold">
                   Status: 
                   <span className={`ml-2 inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
                     order.orderStatus === 'DELIVERED' ? 'bg-green-50 text-green-700 border border-green-200' :
@@ -121,13 +121,13 @@ const OrdersPage = () => {
                 </h3>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide font-normal">
                 {order.items.map((item) => (
-                  <Link key={item.id} to={`/products/${item.productId}`} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-border-light group border border-border">
+                  <Link key={item.id} to={`/products/${item.productId}`} className="shrink-0 relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-border-light group border border-border font-normal">
                     <ImageFallback 
                       src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} 
                       alt={item.product.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 font-normal"
                     />
                   </Link>
                 ))}

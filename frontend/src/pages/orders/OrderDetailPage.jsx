@@ -24,8 +24,8 @@ const OrderDetailPage = () => {
     loadOrder();
   }, [id, fetchOrderById]);
 
-  if (loading) return <div className="p-12 flex justify-center"><div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (!currentOrder) return <div className="p-12 flex justify-center text-text-muted">Order not found</div>;
+  if (loading) return <div className="p-12 flex justify-center font-normal"><div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin font-normal"></div></div>;
+  if (!currentOrder) return <div className="p-12 flex justify-center text-text-muted font-medium">Order not found</div>;
 
   const orderStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
   const currentStatusIndex = orderStatuses.indexOf(currentOrder.orderStatus);
@@ -43,18 +43,18 @@ const OrderDetailPage = () => {
     if (currentIndex === -1) currentIndex = currentOrder.orderStatus === 'CANCELLED' ? -1 : 0;
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-border p-6 sm:p-8 mb-8">
-        <h2 className="text-xl font-medium text-text-primary mb-8">Order Status</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-border p-6 sm:p-8 mb-8 font-normal">
+        <h2 className="text-xl text-text-primary mb-8 font-bold">Order Status</h2>
         
         {currentOrder.orderStatus === 'CANCELLED' ? (
-          <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200">
-            <h3 className="font-medium text-lg mb-1">Order Cancelled</h3>
-            <p className="text-sm">This order has been cancelled and will not be delivered.</p>
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 font-normal">
+            <h3 className="text-lg mb-1 font-bold">Order Cancelled</h3>
+            <p className="text-sm font-normal">This order has been cancelled and will not be delivered.</p>
           </div>
         ) : (
-          <div className="relative">
-            <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-neutral-200 md:left-1/2 md:-translate-x-1/2 md:top-[19px] md:bottom-auto md:w-full md:h-0.5 md:right-4"></div>
-            <div className="flex flex-col md:flex-row justify-between gap-6 relative z-10">
+          <div className="relative font-normal">
+            <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-neutral-200 md:left-1/2 md:-translate-x-1/2 md:top-[19px] md:bottom-auto md:w-full md:h-0.5 md:right-4 font-normal"></div>
+            <div className="flex flex-col md:flex-row justify-between gap-6 relative z-10 font-normal">
               {timelineSteps.map((step, index) => {
                 const isCompleted = index <= currentIndex;
                 const isCurrent = index === currentIndex;
@@ -63,11 +63,11 @@ const OrderDetailPage = () => {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-white border-2 transition-colors ${
                       isCompleted ? 'border-brand-600 text-brand-600' : 'border-neutral-300 text-neutral-300'
                     }`}>
-                      {isCompleted ? <CheckCircle2 className="w-6 h-6 bg-brand-600 text-white rounded-full" /> : <Circle className="w-3 h-3 fill-current" />}
+                      {isCompleted ? <CheckCircle2 className="w-6 h-6 bg-brand-600 text-white rounded-full font-normal" /> : <Circle className="w-3 h-3 fill-current font-normal" />}
                     </div>
-                    <div className="md:text-center">
+                    <div className="md:text-center font-normal">
                       <p className={`font-medium ${isCurrent ? 'text-brand-700' : 'text-text-primary'}`}>{step.label}</p>
-                      <p className="text-sm text-text-muted hidden sm:block">{step.description}</p>
+                      <p className="text-sm text-text-muted hidden sm:block font-medium">{step.description}</p>
                     </div>
                   </div>
                 );
@@ -80,42 +80,42 @@ const OrderDetailPage = () => {
   };
 
   return (
-    <PageContainer className="py-8 lg:py-12 max-w-5xl">
+    <PageContainer className="py-8 lg:py-12 max-w-5xl font-normal">
       <Link to="/orders" className="inline-flex items-center text-sm font-medium text-text-muted hover:text-text-primary mb-8 transition-colors">
-        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Orders
+        <ChevronLeft className="w-4 h-4 mr-1 font-normal" /> Back to Orders
       </Link>
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 font-normal">
         <div>
-          <h1 className="text-3xl font-medium text-text-primary mb-2">Order {currentOrder.orderNumber}</h1>
-          <p className="text-text-muted">Placed on {new Date(currentOrder.createdAt).toLocaleDateString()}</p>
+          <h1 className="text-3xl text-text-primary mb-2 font-bold">Order {currentOrder.orderNumber}</h1>
+          <p className="text-text-muted font-medium">Placed on {new Date(currentOrder.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
 
       {renderTimeline()}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-normal">
         
         {/* Left Column: Items */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-            <div className="p-6 border-b border-border-light">
-              <h2 className="text-lg font-medium text-text-primary flex items-center gap-2">
-                <Package className="w-5 h-5 text-text-muted" /> Items in this Order
+        <div className="lg:col-span-2 space-y-8 font-normal">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+            <div className="p-6 border-b border-border-light font-normal">
+              <h2 className="text-lg text-text-primary flex items-center gap-2 font-bold">
+                <Package className="w-5 h-5 text-text-muted font-medium" /> Items in this Order
               </h2>
             </div>
-            <div className="divide-y divide-neutral-100">
+            <div className="divide-y divide-neutral-100 font-normal">
               {currentOrder.items.map((item) => (
-                <div key={item.id} className="p-6 flex gap-6 items-center hover:bg-surface-background transition-colors">
-                  <Link to={`/products/${item.productId}`} className="shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-border-light">
-                    <ImageFallback src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover" />
+                <div key={item.id} className="p-6 flex gap-6 items-center hover:bg-surface-background transition-colors font-normal">
+                  <Link to={`/products/${item.productId}`} className="shrink-0 w-24 h-24 rounded-xl overflow-hidden bg-border-light font-normal">
+                    <ImageFallback src={getOptimizedUrl(item.product.thumbnail, 'thumbnail')} alt={item.product.name} className="w-full h-full object-cover font-normal" />
                   </Link>
-                  <div className="flex-1">
-                    <Link to={`/products/${item.productId}`} className="text-base font-medium text-text-primary hover:text-brand-600 transition-colors line-clamp-1 mb-1">
+                  <div className="flex-1 font-normal">
+                    <Link to={`/products/${item.productId}`} className="text-base text-text-primary hover:text-brand-600 transition-colors line-clamp-1 mb-1 font-normal">
                       {item.product.name}
                     </Link>
-                    <p className="text-sm text-text-muted mb-2">Qty: {item.quantity}</p>
-                    <p className="font-semibold text-text-primary">{formatPrice(item.price * item.quantity)}</p>
+                    <p className="text-sm text-text-muted mb-2 font-medium">Qty: {item.quantity}</p>
+                    <p className="text-text-primary font-normal">{formatPrice(item.price * item.quantity)}</p>
                   </div>
                 </div>
               ))}
@@ -124,51 +124,51 @@ const OrderDetailPage = () => {
         </div>
 
         {/* Right Column: Summary & Addresses */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-border p-6">
-            <h2 className="text-lg font-medium text-text-primary mb-6 pb-4 border-b border-border-light flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-text-muted" /> Order Summary
+        <div className="space-y-6 font-normal">
+          <div className="bg-white rounded-2xl shadow-sm border border-border p-6 font-normal">
+            <h2 className="text-lg text-text-primary mb-6 pb-4 border-b border-border-light flex items-center gap-2 font-bold">
+              <CreditCard className="w-5 h-5 text-text-muted font-medium" /> Order Summary
             </h2>
             
-            <div className="space-y-4 text-sm text-text-secondary mb-6">
-              <div className="flex justify-between">
+            <div className="space-y-4 text-sm text-text-secondary mb-6 font-normal">
+              <div className="flex justify-between font-normal">
                 <span>Items Subtotal</span>
-                <span className="font-medium text-text-primary">{formatPrice(currentOrder.totalAmount)}</span>
+                <span className="text-text-primary font-normal">{formatPrice(currentOrder.totalAmount)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between font-normal">
                 <span>Shipping {currentOrder.deliveryMethod === 'express' ? '(Express)' : ''}</span>
-                <span className="font-medium text-text-primary">
+                <span className="text-text-primary font-normal">
                   {currentOrder.shippingCharge === 0 ? 'Free' : formatPrice(currentOrder.shippingCharge)}
                 </span>
               </div>
             </div>
 
-            <div className="border-t border-border-light pt-4 flex justify-between items-center">
-              <span className="text-base font-medium text-text-primary">Grand Total</span>
-              <span className="text-xl font-bold text-text-primary">{formatPrice(currentOrder.totalAmount)}</span>
+            <div className="border-t border-border-light pt-4 flex justify-between items-center font-normal">
+              <span className="text-base text-text-primary font-normal">Grand Total</span>
+              <span className="text-xl text-text-primary font-normal">{formatPrice(currentOrder.totalAmount)}</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-border p-6">
-            <h2 className="text-lg font-medium text-text-primary mb-6 pb-4 border-b border-border-light flex items-center gap-2">
-              <Truck className="w-5 h-5 text-text-muted" /> Shipping Details
+          <div className="bg-white rounded-2xl shadow-sm border border-border p-6 font-normal">
+            <h2 className="text-lg text-text-primary mb-6 pb-4 border-b border-border-light flex items-center gap-2 font-bold">
+              <Truck className="w-5 h-5 text-text-muted font-medium" /> Shipping Details
             </h2>
             
             {currentOrder.shippingAddress ? (
-              <div className="text-sm text-text-secondary space-y-1">
-                <p className="font-medium text-text-primary">{currentOrder.shippingAddress.recipientName || 'Name missing'}</p>
+              <div className="text-sm text-text-secondary space-y-1 font-normal">
+                <p className="text-text-primary font-normal">{currentOrder.shippingAddress.recipientName || 'Name missing'}</p>
                 <p>{currentOrder.shippingAddress.street || 'Street missing'}</p>
                 <p>{currentOrder.shippingAddress.city || 'City missing'}, {currentOrder.shippingAddress.state || 'State missing'} {currentOrder.shippingAddress.zipCode || 'Zip missing'}</p>
                 <p>{currentOrder.shippingAddress.country || 'Country missing'}</p>
-                <div className="mt-4 pt-3 border-t border-border-light space-y-1">
-                  <p className="flex justify-between"><span className="text-text-muted">Method:</span> <span className="font-medium text-text-primary capitalize">{currentOrder.deliveryMethod === 'express' ? 'Express Delivery' : 'Standard Delivery'}</span></p>
+                <div className="mt-4 pt-3 border-t border-border-light space-y-1 font-normal">
+                  <p className="flex justify-between font-normal"><span className="text-text-muted font-medium">Method:</span> <span className="text-text-primary capitalize font-normal">{currentOrder.deliveryMethod === 'express' ? 'Express Delivery' : 'Standard Delivery'}</span></p>
                   {currentOrder.estimatedDelivery && (
-                    <p className="flex justify-between"><span className="text-text-muted">Estimated:</span> <span className="font-medium text-text-primary">{currentOrder.estimatedDelivery}</span></p>
+                    <p className="flex justify-between font-normal"><span className="text-text-muted font-medium">Estimated:</span> <span className="text-text-primary font-normal">{currentOrder.estimatedDelivery}</span></p>
                   )}
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-text-muted">Shipping details unavailable.</p>
+              <p className="text-sm text-text-muted font-medium">Shipping details unavailable.</p>
             )}
           </div>
         </div>

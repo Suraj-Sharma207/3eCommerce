@@ -23,12 +23,20 @@ router.post('/branding/logo', uploadBranding.single('logo'), uploadLogo);
 router.post('/branding/email-logo', uploadBranding.single('emailLogo'), uploadEmailLogo);
 
 router.get('/dashboard', adminController.getDashboardAnalytics);
+router.get('/dashboard/kpis', adminController.getKpis);
+router.get('/dashboard/recent-orders', adminController.getRecentOrders);
+router.get('/dashboard/top-products', adminController.getTopProducts);
+router.get('/dashboard/order-statuses', adminController.getOrderStatuses);
+router.get('/dashboard/extended-stats', adminController.getExtendedStats);
 router.get('/dashboard/revenue', adminController.getRevenueAnalytics);
 router.get('/dashboard/inventory-alerts', adminController.getInventoryAlerts);
 router.get('/dashboard/orders', adminController.getOrdersAnalytics);
 router.get('/dashboard/customers', adminController.getCustomersAnalytics);
 router.get('/dashboard/products', adminController.getProductsAnalytics);
 router.get('/products', adminController.getAllProducts);
+// Bulk selection support — must come before any /:id catch-alls
+router.get('/products/ids', adminController.getFilteredProductIds);
+router.delete('/products/bulk', adminController.bulkDeleteProducts);
 router.get('/dashboard/deliveries', adminController.getDeliveriesAnalytics);
 router.get('/dashboard/cancellations', adminController.getCancellationsAnalytics);
 router.get('/orders', adminController.getAllOrders);

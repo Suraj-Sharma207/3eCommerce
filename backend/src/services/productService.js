@@ -2,7 +2,7 @@ import productRepository from '../repositories/productRepository.js';
 import { validateProductInput } from '../utils/productValidation.js';
 import prisma from '../lib/prisma.js';
 import promotionService from './promotionService.js';
-import { homeCache } from '../controllers/homeController.js';
+import { cacheGet, cacheSet, cacheInvalidateByPattern } from './cacheService.js';
 
 const normalizeCategory = (category) => {
   if (!category) return 'Decor';
@@ -16,49 +16,58 @@ const normalizeCategory = (category) => {
 
 class ProductService {
   async getProducts({ page = 1, limit = 15, search = '', category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin }) {
-    const take = parseInt(limit, 10);
-    const filterArgs = { search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin };
+    // Generate deterministic cache key
+    const filterArgs = { page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin };
+    const sortedKeys = Object.keys(filterArgs).sort();
+    const queryPart = sortedKeys.map(k => `${k}=${filterArgs[k] !== undefined && filterArgs[k] !== null ? filterArgs[k] : ''}`).join('&');
+    const cacheKey = `products:list:${queryPart}`;
 
-    // Fetch total items based on current stockStatus filter
-    const totalItems = await productRepository.count(filterArgs);
-    
-    // Concurrently fetch counts for ALL stock statuses only if explicitly requested
-    let inventoryCounts = null;
-    if (filterArgs.includeInventoryCounts === 'true' || filterArgs.includeInventoryCounts === true) {
-      inventoryCounts = await productRepository.countByStockStatus(filterArgs);
-    }
+    const cached = await cacheGet(cacheKey);
+    if (cached) return cached;
 
-    const totalPages = Math.max(1, Math.ceil(totalItems / take));
+    // Safe integer clamping
+    let take = parseInt(limit, 10);
+    if (!Number.isFinite(take) || take < 1) take = 15;
+    if (take > 50000) take = 50000;
 
-    let currentPage = parseInt(page);
-    if (currentPage > totalPages) {
-      currentPage = totalPages;
-    }
-    if (currentPage < 1) {
-      currentPage = 1;
-    }
-
+    let currentPage = parseInt(page, 10);
+    if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
     const skip = (currentPage - 1) * take;
 
-    const products = await productRepository.findAll({ skip, take, ...filterArgs });
+    // Concurrently fetch counts, products, and active promotions in parallel (1 RTT)
+    const [filteredItems, totalItems, products, inventoryCounts, activePromotions] = await Promise.all([
+      productRepository.count(filterArgs),
+      productRepository.count({ isAdmin }),
+      productRepository.findAll({ skip, take, ...filterArgs }),
+      (filterArgs.includeInventoryCounts === 'true' || filterArgs.includeInventoryCounts === true)
+        ? productRepository.countByStockStatus(filterArgs)
+        : Promise.resolve(null),
+      promotionService.getActivePromotions()
+    ]);
 
-    // Fetch active promotions and calculate final prices dynamically
-    const activePromotions = await promotionService.getActivePromotions();
+    const totalPages = Math.max(1, Math.ceil(filteredItems / take));
+    const finalCurrentPage = currentPage > totalPages ? totalPages : currentPage;
+
     const dynamicProducts = await Promise.all(products.map(async (product) => {
       const { finalPrice, discountPercentage } = await promotionService.calculateProductPrice(product, activePromotions);
       return { ...product, finalPrice, discountPercentage };
     }));
 
-    return {
+    const result = {
       products: dynamicProducts,
       pagination: {
-        currentPage,
+        currentPage: finalCurrentPage,
         totalPages,
         totalItems,
+        filteredItems,
         itemsPerPage: take,
+        pageSize: take,
         inventoryCounts,
       },
     };
+
+    await cacheSet(cacheKey, result, 300); // 5 mins TTL
+    return result;
   }
 
   async getRelatedProducts(id, limit = 4) {
@@ -107,7 +116,7 @@ class ProductService {
     }
 
     // Generate SKU: LUX-YYYYMMDD-RANDOM(6 chars)
-    const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, '');
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomStr = Math.floor(100000 + Math.random() * 900000);
     const generatedSku = `LUX-${dateStr}-${randomStr}`;
 
@@ -117,7 +126,7 @@ class ProductService {
       brand: data.brand.trim(),
       category: normalizeCategory(data.category),
       description: data.description.trim(),
-      sku: generatedSku,
+      sku: data.sku || generatedSku,
       price: parseFloat(data.price),
       stock: parseInt(data.stock, 10),
       discountPercentage: parseFloat(data.discountPercentage) || 0,
@@ -129,7 +138,9 @@ class ProductService {
     delete formattedData.galleryImages;
 
     const created = await productRepository.create(formattedData);
-    homeCache.clear();
+    await cacheInvalidateByPattern('products:*');
+    await cacheInvalidateByPattern('home:*');
+    await cacheInvalidateByPattern('admin:dashboard:*');
     return created;
   }
 
@@ -180,19 +191,49 @@ class ProductService {
     };
 
     const updated = await productRepository.update(id, formattedData);
-    homeCache.clear();
+    await cacheInvalidateByPattern('products:*');
+    await cacheInvalidateByPattern('home:*');
+    await cacheInvalidateByPattern('admin:dashboard:*');
     return updated;
   }
 
   async deleteProduct(id) {
     await this.getProductById(id);
     const deleted = await productRepository.delete(id);
-    homeCache.clear();
+    await cacheInvalidateByPattern('products:*');
+    await cacheInvalidateByPattern('home:*');
+    await cacheInvalidateByPattern('admin:dashboard:*');
     return deleted;
   }
 
+  async bulkDeleteProducts(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw { statusCode: 400, message: 'No product IDs provided' };
+    }
+    const { count } = await prisma.$transaction(async (tx) => {
+      return tx.product.deleteMany({
+        where: { id: { in: ids } }
+      });
+    });
+    await cacheInvalidateByPattern('products:*');
+    await cacheInvalidateByPattern('home:*');
+    await cacheInvalidateByPattern('admin:dashboard:*');
+    return { deleted: count };
+  }
+
+  async getFilteredProductIds({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
+    const ids = await productRepository.findAllIds({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
+    return ids;
+  }
+
   async getCategories() {
-    return await productRepository.getCategories();
+    const cacheKey = 'products:categories';
+    const cached = await cacheGet(cacheKey);
+    if (cached) return cached;
+
+    const categories = await productRepository.getCategories();
+    await cacheSet(cacheKey, categories, 3600); // 1 hour TTL
+    return categories;
   }
 
   async createStockNotification(productId, email, phone, userId) {

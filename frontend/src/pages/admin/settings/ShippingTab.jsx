@@ -37,23 +37,23 @@ const ShippingTab = () => {
     setIsEditing(false);
   };
 
-  if (isLoading && !Object.keys(data).length) return <div className="p-8 text-center text-text-muted">Loading shipping settings...</div>;
+  if (isLoading && !Object.keys(data).length) return <div className="p-8 text-center text-text-muted font-medium">Loading shipping settings...</div>;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+      <div className="flex items-center justify-between font-normal">
         <div>
-          <h3 className="text-lg font-extrabold text-text-primary mb-1">Shipping Configuration</h3>
-          <p className="text-sm text-text-muted">Set up global shipping rules.</p>
+          <h3 className="text-lg text-text-primary mb-1 font-bold">Shipping Configuration</h3>
+          <p className="text-sm text-text-muted font-medium">Set up global shipping rules.</p>
         </div>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" /> Edit
+            <Edit2 className="w-4 h-4 mr-2 font-normal" /> Edit
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 font-normal">
         <Input 
           label="Free Shipping Threshold" name="freeShippingThreshold" type="number" 
           value={formData.freeShippingThreshold || ''} onChange={handleChange} 
@@ -75,12 +75,12 @@ const ShippingTab = () => {
       </div>
 
       {isEditing && (
-        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10 font-normal">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-            <X className="w-4 h-4 mr-2" /> Cancel
+            <X className="w-4 h-4 mr-2 font-normal" /> Cancel
           </Button>
           <Button type="button" onClick={handleSave} isLoading={isSaving}>
-            <Save className="w-4 h-4 mr-2" /> Save Changes
+            <Save className="w-4 h-4 mr-2 font-normal" /> Save Changes
           </Button>
         </div>
       )}

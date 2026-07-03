@@ -14,7 +14,7 @@ import useCategoryStore from '../../store/categoryStore';
 
 const HomePage = () => {
   const { homeProducts, fetchHomeProducts, hasFetchedHome } = useProductStore();
-  const { categories, fetchCategories, isLoading: isCategoriesLoading } = useCategoryStore();
+  const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const [isLoading, setIsLoading] = useState(!hasFetchedHome);
 
   // IntersectionObserver for Sticky Navbar
@@ -53,9 +53,7 @@ const HomePage = () => {
     }
   }, [fetchHomeProducts, hasFetchedHome]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  // Categories are now loaded centrally from App.jsx
 
   const renderProductGrid = (items) => {
     if (isLoading) {
@@ -66,7 +64,7 @@ const HomePage = () => {
       );
     }
     if (!items || items.length === 0) {
-      return <div className="text-center text-text-muted py-8">No products found in this section.</div>;
+      return <div className="text-center text-text-muted py-8 font-medium">No products found in this section.</div>;
     }
     return (
       <ProductGrid maxCols={4}>
@@ -78,12 +76,12 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col pb-20">
+    <div className="flex flex-col pb-20 font-normal">
       <HeroBanner />
 
       {/* Sentinel for Navbar */}
-      <div className="relative">
-        <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-[1px] pointer-events-none -mt-8" aria-hidden="true" />
+      <div className="relative font-normal">
+        <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-[1px] pointer-events-none -mt-8 font-normal" aria-hidden="true" />
       </div>
 
       {/* Categories Section */}
@@ -94,13 +92,13 @@ const HomePage = () => {
         actionButton={<Button variant="outline" href="/products">All Categories</Button>}
       >
         {isCategoriesLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6 font-normal">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-square bg-surface-background rounded-2xl animate-pulse" />
+              <div key={i} className="aspect-square bg-surface-background rounded-2xl animate-pulse font-normal" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-6 font-normal">
             {categories.slice(0, 6).map((category, index) => (
               <CategoryCard
                 key={category.id || index}
@@ -163,23 +161,23 @@ const HomePage = () => {
 
       {/* Newsletter Section */}
       <HomeSection>
-        <div className="bg-brand-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
-          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50"></div>
+        <div className="bg-brand-900 rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden font-normal">
+          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50 font-normal"></div>
+          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-800 rounded-full blur-3xl opacity-50 font-normal"></div>
 
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">Join Our Newsletter</h2>
-            <p className="text-brand-100 text-lg mb-8">
+          <div className="relative z-10 max-w-2xl mx-auto font-normal">
+            <h2 className="text-3xl sm:text-4xl mb-4 font-bold">Join Our Newsletter</h2>
+            <p className="text-brand-100 text-lg mb-8 font-normal">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
             </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto font-normal">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-6 py-4 rounded-full text-text-brand-600 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-1 px-6 py-4 rounded-full text-text-brand-600 focus:outline-none focus:ring-2 focus:ring-primary-400 font-normal"
                 required
               />
-              <Button type="submit" size="lg" className="rounded-full px-8 shadow-lg bg-accent-500 hover:bg-accent-600 focus:ring-accent-500">
+              <Button type="submit" size="lg" className="rounded-full px-8 shadow-lg bg-accent-500 hover:bg-accent-600 focus:ring-accent-500 font-normal">
                 Subscribe
               </Button>
             </form>

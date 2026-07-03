@@ -16,7 +16,7 @@ const HeroCategoryCards = ({
 }) => {
   return (
     <div
-      className="flex overflow-x-auto hide-scrollbar sm:grid sm:grid-cols-5 gap-3 sm:gap-4"
+      className="flex overflow-x-auto hide-scrollbar sm:grid sm:grid-cols-5 gap-3 sm:gap-4 font-normal"
       role="list"
       aria-label="Browse by room category"
     >
@@ -40,17 +40,17 @@ const HeroCategoryCards = ({
             <img
               src={card.image}
               alt={card.label}
-              className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 font-normal"
               loading="lazy"
               decoding="async"
             />
 
             {/* Dark gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent font-normal" />
 
             {/* Label */}
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <span className="text-white text-sm sm:text-[13px] font-semibold tracking-wide drop-shadow">
+            <div className="absolute bottom-0 left-0 right-0 p-3 font-normal">
+              <span className="text-white text-sm sm:text-[13px] tracking-wide drop-shadow font-normal">
                 {card.label}
               </span>
             </div>

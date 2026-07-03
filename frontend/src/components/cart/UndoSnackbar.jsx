@@ -30,13 +30,13 @@ const UndoSnackbar = ({ item, onUndo, onConfirmRemoval }) => {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-6 min-w-[320px] max-w-md w-[90%]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-6 min-w-[320px] max-w-md w-[90%] font-normal"
         >
-          <div className="flex-1 flex flex-col gap-1">
-            <span className="text-sm font-medium line-clamp-1">
+          <div className="flex-1 flex flex-col gap-1 font-normal">
+            <span className="text-sm line-clamp-1 font-normal">
               Removed {item.product?.name || 'Item'}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 font-normal">
               Permanently deleting in {timeLeft}s...
             </span>
           </div>

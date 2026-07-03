@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 import { globalLimiter, authLimiter, adminLimiter, readLimiter } from './middleware/rateLimiter.js';
 
@@ -35,6 +36,22 @@ if (trustProxy === 'true' || trustProxy === '1') {
 } else if (trustProxy) {
   app.set('trust proxy', trustProxy);
 }
+
+// Request logger for troubleshooting request cycles
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Compression Middleware
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
 
 // Security Middlewares
 app.use(helmet());

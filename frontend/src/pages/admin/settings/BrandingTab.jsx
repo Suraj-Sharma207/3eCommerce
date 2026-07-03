@@ -110,23 +110,23 @@ const BrandingTab = () => {
 
   if (loading && !branding) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
+      <div className="flex items-center justify-center p-12 font-normal">
+        <Loader2 className="w-8 h-8 text-brand-600 animate-spin font-normal" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in font-normal">
       <div>
         <h2 className="text-xl font-bold text-text-brand-700">Branding Settings</h2>
-        <p className="text-sm text-text-secondary mt-1">
+        <p className="text-sm text-text-secondary mt-1 font-normal">
           Manage your platform's name and global logo. These changes reflect instantly across the entire application.
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6 max-w-xl">
-        <div className="bg-surface-background p-6 rounded-xl border border-border space-y-6">
+      <form onSubmit={handleSave} className="space-y-6 max-w-xl font-normal">
+        <div className="bg-surface-background p-6 rounded-xl border border-border space-y-6 font-normal">
           <Input
             label="Platform Name"
             name="platformName"
@@ -137,42 +137,42 @@ const BrandingTab = () => {
             helperText="This name will appear in emails, document titles, and fallback text."
           />
 
-          <div className="space-y-3">
-            <label className="block text-sm font-semibold text-text-brand-600">Platform Logo</label>
-            <div className="flex items-start space-x-6">
+          <div className="space-y-3 font-normal">
+            <label className="block text-sm text-text-brand-600 font-normal">Platform Logo</label>
+            <div className="flex items-start space-x-6 font-normal">
               <div 
-                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors"
+                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors font-normal"
                 onClick={handleUploadClick}
               >
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Logo preview" className="max-w-full max-h-full object-contain p-2" />
+                  <img src={previewUrl} alt="Logo preview" className="max-w-full max-h-full object-contain p-2 font-normal" />
                 ) : (
-                  <div className="text-gray-400 flex flex-col items-center">
-                    <ImageIcon className="w-8 h-8 mb-2" />
-                    <span className="text-xs font-medium">No logo</span>
+                  <div className="text-gray-400 flex flex-col items-center font-normal">
+                    <ImageIcon className="w-8 h-8 mb-2 font-normal" />
+                    <span className="text-xs font-normal">No logo</span>
                   </div>
                 )}
               </div>
               
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-3 font-normal">
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
                   accept="image/png, image/jpeg, image/jpg"
-                  className="hidden"
+                  className="hidden font-normal"
                 />
                 <Button 
                   type="button" 
                   variant="outline" 
                   size="sm" 
                   onClick={handleUploadClick}
-                  className="w-full flex justify-center"
+                  className="w-full flex justify-center font-normal"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="w-4 h-4 mr-2 font-normal" />
                   Choose Image
                 </Button>
-                <div className="text-xs text-gray-500 space-y-1">
+                <div className="text-xs text-gray-500 space-y-1 font-normal">
                   <p>• Allowed formats: JPG, PNG</p>
                   <p>• Maximum size: 2 MB</p>
                   <p>• Recommended dimensions: 512x512 px</p>
@@ -182,46 +182,46 @@ const BrandingTab = () => {
           </div>
         </div>
 
-        <div className="bg-surface-background p-6 rounded-xl border border-border space-y-6">
-          <div className="space-y-3">
+        <div className="bg-surface-background p-6 rounded-xl border border-border space-y-6 font-normal">
+          <div className="space-y-3 font-normal">
             <div>
-              <label className="block text-sm font-semibold text-text-brand-600">Email Logo</label>
-              <p className="text-xs text-text-secondary mt-1">This logo will be used in transactional and marketing emails.</p>
+              <label className="block text-sm text-text-brand-600 font-normal">Email Logo</label>
+              <p className="text-xs text-text-secondary mt-1 font-normal">This logo will be used in transactional and marketing emails.</p>
             </div>
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-6 font-normal">
               <div 
-                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors"
+                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors font-normal"
                 onClick={handleEmailUploadClick}
               >
                 {emailPreviewUrl ? (
-                  <img src={emailPreviewUrl} alt="Email Logo preview" className="max-w-full max-h-full object-contain p-2" />
+                  <img src={emailPreviewUrl} alt="Email Logo preview" className="max-w-full max-h-full object-contain p-2 font-normal" />
                 ) : (
-                  <div className="text-gray-400 flex flex-col items-center">
-                    <ImageIcon className="w-8 h-8 mb-2" />
-                    <span className="text-xs font-medium">No logo</span>
+                  <div className="text-gray-400 flex flex-col items-center font-normal">
+                    <ImageIcon className="w-8 h-8 mb-2 font-normal" />
+                    <span className="text-xs font-normal">No logo</span>
                   </div>
                 )}
               </div>
               
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-3 font-normal">
                 <input
                   type="file"
                   ref={emailFileInputRef}
                   onChange={handleEmailFileSelect}
                   accept="image/png, image/jpeg, image/jpg"
-                  className="hidden"
+                  className="hidden font-normal"
                 />
                 <Button 
                   type="button" 
                   variant="outline" 
                   size="sm" 
                   onClick={handleEmailUploadClick}
-                  className="w-full flex justify-center"
+                  className="w-full flex justify-center font-normal"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="w-4 h-4 mr-2 font-normal" />
                   Choose Email Image
                 </Button>
-                <div className="text-xs text-gray-500 space-y-1">
+                <div className="text-xs text-gray-500 space-y-1 font-normal">
                   <p>• Allowed formats: JPG, PNG</p>
                   <p>• Maximum size: 2 MB</p>
                   <p>• Recommended dimensions: 600x180 px</p>
@@ -231,13 +231,13 @@ const BrandingTab = () => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end pt-4 font-normal">
           <Button 
             type="submit" 
             isLoading={uploading} 
             disabled={uploading || (!selectedFile && !selectedEmailFile && platformName === branding?.platformName)}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-2 font-normal" />
             Save Changes
           </Button>
         </div>

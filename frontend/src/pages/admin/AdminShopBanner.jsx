@@ -149,39 +149,39 @@ const AdminShopBanner = () => {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-text-muted">Loading banner configuration...</div>;
+    return <div className="p-8 text-center text-text-muted font-medium">Loading banner configuration...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 font-normal">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-normal">
         <div>
           <h2 className="text-lg font-bold text-text-primary">Shop Page Banner</h2>
-          <p className="text-sm text-text-secondary mt-1">Manage the hero background image for the main Products listing page.</p>
+          <p className="text-sm text-text-secondary mt-1 font-normal">Manage the hero background image for the main Products listing page.</p>
         </div>
       </div>
 
       {message.text && (
         <div className={`p-4 rounded-xl flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
           }`}>
-          {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : null}
-          <p className="text-sm font-medium">{message.text}</p>
+          {message.type === 'success' ? <CheckCircle className="w-5 h-5 font-normal" /> : null}
+          <p className="text-sm font-normal">{message.text}</p>
         </div>
       )}
 
       {/* Control Panel */}
-      <div className="bg-surface-background rounded-2xl p-6 border border-border">
+      <div className="bg-surface-background rounded-2xl p-6 border border-border font-normal">
         <h3 className="text-sm font-bold text-text-primary mb-4">Banner Image Settings</h3>
 
-        <div className="flex flex-col sm:flex-row gap-6">
-          <div className="flex-1 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-6 font-normal">
+          <div className="flex-1 space-y-4 font-normal">
             <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-2">Upload Background Image</label>
-              <div className="flex gap-3">
+              <label className="block text-sm text-text-secondary mb-2 font-normal">Upload Background Image</label>
+              <div className="flex gap-3 font-normal">
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
+                  className="hidden font-normal"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
                   disabled={isUploading}
@@ -191,14 +191,14 @@ const AdminShopBanner = () => {
                   disabled={isUploading}
                   className="px-4 py-2 bg-white border border-border rounded-xl text-sm font-bold text-text-primary hover:bg-surface-background transition-colors flex items-center gap-2"
                 >
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-4 h-4 font-normal" />
                   Choose File
                 </button>
                 {selectedFile && (
                   <button
                     onClick={cancelSelection}
                     disabled={isUploading}
-                    className="px-4 py-2 bg-white border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-error transition-colors"
+                    className="px-4 py-2 bg-white border border-border rounded-xl text-sm text-text-secondary hover:text-error transition-colors font-normal"
                   >
                     Cancel
                   </button>
@@ -207,20 +207,20 @@ const AdminShopBanner = () => {
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting || isUploading}
-                    className="px-4 py-2 bg-red-50 border border-red-100 rounded-xl text-sm font-bold text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2 font-normal"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 font-normal" />
                     {isDeleting ? 'Removing...' : 'Remove Banner'}
                   </button>
                 )}
               </div>
-              <p className="text-xs text-text-muted mt-2">
+              <p className="text-xs text-text-muted mt-2 font-medium">
                 Recommended size: 1920x800px. Max 5MB. JPG, PNG, WEBP.
               </p>
             </div>
           </div>
 
-          <div className="shrink-0 flex items-end">
+          <div className="shrink-0 flex items-end font-normal">
             <button
               onClick={handleSave}
               disabled={!selectedFile || isUploading}
@@ -231,12 +231,12 @@ const AdminShopBanner = () => {
             >
               {isUploading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-brand-200 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-brand-200 border-t-white rounded-full animate-spin font-normal" />
                   Publishing...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-4 h-4 font-normal" />
                   Save Changes
                 </>
               )}
@@ -247,17 +247,17 @@ const AdminShopBanner = () => {
 
       {/* Live Preview section */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <ImageIcon className="w-5 h-5 text-text-secondary" />
+        <div className="flex items-center gap-2 mb-4 font-normal">
+          <ImageIcon className="w-5 h-5 text-text-secondary font-normal" />
           <h3 className="text-sm font-bold text-text-primary">Live Preview</h3>
         </div>
 
-        <div className="border-[4px] border-surface-background rounded-[40px] overflow-hidden bg-white shadow-sm p-4 sm:p-6 lg:p-8">
-          <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px]">
+        <div className="border-[4px] border-surface-background rounded-[40px] overflow-hidden bg-white shadow-sm p-4 sm:p-6 lg:p-8 font-normal">
+          <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] font-normal">
             <img
               src={previewImage}
               alt="Shop Banner Preview"
-              className="w-full h-full object-cover object-center select-none pointer-events-none"
+              className="w-full h-full object-cover object-center select-none pointer-events-none font-normal"
               draggable={false}
             />
           </div>

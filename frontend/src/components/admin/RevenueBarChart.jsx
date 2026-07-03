@@ -16,13 +16,13 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white border border-border rounded-xl shadow-lg p-3 min-w-[150px]">
-        <p className="text-sm font-bold text-text-muted mb-2">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-extrabold text-brand-600">
+      <div className="bg-white border border-border rounded-xl shadow-lg p-3 min-w-[150px] font-normal">
+        <p className="text-sm text-text-muted mb-2 font-medium">{label}</p>
+        <div className="space-y-1 font-normal">
+          <p className="text-sm text-brand-600 font-normal">
             Revenue: {formatPrice(data.revenue)}
           </p>
-          <p className="text-xs font-medium text-text-secondary">
+          <p className="text-xs text-text-secondary font-normal">
             Orders: {data.orders}
           </p>
         </div>
@@ -52,8 +52,8 @@ const RevenueBarChart = () => {
   const data = analytics?.revenueTrend || [];
 
   return (
-    <div className="flex flex-col h-full w-full relative">
-      <div className="flex flex-wrap items-center gap-2 mb-6">
+    <div className="flex flex-col h-full w-full relative font-normal">
+      <div className="flex flex-wrap items-center gap-2 mb-6 font-normal">
         {FILTERS.map(f => (
           <button
             key={f.id}
@@ -69,9 +69,9 @@ const RevenueBarChart = () => {
         ))}
       </div>
 
-      <div className="flex-1 min-h-[300px] relative">
+      <div className="flex-1 min-h-[300px] relative font-normal">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] font-normal">
             <LoadingSpinner />
           </div>
         )}
@@ -84,13 +84,13 @@ const RevenueBarChart = () => {
                 dataKey="date" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#64748B', fontWeight: 600 }}
+                tick={{ fontSize: 12, fill: '#64748B', fontWeight: '400' }}
                 dy={10}
               />
               <YAxis 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#64748B', fontWeight: 600 }}
+                tick={{ fontSize: 12, fill: '#64748B', fontWeight: '400' }}
                 tickFormatter={(val) => `₹${(val / 1000)}k`}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: '#F1F5F9' }} />
@@ -104,8 +104,8 @@ const RevenueBarChart = () => {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="text-sm font-bold text-text-brand-600">No data for selected period</p>
+          <div className="flex flex-col items-center justify-center h-full text-center font-normal">
+            <p className="text-sm text-text-brand-600 font-normal">No data for selected period</p>
           </div>
         )}
       </div>

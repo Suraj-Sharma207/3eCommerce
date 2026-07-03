@@ -40,10 +40,12 @@ const usePromotionStore = create((set, get) => ({
     const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
     const filters = overrideParams.filters || {};
     
+    const limit = overrideParams.limit ?? pagination.itemsPerPage;
+
     try {
       const { data } = await promotionService.getPromotions({
         page,
-        limit: pagination.itemsPerPage,
+        limit,
         search: effectiveSearch,
         status: filters.status,
         type: filters.type,
@@ -66,13 +68,11 @@ const usePromotionStore = create((set, get) => ({
   createPromotion: async (promotionData) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await promotionService.createPromotion(promotionData);
-      const newPromotion = data?.promotion || data?.data || data;
-      // Append to list without refetching
-      set((state) => ({
-        isLoading: false,
-        promotions: newPromotion ? [...state.promotions, newPromotion] : state.promotions,
-      }));
+      await promotionService.createPromotion(promotionData);
+      set({ isLoading: false });
+      // Refetch the current page so row count never exceeds the limit
+      const { pagination, fetchPromotions } = get();
+      fetchPromotions(pagination.currentPage);
       return true;
     } catch (error) {
       set({ error: error.response?.data?.message || 'Failed to create promotion', isLoading: false });
@@ -123,7 +123,7 @@ const usePromotionStore = create((set, get) => ({
   deletePromotion: async (id) => {
     const prevPromotions = get().promotions;
 
-    // Optimistic removal
+    // Optimistically remove
     set((state) => ({
       promotions: state.promotions.filter((p) => p.id !== id),
       updatingPromotionIds: new Set([...state.updatingPromotionIds, id]),
@@ -136,6 +136,9 @@ const usePromotionStore = create((set, get) => ({
         next.delete(id);
         return { updatingPromotionIds: next };
       });
+      // Refetch to fill the gap and keep pagination accurate
+      const { pagination, fetchPromotions } = get();
+      fetchPromotions(pagination.currentPage);
       return true;
     } catch (error) {
       // Rollback

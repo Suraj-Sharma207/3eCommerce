@@ -1,13 +1,29 @@
 import prisma from '../lib/prisma.js';
 import cloudinary from '../config/cloudinary.js';
+import { cacheGet, cacheSet, cacheDel } from '../services/cacheService.js';
+
+const SHOP_BANNER_CACHE_KEY = 'shop-banner:active';
 
 export const getActiveShopBanner = async (req, res, next) => {
   try {
+    // Check cache first
+    const cached = await cacheGet(SHOP_BANNER_CACHE_KEY);
+    if (cached !== null) {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+      return res.status(200).json({
+        success: true,
+        data: cached
+      });
+    }
+
     const banner = await prisma.shopBanner.findFirst({
       where: { isActive: true },
       orderBy: { updatedAt: 'desc' }
     });
 
+    // Cache the result (even if null — prevents repeated DB lookups)
+    await cacheSet(SHOP_BANNER_CACHE_KEY, banner, 600); // 10 minutes TTL
+    res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
     res.status(200).json({
       success: true,
       data: banner
@@ -45,6 +61,9 @@ export const createShopBanner = async (req, res, next) => {
         isActive: true
       }
     });
+
+    // Invalidate cache after mutation
+    await cacheDel(SHOP_BANNER_CACHE_KEY);
 
     res.status(201).json({
       success: true,
@@ -113,6 +132,9 @@ export const updateShopBanner = async (req, res, next) => {
       data: updatedData
     });
 
+    // Invalidate cache after mutation
+    await cacheDel(SHOP_BANNER_CACHE_KEY);
+
     res.status(200).json({
       success: true,
       message: 'Shop banner updated successfully',
@@ -139,13 +161,16 @@ export const deleteShopBanner = async (req, res, next) => {
       try {
         await cloudinary.uploader.destroy(banner.imagePublicId);
       } catch (cloudinaryError) {
-        console.error('Failed to delete Cloudinary image:', cloudinaryError);
+        console.error('Failed to delete Cloudinary image during banner deletion:', cloudinaryError);
       }
     }
 
     await prisma.shopBanner.delete({
       where: { id }
     });
+
+    // Invalidate cache after mutation
+    await cacheDel(SHOP_BANNER_CACHE_KEY);
 
     res.status(200).json({
       success: true,

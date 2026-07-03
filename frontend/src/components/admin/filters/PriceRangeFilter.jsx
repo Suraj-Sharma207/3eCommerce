@@ -38,7 +38,7 @@ const PriceRangeFilter = ({ label, min, max, onChange }) => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative font-normal" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -47,15 +47,15 @@ const PriceRangeFilter = ({ label, min, max, onChange }) => {
           ${(min || max) ? 'bg-brand-50 border-brand-200' : ''}
         `}
       >
-        <span className="flex items-center gap-1.5 truncate">
-          <span className="text-text-muted">{label}:</span>
-          <span className="font-bold truncate max-w-[120px]">{selectedOption.label}</span>
+        <span className="flex items-center gap-1.5 truncate font-normal">
+          <span className="text-text-muted font-medium">{label}:</span>
+          <span className="truncate max-w-[120px] font-normal">{selectedOption.label}</span>
         </span>
         <ChevronDown className={`w-4 h-4 ml-2 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden">
+        <div className="absolute z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden font-normal">
           {predefinedRanges.map((option) => (
             <button
               key={option.value}
@@ -65,7 +65,7 @@ const PriceRangeFilter = ({ label, min, max, onChange }) => {
               <span className={currentValue === option.value ? 'font-bold text-brand-600' : 'text-text-primary'}>
                 {option.label}
               </span>
-              {currentValue === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0" />}
+              {currentValue === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0 font-normal" />}
             </button>
           ))}
         </div>

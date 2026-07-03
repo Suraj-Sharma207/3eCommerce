@@ -30,12 +30,12 @@ const PhoneInput = forwardRef(({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-sm font-semibold text-text-primary" htmlFor={id}>
+        <label className="text-sm text-text-primary font-normal" htmlFor={id}>
           {label}
-          {required && <span className="text-danger-600 ml-0.5">*</span>}
+          {required && <span className="text-danger-600 ml-0.5 font-normal">*</span>}
         </label>
       )}
-      <div className="relative">
+      <div className="relative font-normal">
         <PhoneInputLib
           ref={ref}
           international
@@ -61,7 +61,7 @@ const PhoneInput = forwardRef(({
         />
       </div>
       {error && (
-        <p className="text-sm text-danger-600 mt-1" id={`${id || name}-error`} role="alert">
+        <p className="text-sm text-danger-600 mt-1 font-normal" id={`${id || name}-error`} role="alert">
           {error}
         </p>
       )}

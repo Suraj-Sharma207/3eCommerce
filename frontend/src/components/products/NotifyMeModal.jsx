@@ -42,37 +42,37 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm font-normal">
         <div
-          className="bg-white w-full max-w-md rounded-[24px] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          className="bg-white w-full max-w-md rounded-[24px] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-normal"
           onClick={(e) => e.stopPropagation()}
-        ><div className="flex justify-between items-center p-6 border-b border-border-light">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
-              <Bell className="w-5 h-5" />
+        ><div className="flex justify-between items-center p-6 border-b border-border-light font-normal">
+          <div className="flex items-center gap-3 font-normal">
+            <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-normal">
+              <Bell className="w-5 h-5 font-normal" />
             </div>
             <h3 className="text-xl font-bold text-text-brand-600">Notify Me</h3>
           </div>
           <button 
             onClick={onClose}
-            className="text-text-muted hover:text-text-brand-600 transition-colors p-2"
+            className="text-text-muted hover:text-text-brand-600 transition-colors p-2 font-medium"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 font-normal" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 font-normal">
           {success ? (
-            <div className="text-center py-6">
-              <div className="w-16 h-16 bg-success-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-center py-6 font-normal">
+              <div className="w-16 h-16 bg-success-50 rounded-full flex items-center justify-center mx-auto mb-4 font-normal">
+                <svg className="w-8 h-8 text-success-600 font-normal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h4 className="text-lg font-bold text-text-brand-600 mb-2">Request Received!</h4>
-              <p className="text-text-secondary mb-6">
-                We'll email you as soon as <span className="font-semibold text-text-brand-600">{productName}</span> is back in stock.
+              <h4 className="text-lg text-text-brand-600 mb-2 font-normal">Request Received!</h4>
+              <p className="text-text-secondary mb-6 font-normal">
+                We'll email you as soon as <span className="text-text-brand-600 font-normal">{productName}</span> is back in stock.
               </p>
               <Button 
                 onClick={onClose}
@@ -83,19 +83,19 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <p className="text-text-secondary mb-6">
-                <span className="font-semibold text-text-brand-600">{productName}</span> is currently out of stock. Leave your details below and we'll notify you when it's available.
+              <p className="text-text-secondary mb-6 font-normal">
+                <span className="text-text-brand-600 font-normal">{productName}</span> is currently out of stock. Leave your details below and we'll notify you when it's available.
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-danger-50 text-danger-700 text-sm rounded-lg border border-danger-600-200">
+                <div className="mb-4 p-3 bg-danger-50 text-danger-700 text-sm rounded-lg border border-danger-600-200 font-normal">
                   {error}
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-4 font-normal">
                 <div>
-                  <label className="block text-sm font-bold text-text-brand-600 mb-1">Email Address *</label>
+                  <label className="block text-sm text-text-brand-600 mb-1 font-normal">Email Address *</label>
                   <input
                     type="email"
                     required
@@ -106,7 +106,7 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-text-brand-600 mb-1">Phone Number (Optional)</label>
+                  <label className="block text-sm text-text-brand-600 mb-1 font-normal">Phone Number (Optional)</label>
                   <input
                     type="tel"
                     value={phone}
@@ -118,7 +118,7 @@ const NotifyMeModal = ({ isOpen, onClose, productId, productName, onSuccess }) =
                 </div>
               </div>
 
-              <div className="mt-8">
+              <div className="mt-8 font-normal">
                 <Button
                   type="submit"
                   isLoading={isLoading}

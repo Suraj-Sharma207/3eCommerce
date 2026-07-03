@@ -1,39 +1,17 @@
 import homepageService from '../services/homepageService.js';
+import { cacheGet, cacheSet, cacheInvalidateByPattern } from '../services/cacheService.js';
 
-class Cache {
-  constructor() {
-    this.store = new Map();
-  }
-  get(key) {
-    const item = this.store.get(key);
-    if (!item) return null;
-    if (Date.now() > item.expiry) {
-      this.store.delete(key);
-      return null;
-    }
-    return item.value;
-  }
-  set(key, value, ttlSeconds = 300) {
-    this.store.set(key, {
-      value,
-      expiry: Date.now() + (ttlSeconds * 1000)
-    });
-  }
-  clear() {
-    this.store.clear();
-  }
-}
-export const homeCache = new Cache();
+// Cache TTL config for home elements
+const HOME_CACHE_TTL = 300; // 5 minutes
 
 export const getAllHomeSections = async (req, res, next) => {
   try {
-    const cacheKey = `home_all`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = 'home:all';
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json({ success: true, data: cached });
 
     const data = await homepageService.getHomepageSections();
-    
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json({ success: true, data });
   } catch (error) {
     next(error);
@@ -43,12 +21,12 @@ export const getAllHomeSections = async (req, res, next) => {
 export const getFeaturedProducts = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
-    const cacheKey = `home_featured_${limit}`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = `home:featured:limit=${limit}`;
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json(cached);
 
     const data = await homepageService.getFeaturedProducts(limit);
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json(data);
   } catch (error) {
     next(error);
@@ -58,12 +36,12 @@ export const getFeaturedProducts = async (req, res, next) => {
 export const getTrendingProducts = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
-    const cacheKey = `home_trending_${limit}`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = `home:trending:limit=${limit}`;
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json(cached);
 
     const data = await homepageService.getTrendingProducts(limit);
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json(data);
   } catch (error) {
     next(error);
@@ -73,12 +51,12 @@ export const getTrendingProducts = async (req, res, next) => {
 export const getNewArrivals = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
-    const cacheKey = `home_new_${limit}`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = `home:new:limit=${limit}`;
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json(cached);
 
     const data = await homepageService.getNewArrivalProducts(limit);
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json(data);
   } catch (error) {
     next(error);
@@ -88,12 +66,12 @@ export const getNewArrivals = async (req, res, next) => {
 export const getSpecialOffers = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
-    const cacheKey = `home_offers_${limit}`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = `home:offers:limit=${limit}`;
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json(cached);
 
     const data = await homepageService.getSpecialOfferProducts(limit);
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json(data);
   } catch (error) {
     next(error);
@@ -103,12 +81,12 @@ export const getSpecialOffers = async (req, res, next) => {
 export const getBestSellers = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
-    const cacheKey = `home_bestsellers_${limit}`;
-    const cached = homeCache.get(cacheKey);
+    const cacheKey = `home:bestsellers:limit=${limit}`;
+    const cached = await cacheGet(cacheKey);
     if (cached) return res.json(cached);
 
     const data = await homepageService.getBestSellerProducts(limit);
-    homeCache.set(cacheKey, data);
+    await cacheSet(cacheKey, data, HOME_CACHE_TTL);
     res.json(data);
   } catch (error) {
     next(error);
@@ -119,7 +97,10 @@ export const updateFeaturedOrder = async (req, res, next) => {
   try {
     const { products } = req.body;
     await homepageService.updateFeaturedOrder(products);
-    homeCache.clear();
+    
+    // Invalidate all home cache keys on reordering
+    await cacheInvalidateByPattern('home:*');
+    
     res.json({ success: true, message: 'Order updated successfully' });
   } catch (error) {
     next(error);

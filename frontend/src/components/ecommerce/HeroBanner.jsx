@@ -8,12 +8,12 @@ import { HeroOfferStrip, HeroSection } from './hero';
  */
 const HeroBanner = () => {
   return (
-    <div className="w-full bg-surface-background">
+    <div className="w-full bg-surface-background font-normal">
       {/* Dark announcement strip */}
       <HeroOfferStrip />
 
       {/* Main hero area (carousel + category cards + benefit cards) */}
-      <div className="pt-6 pb-2 md:pt-8 lg:pt-10">
+      <div className="pt-6 pb-2 md:pt-8 lg:pt-10 font-normal">
         <PageContainer>
           <HeroSection />
         </PageContainer>

@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 const HeroIndicators = ({ count, current, onChange }) => {
   return (
     <div
-      className="flex items-center justify-center gap-2"
+      className="flex items-center justify-center gap-2 font-normal"
       role="tablist"
       aria-label="Slide indicators"
     >

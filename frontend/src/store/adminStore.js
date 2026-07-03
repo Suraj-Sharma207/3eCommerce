@@ -6,10 +6,16 @@ import axios from 'axios';
 let ordersAbortController = null;
 
 const useAdminStore = create((set, get) => ({
-  analytics: null,
+  analytics: {}, // Initialized to empty object to allow immediate shell render
+  dashboardLoading: {
+    kpis: false,
+    recentOrders: false,
+    topProducts: false,
+    orderStatuses: false,
+    extendedStats: false,
+  },
   inventoryAlerts: null,
   inventoryAlertsError: null,
-  cachedAt: null,
   activeRequest: null,
   
   // Detailed Analytics Caches
@@ -30,6 +36,7 @@ const useAdminStore = create((set, get) => ({
     cancellations: false
   },
   orders: [],
+  ordersCache: {},
   ordersPagination: {
     currentPage: 1,
     totalPages: 1,
@@ -54,50 +61,90 @@ const useAdminStore = create((set, get) => ({
   },
 
   fetchAnalytics: async ({ force = false } = {}) => {
+    // Fire all granular fetchers concurrently so widgets load independently
+    Promise.allSettled([
+      get().fetchDashboardKpis(force),
+      get().fetchDashboardRecentOrders(force),
+      get().fetchDashboardTopProducts(force),
+      get().fetchDashboardOrderStatuses(force),
+      get().fetchDashboardExtendedStats(force),
+      get().fetchRevenueChartData('7d') // Fetch default revenue chart
+    ]);
+  },
+
+  fetchDashboardKpis: async (force) => {
     const state = get();
-    const now = Date.now();
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-    // If we have cached data and it's fresh, and we aren't forcing, just return
-    if (!force && state.analytics && state.cachedAt && (now - state.cachedAt < CACHE_TTL)) {
-      return;
-    }
-
-    // If a request is already in-flight, cancel it before starting a new one
-    if (state.activeRequest) {
-      state.activeRequest.abort();
-    }
-
-    const abortController = new AbortController();
-    set({ activeRequest: abortController });
-
-    // Only show loading state if we have no existing analytics data
-    if (!state.analytics) {
-      set({ isLoading: true, error: null });
-    }
-
+    if (!force && state.analytics.kpis) return;
+    set(state => ({ dashboardLoading: { ...state.dashboardLoading, kpis: true } }));
     try {
-      const response = await api.get('/admin/dashboard', {
-        signal: abortController.signal
-      });
-      set({ 
-        analytics: response.data?.data || response.data, 
-        cachedAt: now,
-        isLoading: false,
-        activeRequest: null 
-      });
+      const response = await api.get('/admin/dashboard/kpis');
+      set(state => ({
+        analytics: { ...state.analytics, kpis: response.data?.data || response.data },
+        dashboardLoading: { ...state.dashboardLoading, kpis: false }
+      }));
     } catch (error) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError') {
-        return;
-      }
-      if (state.analytics) {
-        toast.error("Unable to refresh dashboard data.");
-      }
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch analytics', 
-        isLoading: false,
-        activeRequest: null
-      });
+      set(state => ({ dashboardLoading: { ...state.dashboardLoading, kpis: false } }));
+    }
+  },
+
+  fetchDashboardRecentOrders: async (force) => {
+    const state = get();
+    if (!force && state.analytics.recentOrders) return;
+    set(state => ({ dashboardLoading: { ...state.dashboardLoading, recentOrders: true } }));
+    try {
+      const response = await api.get('/admin/dashboard/recent-orders');
+      set(state => ({
+        analytics: { ...state.analytics, recentOrders: response.data?.data || response.data },
+        dashboardLoading: { ...state.dashboardLoading, recentOrders: false }
+      }));
+    } catch (error) {
+      set(state => ({ dashboardLoading: { ...state.dashboardLoading, recentOrders: false } }));
+    }
+  },
+
+  fetchDashboardTopProducts: async (force) => {
+    const state = get();
+    if (!force && state.analytics.topProducts) return;
+    set(state => ({ dashboardLoading: { ...state.dashboardLoading, topProducts: true } }));
+    try {
+      const response = await api.get('/admin/dashboard/top-products');
+      set(state => ({
+        analytics: { ...state.analytics, topProducts: response.data?.data || response.data },
+        dashboardLoading: { ...state.dashboardLoading, topProducts: false }
+      }));
+    } catch (error) {
+      set(state => ({ dashboardLoading: { ...state.dashboardLoading, topProducts: false } }));
+    }
+  },
+
+  fetchDashboardOrderStatuses: async (force) => {
+    const state = get();
+    if (!force && state.analytics.statusDistribution) return;
+    set(state => ({ dashboardLoading: { ...state.dashboardLoading, orderStatuses: true } }));
+    try {
+      const response = await api.get('/admin/dashboard/order-statuses');
+      set(state => ({
+        analytics: { ...state.analytics, statusDistribution: response.data?.data || response.data },
+        dashboardLoading: { ...state.dashboardLoading, orderStatuses: false }
+      }));
+    } catch (error) {
+      set(state => ({ dashboardLoading: { ...state.dashboardLoading, orderStatuses: false } }));
+    }
+  },
+
+  fetchDashboardExtendedStats: async (force) => {
+    const state = get();
+    if (!force && state.analytics.mostViewed) return;
+    set(state => ({ dashboardLoading: { ...state.dashboardLoading, extendedStats: true } }));
+    try {
+      const response = await api.get('/admin/dashboard/extended-stats');
+      const extendedStats = response.data?.data || response.data;
+      set(state => ({
+        analytics: { ...state.analytics, ...extendedStats },
+        dashboardLoading: { ...state.dashboardLoading, extendedStats: false }
+      }));
+    } catch (error) {
+      set(state => ({ dashboardLoading: { ...state.dashboardLoading, extendedStats: false } }));
     }
   },
 
@@ -163,7 +210,7 @@ const useAdminStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     const { searchQuery, ordersPagination } = get();
-    const limit = ordersPagination.itemsPerPage;
+    const limit = overrideParams.limit ?? ordersPagination.itemsPerPage;
     
     // Support URL search param and filters overrides
     const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
@@ -213,8 +260,20 @@ const useAdminStore = create((set, get) => ({
       }
     }
 
+    const cacheKey = queryParams.toString();
+    const { ordersCache } = get();
+
+    if (ordersCache[cacheKey]) {
+      set({
+        orders: ordersCache[cacheKey].orders,
+        ordersPagination: ordersCache[cacheKey].pagination,
+        isLoading: false
+      });
+      return;
+    }
+
     try {
-      const response = await api.get(`/admin/orders?${queryParams.toString()}`, {
+      const response = await api.get(`/admin/orders?${cacheKey}`, {
         signal: ordersAbortController.signal
       });
       set({ 
@@ -227,9 +286,85 @@ const useAdminStore = create((set, get) => ({
         },
         isLoading: false 
       });
+
+      // Populate cache
+      const updatedCache = { ...get().ordersCache };
+      updatedCache[cacheKey] = {
+        orders: response.data.data.orders,
+        pagination: response.data.data.pagination || get().ordersPagination
+      };
+      set({ ordersCache: updatedCache });
+
     } catch (error) {
       if (axios.isCancel(error)) return;
       set({ error: error.response?.data?.message || 'Failed to fetch admin orders', isLoading: false });
+    }
+  },
+
+  prefetchOrders: async (page, overrideParams = {}) => {
+    const { searchQuery, ordersPagination, ordersCache } = get();
+    const limit = overrideParams.limit ?? ordersPagination.itemsPerPage;
+    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+    const filters = overrideParams.filters || {};
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    if (effectiveSearch) queryParams.append('search', effectiveSearch);
+    if (filters.status && filters.status !== 'All') queryParams.append('status', filters.status);
+    if (filters.paymentStatus && filters.paymentStatus !== 'All') queryParams.append('paymentStatus', filters.paymentStatus);
+    if (filters.minAmount) queryParams.append('minAmount', filters.minAmount);
+    if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount);
+    if (filters.sort) queryParams.append('sort', filters.sort);
+    
+    if (filters.dateRange && filters.dateRange !== 'All') {
+      const date = new Date();
+      if (filters.dateRange === 'today') {
+        date.setHours(0,0,0,0);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'yesterday') {
+        const yest = new Date(date);
+        yest.setDate(yest.getDate() - 1);
+        yest.setHours(0,0,0,0);
+        const yestEnd = new Date(date);
+        yestEnd.setDate(yestEnd.getDate() - 1);
+        yestEnd.setHours(23,59,59,999);
+        queryParams.append('minDate', yest.toISOString());
+        queryParams.append('maxDate', yestEnd.toISOString());
+      } else if (filters.dateRange === 'last7') {
+        date.setDate(date.getDate() - 7);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'last30') {
+        date.setDate(date.getDate() - 30);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'thisMonth') {
+        date.setDate(1);
+        date.setHours(0,0,0,0);
+        queryParams.append('minDate', date.toISOString());
+      } else if (filters.dateRange === 'lastMonth') {
+        const lastMonth = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(date.getFullYear(), date.getMonth(), 0);
+        queryParams.append('minDate', lastMonth.toISOString());
+        queryParams.append('maxDate', lastMonthEnd.toISOString());
+      }
+    }
+
+    const cacheKey = queryParams.toString();
+    
+    // Prevent duplicate fetch if already cached
+    if (ordersCache[cacheKey]) return;
+
+    try {
+      const response = await api.get(`/admin/orders?${cacheKey}`);
+      const updatedCache = { ...get().ordersCache };
+      updatedCache[cacheKey] = {
+        orders: response.data.data.orders,
+        pagination: response.data.data.pagination
+      };
+      set({ ordersCache: updatedCache });
+    } catch (error) {
+      // Silently fail predictive prefetching
+      console.warn('Failed to prefetch orders:', error);
     }
   },
 

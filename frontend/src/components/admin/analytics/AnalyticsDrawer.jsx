@@ -51,7 +51,7 @@ const AnalyticsDrawer = ({ isOpen, onClose, type }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity font-normal"
           />
 
           {/* Drawer Panel */}
@@ -60,25 +60,25 @@ const AnalyticsDrawer = ({ isOpen, onClose, type }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 right-0 z-50 w-full md:w-[420px] lg:w-[480px] bg-white shadow-2xl border-l border-border flex flex-col"
+            className="fixed inset-y-0 right-0 z-50 w-full md:w-[420px] lg:w-[480px] bg-white shadow-2xl border-l border-border flex flex-col font-normal"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-surface-background/50">
-              <h2 className="text-xl font-extrabold text-text-primary">{config.title}</h2>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-surface-background/50 font-normal">
+              <h2 className="text-xl text-text-primary font-bold">{config.title}</h2>
               <button 
                 onClick={onClose}
-                className="p-2 hover:bg-black/5 rounded-full transition-colors text-text-muted hover:text-text-primary"
+                className="p-2 hover:bg-black/5 rounded-full transition-colors text-text-muted hover:text-text-primary font-medium"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 font-normal" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-6 relative">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-6 relative font-normal">
               {detailedLoading[type] ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted font-medium">
                   <LoadingSpinner size="lg" />
-                  <p className="mt-4 font-medium text-sm">Aggregating live data...</p>
+                  <p className="mt-4 text-sm font-normal">Aggregating live data...</p>
                 </div>
               ) : (
                 <React.Suspense fallback={<LoadingSpinner />}>

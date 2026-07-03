@@ -3,12 +3,19 @@ import { logAudit } from '../services/auditLogger.js';
 import { getFrontendUrl } from '../utils/urlUtils.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import nodemailer from 'nodemailer';
+import { cacheGet, cacheSet, cacheDel } from '../services/cacheService.js';
 
 class SettingsController {
   
   // Internal helper
   async handleGet(req, res, domain) {
     try {
+      const cacheKey = `settings:domain:${domain}`;
+      const cached = await cacheGet(cacheKey);
+      if (cached) {
+        return successResponse(res, 'Settings fetched successfully', cached);
+      }
+
       const data = await settingsService.getSettingsByKeys([domain]);
       let responseData = data[domain] || {};
       
@@ -22,6 +29,7 @@ class SettingsController {
         }
       }
       
+      await cacheSet(cacheKey, responseData, 1800); // 30 mins
       return successResponse(res, 'Settings fetched successfully', responseData);
     } catch (error) {
       console.error(`Error fetching ${domain} settings:`, error);
@@ -39,6 +47,10 @@ class SettingsController {
       // Settings service will natively preserve existing encrypted password if dataToSave.password is omitted/empty.
 
       const newData = await settingsService.updateSettings(domain, dataToSave);
+
+      // Invalidate settings caches
+      await cacheDel(`settings:domain:${domain}`);
+      await cacheDel('settings:public');
 
       // Log Audit
       await logAudit({
@@ -209,6 +221,12 @@ class SettingsController {
   // Public endpoint for storefront config
   async getPublicConfig(req, res) {
     try {
+      const cacheKey = 'settings:public';
+      const cached = await cacheGet(cacheKey);
+      if (cached) {
+        return successResponse(res, 'Public config fetched', cached);
+      }
+
       const data = await settingsService.getSettingsByKeys(['store', 'payment', 'shipping']);
       
       const storeConfig = data.store || {};
@@ -225,6 +243,7 @@ class SettingsController {
         shipping: shippingConfig,
       };
 
+      await cacheSet(cacheKey, publicConfig, 1800); // 30 mins
       return successResponse(res, 'Public config fetched', publicConfig);
     } catch (error) {
       return errorResponse(res, 'Failed to fetch public config');

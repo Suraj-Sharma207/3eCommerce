@@ -26,18 +26,18 @@ const Testimonials = () => {
 
   return (
     <HomeSection title="What Our Customers Say" subtitle="Don't just take our word for it">
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-8 font-normal">
         {testimonials.map((testimonial, index) => (
-          <div key={index} className="bg-surface-background p-8 rounded-2xl">
-            <div className="flex gap-1 mb-4">
+          <div key={index} className="bg-surface-background p-8 rounded-2xl font-normal">
+            <div className="flex gap-1 mb-4 font-normal">
               {[...Array(testimonial.rating)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-warning-400 text-warning-400" />
+                <Star key={i} className="w-5 h-5 fill-warning-400 text-warning-400 font-normal" />
               ))}
             </div>
-            <p className="text-text-secondary italic mb-6">"{testimonial.content}"</p>
+            <p className="text-text-secondary italic mb-6 font-normal">"{testimonial.content}"</p>
             <div>
-              <div className="font-bold text-text-primary">{testimonial.name}</div>
-              <div className="text-sm text-text-muted">{testimonial.role}</div>
+              <div className="text-text-primary font-normal">{testimonial.name}</div>
+              <div className="text-sm text-text-muted font-medium">{testimonial.role}</div>
             </div>
           </div>
         ))}

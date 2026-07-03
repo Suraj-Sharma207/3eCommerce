@@ -1,12 +1,32 @@
 import React from 'react';
 
-const Pagination = ({ 
-  currentPage, 
-  totalPages, 
+/**
+ * Enterprise Pagination Component
+ *
+ * Props:
+ *  - currentPage:            number
+ *  - totalPages:             number
+ *  - onPageChange:           (page: number) => void
+ *  - itemsPerPage:           number
+ *  - onItemsPerPageChange:   (limit: number) => void  (optional)
+ *  - itemsPerPageOptions:    number[]
+ *  - totalItems:             number   (total unfiltered — from backend)
+ *  - filteredItems:          number   (total matching active filters — from backend)
+ *  - isFiltered:             boolean  (whether any filters are active)
+ *  - label:                  string   (e.g. "Products", "Orders")
+ *  - variant:                'default' | 'premium'
+ */
+const Pagination = ({
+  currentPage,
+  totalPages,
   onPageChange,
   itemsPerPage,
   onItemsPerPageChange,
-  itemsPerPageOptions = [5, 10, 20, 50],
+  itemsPerPageOptions = [10, 20, 50, 100, 500, 'Max'],
+  totalItems,
+  filteredItems,
+  isFiltered = false,
+  label = 'Items',
   variant = 'default'
 }) => {
   if (totalPages <= 1 && !onItemsPerPageChange) return null;
@@ -14,7 +34,7 @@ const Pagination = ({
   const generatePages = () => {
     const pages = [];
     const maxVisible = 7;
-    
+
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -45,10 +65,48 @@ const Pagination = ({
     return pages;
   };
 
+  /**
+   * Build the result summary string.
+   * - If filtered:    "Showing {filteredItems} of {totalItems} {label}"
+   * - If unfiltered:  "Showing {start}–{end} of {totalItems} {label}"
+   */
+  const buildSummary = () => {
+    if (totalItems === undefined || totalItems === null) return null;
+
+    const effectiveFiltered = filteredItems !== undefined ? filteredItems : totalItems;
+    const hasFilter = isFiltered || (filteredItems !== undefined && filteredItems < totalItems);
+
+    if (hasFilter) {
+      return (
+        <span className="text-sm text-text-secondary font-normal">
+          Showing{' '}
+          <span className="text-text-primary font-normal">{effectiveFiltered}</span>{' '}
+          of{' '}
+          <span className="text-text-primary font-normal">{totalItems}</span>{' '}
+          {label}
+        </span>
+      );
+    }
+
+    const start = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
+    const end = Math.min(currentPage * itemsPerPage, totalItems);
+    return (
+      <span className="text-sm text-text-secondary font-normal">
+        Showing{' '}
+        <span className="text-text-primary font-normal">{start}–{end}</span>{' '}
+        of{' '}
+        <span className="text-text-primary font-normal">{totalItems}</span>{' '}
+        {label}
+      </span>
+    );
+  };
+
+  const summary = buildSummary();
+
   if (variant === 'premium') {
     return (
-      <div className="flex items-center justify-center gap-2 select-none">
-        <button 
+      <div className="flex items-center justify-center gap-2 select-none font-normal">
+        <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
           className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
@@ -64,15 +122,15 @@ const Pagination = ({
         {generatePages().map((page, index) => (
           <React.Fragment key={index}>
             {page === '...' ? (
-              <span className="w-10 h-10 flex items-center justify-center text-text-muted text-sm font-bold">
+              <span className="w-10 h-10 flex items-center justify-center text-text-muted text-sm font-medium">
                 ...
               </span>
             ) : (
               <button
                 onClick={() => onPageChange(page)}
                 className={`w-10 h-10 rounded-full font-bold text-xs transition-all flex items-center justify-center shadow-sm ${
-                  currentPage === page 
-                    ? 'bg-brand-900 text-white border border-brand-900 hover:bg-brand-950 hover:-translate-y-0.5 active:translate-y-0' 
+                  currentPage === page
+                    ? 'bg-brand-900 text-white border border-brand-900 hover:bg-brand-950 hover:-translate-y-0.5 active:translate-y-0'
                     : 'bg-white text-text-secondary border border-border hover:bg-slate-50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0'
                 }`}
               >
@@ -82,7 +140,7 @@ const Pagination = ({
           </React.Fragment>
         ))}
 
-        <button 
+        <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
@@ -99,54 +157,68 @@ const Pagination = ({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl shadow-sm border border-border p-3.5 mx-auto w-full max-w-4xl font-sans">
-      {onItemsPerPageChange ? (
-        <div className="flex items-center gap-2 text-sm text-text-secondary">
-          <span>Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            className="px-2.5 py-1.5 border border-border rounded-lg bg-white font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm cursor-pointer shadow-sm transition-all"
-          >
-            {itemsPerPageOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-          <span>items per page</span>
-        </div>
-      ) : (
-        <div className="hidden sm:block" />
-      )}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full font-sans font-normal">
+      {/* Left: Items per page + summary */}
+      <div className="flex flex-wrap items-center gap-3 font-normal">
+        {onItemsPerPageChange && (
+          <div className="flex items-center gap-2 text-sm text-text-secondary font-normal">
+            <span>Show</span>
+            <select
+              value={itemsPerPage === 50000 ? 'Max' : itemsPerPage}
+              onChange={(e) => {
+                const val = e.target.value;
+                onItemsPerPageChange(val === 'Max' ? 50000 : Number(val));
+              }}
+              className="px-2.5 py-1.5 border border-border rounded-lg bg-white font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm cursor-pointer shadow-sm transition-all"
+              aria-label="Items per page"
+            >
+              {itemsPerPageOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            <span>per page</span>
+          </div>
+        )}
 
+        {summary && (
+          <div className="hidden sm:block font-normal">
+            {summary}
+          </div>
+        )}
+      </div>
+
+      {/* Right: Page navigation */}
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button 
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 font-normal">
+          <button
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
-            className={`px-4 py-2 border rounded text-xs font-bold tracking-wider transition-colors uppercase ${
+            className={`px-3 py-1.5 border rounded text-xs font-bold tracking-wider transition-colors uppercase ${
               currentPage === 1
                 ? 'border-border-light text-text-muted bg-surface-background cursor-not-allowed'
                 : 'border-border text-text-secondary bg-white hover:bg-surface-background hover:text-text-primary'
             }`}
             aria-label="Previous page"
           >
-            PREVIOUS
+            PREV
           </button>
 
           {generatePages().map((page, index) => (
             <React.Fragment key={index}>
               {page === '...' ? (
-                <span className="w-10 h-10 flex items-center justify-center text-text-muted text-sm font-bold">
+                <span className="w-8 h-8 flex items-center justify-center text-text-muted text-sm font-medium">
                   ...
                 </span>
               ) : (
                 <button
                   onClick={() => onPageChange(page)}
-                  className={`w-10 h-10 rounded font-semibold text-sm transition-all flex items-center justify-center ${
-                    currentPage === page 
-                      ? 'bg-[#222222] text-white border border-[#222222] shadow-sm' 
+                  aria-label={`Page ${page}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                  className={`w-8 h-8 rounded font-semibold text-sm transition-all flex items-center justify-center ${
+                    currentPage === page
+                      ? 'bg-[#082F5C] text-white border border-[#082F5C] shadow-sm'
                       : 'bg-white text-text-secondary border border-border hover:bg-surface-background hover:text-text-primary'
                   }`}
                 >
@@ -156,10 +228,10 @@ const Pagination = ({
             </React.Fragment>
           ))}
 
-          <button 
+          <button
             disabled={currentPage === totalPages}
             onClick={() => onPageChange(currentPage + 1)}
-            className={`px-4 py-2 border rounded text-xs font-bold tracking-wider transition-colors uppercase ${
+            className={`px-3 py-1.5 border rounded text-xs font-bold tracking-wider transition-colors uppercase ${
               currentPage === totalPages
                 ? 'border-border-light text-text-muted bg-surface-background cursor-not-allowed'
                 : 'border-border text-text-secondary bg-white hover:bg-surface-background hover:text-text-primary'
@@ -170,6 +242,13 @@ const Pagination = ({
           </button>
         </div>
       ) : null}
+
+      {/* Mobile summary */}
+      {summary && (
+        <div className="sm:hidden text-center w-full font-normal">
+          {summary}
+        </div>
+      )}
     </div>
   );
 };

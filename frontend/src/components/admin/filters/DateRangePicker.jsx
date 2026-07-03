@@ -28,7 +28,7 @@ const DateRangePicker = ({ label = 'Date', value, onChange }) => {
   const selectedOption = dateRanges.find(opt => opt.value === value) || dateRanges[0];
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative font-normal" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -37,15 +37,15 @@ const DateRangePicker = ({ label = 'Date', value, onChange }) => {
           ${value && value !== 'All' ? 'bg-brand-50 border-brand-200' : ''}
         `}
       >
-        <span className="flex items-center gap-1.5 truncate">
-          <Calendar className="w-4 h-4 text-text-muted shrink-0" />
-          <span className="text-text-muted">{label}:</span>
-          <span className="font-bold truncate max-w-[100px]">{selectedOption.label}</span>
+        <span className="flex items-center gap-1.5 truncate font-normal">
+          <Calendar className="w-4 h-4 text-text-muted shrink-0 font-medium" />
+          <span className="text-text-muted font-medium">{label}:</span>
+          <span className="truncate max-w-[100px] font-normal">{selectedOption.label}</span>
         </span>
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden">
+        <div className="absolute z-50 w-full min-w-[180px] mt-1 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden font-normal">
           {dateRanges.map((option) => (
             <button
               key={option.value}
@@ -58,7 +58,7 @@ const DateRangePicker = ({ label = 'Date', value, onChange }) => {
               <span className={value === option.value ? 'font-bold text-brand-600' : 'text-text-primary'}>
                 {option.label}
               </span>
-              {value === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0" />}
+              {value === option.value && <Check className="w-4 h-4 text-brand-600 shrink-0 font-normal" />}
             </button>
           ))}
         </div>

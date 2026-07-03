@@ -33,7 +33,7 @@ const MegaMenu = ({ isOpen, setIsOpen }) => {
   return (
     <div 
       ref={containerRef}
-      className="flex items-center h-full"
+      className="flex items-center h-full font-normal"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
@@ -53,15 +53,15 @@ const MegaMenu = ({ isOpen, setIsOpen }) => {
       <div 
         className={`absolute top-full left-1/2 -translate-x-1/2 w-[calc(100vw-32px)] max-w-[1200px] bg-white rounded-2xl shadow-2xl border border-border-light p-6 lg:p-8 z-50 mt-1 transition-all duration-300 transform origin-top ${isOpen ? 'opacity-100 scale-y-100 translate-y-0 visible' : 'opacity-0 scale-y-95 -translate-y-2 invisible'}`}
       >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 font-normal">
           {topRow.map(group => (
             <MegaMenuColumn key={group.slug} group={group} onClose={() => setIsOpen(false)} />
           ))}
         </div>
         
-        <hr className="my-6 lg:my-8 border-border-light" />
+        <hr className="my-6 lg:my-8 border-border-light font-normal" />
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 font-normal">
           {bottomRow.map(group => (
             <MegaMenuColumn key={group.slug} group={group} onClose={() => setIsOpen(false)} />
           ))}

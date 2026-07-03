@@ -1,17 +1,20 @@
 import prisma from '../lib/prisma.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { logAudit } from '../services/auditLogger.js';
-import { homeCache } from './homeController.js';
+import { cacheInvalidateByPattern } from '../services/cacheService.js';
 
 class PromotionController {
   async getPromotions(req, res) {
     try {
       const { page = 1, limit = 10, search = '', status, type, applyTo, sort } = req.query;
-      const take = parseInt(limit, 10);
-      let currentPage = parseInt(page, 10);
-      if (currentPage < 1) currentPage = 1;
 
-      const skip = (currentPage - 1) * take;
+      // Safe integer clamping
+      let take = parseInt(limit, 10);
+      if (!Number.isFinite(take) || take < 1) take = 10;
+      if (take > 50000) take = 50000;
+
+      let currentPage = parseInt(page, 10);
+      if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
 
       let where = {};
       if (search) {
@@ -32,18 +35,20 @@ class PromotionController {
       if (sort === 'discount_desc') orderBy = { discountValue: 'desc' };
       if (sort === 'discount_asc') orderBy = { discountValue: 'asc' };
 
-      const totalItems = await prisma.promotion.count({ where });
-      const totalPages = Math.max(1, Math.ceil(totalItems / take));
+      // filteredItems = count matching current filters
+      const filteredItems = await prisma.promotion.count({ where });
 
-      if (currentPage > totalPages) {
-        currentPage = totalPages;
-      }
+      // totalItems = all promotions (no filters)
+      const totalItems = await prisma.promotion.count({});
 
-      const safeSkip = (currentPage - 1) * take;
+      const totalPages = Math.max(1, Math.ceil(filteredItems / take));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const skip = (currentPage - 1) * take;
 
       const promotions = await prisma.promotion.findMany({
         where,
-        skip: safeSkip,
+        skip,
         take,
         include: {
           products: { include: { product: true } },
@@ -59,7 +64,9 @@ class PromotionController {
           currentPage,
           totalPages,
           totalItems,
-          itemsPerPage: take
+          filteredItems,
+          itemsPerPage: take,
+          pageSize: take,
         }
       });
     } catch (error) {
@@ -67,6 +74,7 @@ class PromotionController {
       return errorResponse(res, 'Failed to fetch promotions');
     }
   }
+
 
   async createPromotion(req, res) {
     try {
@@ -96,7 +104,8 @@ class PromotionController {
 
       const promotion = await prisma.promotion.create({ data });
 
-      homeCache.clear();
+      await cacheInvalidateByPattern('products:*');
+      await cacheInvalidateByPattern('home:*');
 
       await logAudit({
         adminName: req.user.name,
@@ -149,7 +158,8 @@ class PromotionController {
 
       const promotion = await prisma.promotion.update({ where: { id }, data });
 
-      homeCache.clear();
+      await cacheInvalidateByPattern('products:*');
+      await cacheInvalidateByPattern('home:*');
 
       await logAudit({
         adminName: req.user.name,
@@ -174,7 +184,8 @@ class PromotionController {
 
       await prisma.promotion.delete({ where: { id } });
 
-      homeCache.clear();
+      await cacheInvalidateByPattern('products:*');
+      await cacheInvalidateByPattern('home:*');
 
       await logAudit({
         adminName: req.user.name,

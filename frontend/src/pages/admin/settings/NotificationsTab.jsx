@@ -37,33 +37,33 @@ const NotificationsTab = () => {
     setIsEditing(false);
   };
 
-  if (isLoading && !Object.keys(data).length) return <div className="p-8 text-center text-text-muted">Loading notification settings...</div>;
+  if (isLoading && !Object.keys(data).length) return <div className="p-8 text-center text-text-muted font-medium">Loading notification settings...</div>;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+      <div className="flex items-center justify-between font-normal">
         <div>
-          <h3 className="text-lg font-extrabold text-text-primary mb-1">System Notifications</h3>
-          <p className="text-sm text-text-muted">Choose which notifications your store automatically sends.</p>
+          <h3 className="text-lg text-text-primary mb-1 font-bold">System Notifications</h3>
+          <p className="text-sm text-text-muted font-medium">Choose which notifications your store automatically sends.</p>
         </div>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" /> Edit
+            <Edit2 className="w-4 h-4 mr-2 font-normal" /> Edit
           </Button>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 font-normal">
         <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${formData.emailNotifications !== false && isEditing ? 'border-brand-600 bg-brand-50/10' : 'border-border'} ${!isEditing && 'opacity-70 cursor-not-allowed'}`}>
           <input 
             type="checkbox" name="emailNotifications" 
             checked={formData.emailNotifications ?? true} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50" 
+            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50 font-normal" 
           />
           <div>
-            <div className="font-bold text-text-primary">Customer Email Notifications</div>
-            <div className="text-xs text-text-muted">Send order confirmations and shipping updates via email.</div>
+            <div className="text-text-primary font-normal">Customer Email Notifications</div>
+            <div className="text-xs text-text-muted font-medium">Send order confirmations and shipping updates via email.</div>
           </div>
         </label>
         
@@ -72,11 +72,11 @@ const NotificationsTab = () => {
             type="checkbox" name="smsNotifications" 
             checked={formData.smsNotifications || false} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50" 
+            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50 font-normal" 
           />
           <div>
-            <div className="font-bold text-text-primary">Customer SMS Notifications</div>
-            <div className="text-xs text-text-muted">Send order updates via SMS (Requires Twilio config).</div>
+            <div className="text-text-primary font-normal">Customer SMS Notifications</div>
+            <div className="text-xs text-text-muted font-medium">Send order updates via SMS (Requires Twilio config).</div>
           </div>
         </label>
         
@@ -85,22 +85,22 @@ const NotificationsTab = () => {
             type="checkbox" name="adminAlerts" 
             checked={formData.adminAlerts ?? true} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50" 
+            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50 font-normal" 
           />
           <div>
-            <div className="font-bold text-text-primary">Admin Alerts</div>
-            <div className="text-xs text-text-muted">Notify admins about low stock and new orders.</div>
+            <div className="text-text-primary font-normal">Admin Alerts</div>
+            <div className="text-xs text-text-muted font-medium">Notify admins about low stock and new orders.</div>
           </div>
         </label>
       </div>
 
       {isEditing && (
-        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10 font-normal">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-            <X className="w-4 h-4 mr-2" /> Cancel
+            <X className="w-4 h-4 mr-2 font-normal" /> Cancel
           </Button>
           <Button type="button" onClick={handleSave} isLoading={isSaving}>
-            <Save className="w-4 h-4 mr-2" /> Save Changes
+            <Save className="w-4 h-4 mr-2 font-normal" /> Save Changes
           </Button>
         </div>
       )}

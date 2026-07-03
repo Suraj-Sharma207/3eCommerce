@@ -12,7 +12,7 @@ const HeroSection = () => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5">
+    <div className="flex flex-col gap-4 sm:gap-5 font-normal">
       {/* Main promotional carousel */}
       <HeroCarousel
         onSlideChange={setActiveSlideIndex}

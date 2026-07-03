@@ -4,25 +4,25 @@ import { ArrowRight } from 'lucide-react';
 
 const SectionHeader = ({ title, subtitle, actionLabel, actionLink, actionButton }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-4 font-normal">
       <div>
-        <h2 className="text-3xl font-extrabold text-text-brand-600 tracking-tight mb-3 leading-none">
+        <h2 className="text-3xl text-text-brand-600 tracking-tight mb-3 leading-none font-bold">
           {title}
         </h2>
-        {subtitle && <p className="text-lg text-text-secondary">{subtitle}</p>}
+        {subtitle && <p className="text-lg text-text-secondary font-normal">{subtitle}</p>}
       </div>
       
       {actionButton ? (
-        <div className="hidden sm:block">
+        <div className="hidden sm:block font-normal">
           {actionButton}
         </div>
       ) : actionLabel && actionLink ? (
         <Link 
           to={actionLink}
-          className="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors group"
+          className="inline-flex items-center text-sm text-brand-600 hover:text-brand-700 transition-colors group font-normal"
         >
           {actionLabel}
-          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform font-normal" />
         </Link>
       ) : null}
     </div>

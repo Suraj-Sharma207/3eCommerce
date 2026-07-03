@@ -17,30 +17,30 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-normal">
       {/* Backdrop overlay with blur */}
       <div 
-        className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" 
+        className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200 font-normal" 
         onClick={onClose}
       />
 
       {/* Modal Container Card */}
-      <div className="relative w-full max-w-lg bg-white rounded-[16px] border border-border shadow-xl overflow-hidden z-10 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg bg-white rounded-[16px] border border-border shadow-xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 font-normal">
         
         {/* Header section */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-background">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-background font-normal">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-border-light transition-all outline-none"
+            className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-border-light transition-all outline-none font-normal"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 font-normal" />
           </button>
         </div>
 
         {/* Content body section */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 max-h-[75vh] overflow-y-auto font-normal">
           {children}
         </div>
       </div>

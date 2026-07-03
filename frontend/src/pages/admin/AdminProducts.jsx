@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useProductStore from '../../store/productStore';
 import Button from '../../components/ui/Button';
-import { Plus, Edit2, Trash2, Search, Inbox } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Inbox, Upload, Trash, X, CheckSquare, Download, Loader2 } from 'lucide-react';
+import useVirtual from '../../hooks/useVirtual';
+import { getOptimizedUrl } from '../../utils/cloudinary';
 import Input from '../../components/ui/Input';
 import ImageFallback from '../../components/ui/ImageFallback';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { formatPrice } from '../../utils/currency';
 import toast from 'react-hot-toast';
+import EmptyState from '../../components/ui/EmptyState';
 import ProductModal from '../../components/admin/ProductModal';
+import BulkImportModal from '../../components/admin/BulkImportModal';
 import useConfirmStore from '../../store/confirmStore';
 import useSettingsStore from '../../store/settingsStore';
 import Pagination from '../../components/ui/Pagination';
@@ -39,32 +44,181 @@ const sortOptions = [
   { label: 'Stock (Low to High)', value: 'stock_asc' },
 ];
 
+const ITEMS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
+const DEFAULT_LIMIT = 10;
+
+// ── Tri-state Header Checkbox ──────────────────────────────────────────────────
+const HeaderCheckbox = ({ checked, indeterminate, disabled, onChange, id }) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
+
+  return (
+    <input
+      ref={ref}
+      id={id}
+      type="checkbox"
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      className="w-4 h-4 rounded accent-blue-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-normal"
+      style={{ accentColor: '#2563eb' }}
+    />
+  );
+};
+
+// ── Row Checkbox ───────────────────────────────────────────────────────────────
+const RowCheckbox = ({ checked, disabled, onChange, id }) => (
+  <input
+    id={id}
+    type="checkbox"
+    checked={checked}
+    disabled={disabled}
+    onChange={onChange}
+    className="w-4 h-4 rounded accent-blue-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-normal"
+    style={{ accentColor: '#2563eb' }}
+    onClick={(e) => e.stopPropagation()}
+  />
+);
+
 const AdminProducts = () => {
-  const { products, isLoading, updatingProductIds, fetchAdminProducts, createProduct, updateProduct, deleteProduct, pagination, setItemsPerPage, inventoryCounts } = useProductStore();
-  
-  const { search, setSearch, filters, updateFilter, resetFilters, isInitialized } = useAdminFilters({
+  const {
+    products,
+    isLoading,
+    updatingProductIds,
+    fetchAdminProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    pagination,
+    inventoryCounts,
+    // Bulk selection
+    selectedProductIds,
+    isBulkDeleting,
+    toggleProductSelection,
+    selectProductIds,
+    clearSelection,
+    bulkDeleteProducts: storeBulkDelete,
+    fetchFilteredProductIds,
+  } = useProductStore();
+
+  const {
+    search,
+    setSearch,
+    filters,
+    updateFilter,
+    updateFilters,
+    resetFilters,
+    setPage,
+    setLimit,
+    isInitialized
+  } = useAdminFilters({
     inventoryTab: 'all',
     sort: 'newest'
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
   
+  // Table virtualization container ref
+  const tableContainerRef = useRef(null);
+
+  // Call virtualization hook for performance on large product lists
+  const { virtualItems, totalHeight, startOffset, shouldVirtualize } = useVirtual({
+    items: products,
+    rowHeight: 72,
+    containerRef: tableContainerRef,
+    overscan: 5
+  });
+
   // Always derive selectedProduct from the live store so image updates propagate automatically
   const selectedProduct = selectedProductId
     ? (products.find(p => p.id === selectedProductId) ?? null)
     : null;
-  
+
   const { confirm } = useConfirmStore();
-  
+
   const [isCreating, setIsCreating] = useState(false);
   const { publicConfig } = useSettingsStore();
   const lowStockThreshold = publicConfig?.lowStockThreshold || 5;
 
+  // Read pagination state from URL params (single source of truth)
+  const currentPage = parseInt(filters.page, 10) || 1;
+  const itemsPerPage = parseInt(filters.limit, 10) || DEFAULT_LIMIT;
+
+  // Determine if any filters are active (for result summary)
+  const hasActiveFilters = Boolean(
+    search ||
+    (filters.category && filters.category !== 'All') ||
+    filters.minPrice ||
+    filters.maxPrice ||
+    (filters.inventoryTab && filters.inventoryTab !== 'all')
+  );
+
   useEffect(() => {
     if (!isInitialized) return;
-    fetchAdminProducts(1, { search: filters.search || '', filters });
+    fetchAdminProducts(currentPage, {
+      search: filters.search || '',
+      filters,
+      limit: itemsPerPage,
+    });
   }, [filters, isInitialized, fetchAdminProducts]);
+
+  // ── Bulk Selection Derived State ─────────────────────────────────────────────
+
+  const selectedCount = selectedProductIds.size;
+  const hasSelection = selectedCount > 0;
+
+  // IDs visible on current page
+  const pageProductIds = products.map(p => p.id);
+  const selectedOnPage = pageProductIds.filter(id => selectedProductIds.has(id));
+  const allPageSelected = pageProductIds.length > 0 && selectedOnPage.length === pageProductIds.length;
+  const somePageSelected = selectedOnPage.length > 0 && selectedOnPage.length < pageProductIds.length;
+
+  // The header checkbox is "checked" if every product in the ENTIRE filtered set is selected
+  const totalFiltered = pagination?.filteredItems ?? pagination?.totalItems ?? 0;
+  const allDatasetSelected = selectedCount > 0 && selectedCount >= totalFiltered;
+  const headerIndeterminate = !allDatasetSelected && hasSelection;
+  const headerChecked = allDatasetSelected;
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const handleHeaderCheckboxChange = useCallback(async () => {
+    if (hasSelection) {
+      // Any selection → clear all
+      clearSelection();
+      return;
+    }
+
+    // Nothing selected → select all matching the current filters
+    setIsSelectingAll(true);
+    try {
+      let stockStatus;
+      if (filters.inventoryTab === 'active') stockStatus = 'active';
+      else if (filters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+
+      const ids = await fetchFilteredProductIds({
+        search: filters.search || search || '',
+        category: filters.category,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        sort: filters.sort,
+        inventoryTab: filters.inventoryTab,
+        stockStatus,
+      });
+      selectProductIds(ids);
+    } catch {
+      toast.error('Failed to select all products');
+    } finally {
+      setIsSelectingAll(false);
+    }
+  }, [hasSelection, clearSelection, fetchFilteredProductIds, selectProductIds, filters, search]);
 
   const handleOpenModal = (product = null) => {
     setSelectedProductId(product?.id ?? null);
@@ -78,7 +232,6 @@ const AdminProducts = () => {
 
   const handleSaveProduct = async (productData) => {
     if (selectedProduct) {
-      // Update: store handles optimistic patch, no refetch needed
       const success = await updateProduct(selectedProduct.id, productData);
       if (success) {
         toast.success('Product updated successfully.');
@@ -87,7 +240,6 @@ const AdminProducts = () => {
         toast.error(useProductStore.getState().error || 'Unable to update product.');
       }
     } else {
-      // Create: store appends to list, no refetch needed
       setIsCreating(true);
       const success = await createProduct(productData);
       setIsCreating(false);
@@ -107,7 +259,7 @@ const AdminProducts = () => {
       variant: 'danger',
       confirmText: 'Delete'
     });
-    
+
     if (isConfirmed) {
       const success = await deleteProduct(product.id);
       if (success) {
@@ -118,20 +270,108 @@ const AdminProducts = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    const count = selectedProductIds.size;
+    const isConfirmed = await confirm({
+      title: `Delete ${count} Product${count !== 1 ? 's' : ''}?`,
+      description: `This action cannot be undone. All ${count} selected product${count !== 1 ? 's' : ''} will be permanently removed.`,
+      variant: 'danger',
+      confirmText: `Delete Product${count !== 1 ? 's' : ''}`
+    });
+
+    if (!isConfirmed) return;
+
+    const result = await storeBulkDelete();
+    if (result.success) {
+      toast.success(`${result.deleted} product${result.deleted !== 1 ? 's' : ''} deleted successfully.`);
+    } else {
+      toast.error(useProductStore.getState().error || 'Bulk delete failed. Please try again.');
+    }
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-extrabold text-text-brand-600">Products</h1>
-        <Button className="shrink-0 group" onClick={() => handleOpenModal()}>
-          <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
-          Add Product
-        </Button>
+    <div className="space-y-4 font-normal">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-normal">
+        <h1 className="text-2xl text-text-brand-600 font-bold">Products</h1>
+        <div className="flex items-center gap-3 shrink-0 font-normal">
+          <Button variant="outline" className="group font-normal" onClick={() => setIsImportModalOpen(true)}>
+            <Upload className="w-5 h-5 mr-2 group-hover:-translate-y-0.5 transition-transform font-normal" />
+            Bulk Import
+          </Button>
+          <Button className="group font-normal" onClick={() => handleOpenModal()}>
+            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform font-normal" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-        
+      {/* ── Bulk Selection Banner ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {hasSelection && (
+          <motion.div
+            key="selection-banner"
+            initial={{ opacity: 0, y: -12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 rounded-xl border border-blue-200 bg-blue-50 shadow-sm font-normal"
+          >
+            {/* Count pill */}
+            <div className="flex items-center gap-3 font-normal">
+              <div className="flex items-center gap-2 bg-blue-600 text-white text-sm px-3 py-1.5 rounded-full shadow-sm select-none font-normal">
+                <CheckSquare className="w-3.5 h-3.5 font-normal" />
+                <span>
+                  {selectedCount.toLocaleString()} Product{selectedCount !== 1 ? 's' : ''} Selected
+                </span>
+              </div>
+              {isSelectingAll && (
+                <span className="flex items-center gap-1.5 text-xs text-blue-600 font-normal">
+                  <Loader2 className="w-3 h-3 animate-spin font-normal" />
+                  Selecting all…
+                </span>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-wrap font-normal">
+              {/* Bulk Delete */}
+              <button
+                id="bulk-delete-btn"
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm text-white bg-danger-600 hover:bg-danger-700 disabled:bg-danger-400 rounded-lg transition-colors shadow-sm disabled:cursor-not-allowed font-normal"
+              >
+                {isBulkDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin font-normal" />
+                ) : (
+                  <Trash className="w-3.5 h-3.5 font-normal" />
+                )}
+                {isBulkDeleting ? 'Deleting…' : 'Delete Selected'}
+              </button>
+
+              {/* Clear Selection */}
+              <button
+                id="clear-selection-btn"
+                onClick={clearSelection}
+                disabled={isBulkDeleting}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm text-blue-700 bg-white hover:bg-blue-100 border border-blue-300 rounded-lg transition-colors shadow-sm disabled:cursor-not-allowed disabled:opacity-60 font-normal"
+              >
+                <X className="w-3.5 h-3.5 font-normal" />
+                Clear Selection
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Table Card — fixed height so only tbody scrolls */}
+      <div className={`bg-white rounded-2xl shadow-sm border border-border flex flex-col relative ${isLoading ? 'overflow-hidden' : ''}`} style={{ maxHeight: '80vh' }}>
+
         {/* Inventory Tabs */}
-        <div className="flex items-center px-4 pt-4 border-b border-border gap-6 overflow-x-auto hide-scrollbar">
+        <div className="flex items-center px-4 pt-4 border-b border-border gap-6 overflow-x-auto hide-scrollbar shrink-0 font-normal">
           {[
             { id: 'all', label: 'All Products', count: inventoryCounts.all },
             { id: 'active', label: 'Active', count: inventoryCounts.active },
@@ -140,17 +380,16 @@ const AdminProducts = () => {
             <button
               key={tab.id}
               onClick={() => updateFilter('inventoryTab', tab.id)}
-              className={`pb-3 text-sm font-bold transition-colors relative whitespace-nowrap ${
-                filters.inventoryTab === tab.id 
-                  ? 'text-brand-600' 
+              className={`pb-3 text-sm font-bold transition-colors relative whitespace-nowrap ${filters.inventoryTab === tab.id
+                  ? 'text-brand-600'
                   : 'text-text-muted hover:text-text-primary'
-              }`}
+                }`}
             >
-              {tab.label} <span className="ml-1 opacity-80">({tab.count})</span>
+              {tab.label} <span className="ml-1 opacity-80 font-normal">({tab.count})</span>
               {filters.inventoryTab === tab.id && (
-                <motion.div 
+                <motion.div
                   layoutId="activeAdminTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600 font-normal"
                 />
               )}
             </button>
@@ -158,143 +397,194 @@ const AdminProducts = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="p-4 border-b border-border bg-surface-background">
-          <AdminFilterBar 
-            search={search} 
-            onSearchChange={setSearch} 
+        <div className="p-4 border-b border-border bg-surface-background shrink-0 font-normal">
+          <AdminFilterBar
+            search={search}
+            onSearchChange={setSearch}
             onReset={resetFilters}
           >
-            <FilterDropdown 
-              label="Category" 
-              options={categoryOptions} 
-              value={filters.category || 'All'} 
-              onChange={(val) => updateFilter('category', val)} 
+            <FilterDropdown
+              label="Category"
+              options={categoryOptions}
+              value={filters.category || 'All'}
+              onChange={(val) => updateFilter('category', val)}
             />
-            <PriceRangeFilter 
-              label="Price" 
-              min={filters.minPrice} 
-              max={filters.maxPrice} 
+            <PriceRangeFilter
+              label="Price"
+              min={filters.minPrice}
+              max={filters.maxPrice}
               onChange={(min, max) => {
-                updateFilter('minPrice', min);
-                updateFilter('maxPrice', max);
-              }} 
+                updateFilters({ minPrice: min, maxPrice: max });
+              }}
             />
-            <FilterDropdown 
-              label="Sort By" 
-              options={sortOptions} 
-              value={filters.sort || 'newest'} 
-              onChange={(val) => updateFilter('sort', val)} 
+            <FilterDropdown
+              label="Sort By"
+              options={sortOptions}
+              value={filters.sort || 'newest'}
+              onChange={(val) => updateFilter('sort', val)}
             />
           </AdminFilterBar>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider font-bold border-b border-border">
-                <th className="p-4 pl-6">Product</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Price</th>
-                <th className="p-4">Stock</th>
-                <th className="p-4 text-right pr-6">Actions</th>
+        {/* Scrollable Table Body */}
+        <div ref={tableContainerRef} className={`flex-1 min-h-0 relative ${isLoading ? 'overflow-hidden' : 'overflow-auto'}`}>
+          <table className="w-full text-left border-collapse font-normal">
+            <thead className="sticky top-0 z-10 font-normal">
+              <tr className="bg-surface-background text-text-muted text-xs uppercase tracking-wider border-b border-border font-medium">
+                {/* ── Checkbox Column Header ───────────────────────────── */}
+                <th className="p-4 pl-5 w-10 font-normal">
+                  <HeaderCheckbox
+                    id="header-checkbox"
+                    checked={headerChecked}
+                    indeterminate={headerIndeterminate}
+                    disabled={isBulkDeleting || isSelectingAll || (products.length === 0 && !hasSelection)}
+                    onChange={handleHeaderCheckboxChange}
+                  />
+                </th>
+                <th className="p-4 pl-2 font-normal">Product</th>
+                <th className="p-4 font-normal">Category</th>
+                <th className="p-4 font-normal">Price</th>
+                <th className="p-4 font-normal">Stock</th>
+                <th className="p-4 text-right pr-6 font-normal">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-100">
-              {isLoading && products.length === 0 ? (
+            <tbody className="divide-y divide-secondary-100 font-normal">
+              {isLoading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
-                    <td className="p-4 pl-6"><SkeletonLoader className="h-10 w-full" /></td>
-                    <td className="p-4"><SkeletonLoader className="h-6 w-24" /></td>
-                    <td className="p-4"><SkeletonLoader className="h-6 w-16" /></td>
-                    <td className="p-4"><SkeletonLoader className="h-6 w-20" /></td>
-                    <td className="p-4 pr-6"><SkeletonLoader className="h-8 w-16 float-right" /></td>
+                    <td className="p-4 pl-5 w-10 font-normal"><SkeletonLoader className="h-4 w-4 font-normal" /></td>
+                    <td className="p-4 pl-2 font-normal"><SkeletonLoader className="h-10 w-full font-normal" /></td>
+                    <td className="p-4 font-normal"><SkeletonLoader className="h-6 w-24 font-normal" /></td>
+                    <td className="p-4 font-normal"><SkeletonLoader className="h-6 w-16 font-normal" /></td>
+                    <td className="p-4 font-normal"><SkeletonLoader className="h-6 w-20 font-normal" /></td>
+                    <td className="p-4 pr-6 font-normal"><SkeletonLoader className="h-8 w-16 float-right font-normal" /></td>
                   </tr>
                 ))
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-12 text-center">
-                    <div className="flex flex-col items-center justify-center">
+                  <td colSpan="6" className="p-12 text-center font-normal">
+                    <div className="flex flex-col items-center justify-center font-normal">
                       {filters.inventoryTab === 'outOfStock' && !search ? (
                         <>
-                          <div className="w-16 h-16 bg-success-500/10 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-3xl">🎉</span>
+                          <div className="w-16 h-16 bg-success-500/10 rounded-full flex items-center justify-center mb-4 font-normal">
+                            <span className="text-3xl font-normal">🎉</span>
                           </div>
                           <h3 className="text-lg font-bold text-text-primary mb-2">Great!</h3>
-                          <p className="text-text-muted max-w-sm">No products are currently out of stock. Everything is available for purchase.</p>
+                          <p className="text-text-muted max-w-sm font-medium">No products are currently out of stock. Everything is available for purchase.</p>
                         </>
                       ) : (
                         <>
-                          <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4">
-                            <Inbox className="w-8 h-8 text-text-muted" strokeWidth={1.5} />
+                          <div className="w-16 h-16 bg-surface-background rounded-full flex items-center justify-center mb-4 font-normal">
+                            <Inbox className="w-8 h-8 text-text-muted font-medium" strokeWidth={1.5} />
                           </div>
                           <h3 className="text-lg font-bold text-text-primary mb-2">No products found</h3>
-                          <p className="text-text-muted max-w-sm">Try adjusting your search query or creating a new product.</p>
+                          <p className="text-text-muted max-w-sm font-medium">Try adjusting your search query or creating a new product.</p>
                         </>
                       )}
                     </div>
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
-                  <tr key={product.id} className="hover:bg-surface-background transition-colors group">
-                    <td className="p-4 pl-6 flex items-center gap-4">
-                      <ImageFallback src={product.thumbnail} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-border-light" />
-                      <div className="font-bold text-text-brand-600 text-sm line-clamp-1 max-w-[250px]">{product.name}</div>
-                    </td>
-                    <td className="p-4 text-sm text-text-secondary">{product.category || 'N/A'}</td>
-                    <td className="p-4 font-bold text-text-brand-600">{formatPrice(product.price)}</td>
-                    <td className="p-4">
-                      {product.stock === 0 ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger-600/10 text-danger-600 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
-                          Out of Stock
-                        </div>
-                      ) : (
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                          product.stock <= lowStockThreshold 
-                            ? 'bg-warning-500/10 text-warning-600'
-                            : 'bg-success-500/10 text-success-600'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            product.stock <= lowStockThreshold ? 'bg-warning-500' : 'bg-success-500'
-                          }`}></span>
-                          {product.stock} in stock
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 pr-6 text-right space-x-2">
-                      <button 
-                        onClick={() => handleOpenModal(product)}
-                        className="p-2 text-text-muted hover:text-brand-600 bg-white hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-200 shadow-sm"
+                <>
+                  {shouldVirtualize && startOffset > 0 && (
+                    <tr style={{ height: `${startOffset}px` }}>
+                      <td colSpan="6" className="p-0 border-none font-normal" />
+                    </tr>
+                  )}
+                  {virtualItems.map(({ item: product }) => {
+                    const isSelected = selectedProductIds.has(product.id);
+                    return (
+                      <tr
+                        key={product.id}
+                        className={`transition-colors group relative ${
+                          isSelected
+                            ? 'bg-blue-50 hover:bg-blue-100'
+                            : 'hover:bg-surface-background'
+                        }`}
+                        style={isSelected ? { borderLeft: '3px solid #2563eb' } : { borderLeft: '3px solid transparent' }}
                       >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleOpenDelete(product)}
-                        className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 bg-white rounded-lg transition-colors border border-transparent hover:border-danger-600 shadow-sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        {/* ── Row Checkbox ─────────────────────────────── */}
+                        <td className="p-4 pl-4 w-10 font-normal">
+                          <RowCheckbox
+                            id={`row-checkbox-${product.id}`}
+                            checked={isSelected}
+                            disabled={isBulkDeleting}
+                            onChange={() => toggleProductSelection(product.id)}
+                          />
+                        </td>
+                        <td className="p-4 pl-2 flex items-center gap-4 font-normal">
+                          <ImageFallback src={getOptimizedUrl(product.thumbnail, 'thumbnail')} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-border-light flex-shrink-0 font-normal" />
+                          <div className="text-text-brand-600 text-sm line-clamp-1 max-w-[220px] font-normal">{product.name}</div>
+                        </td>
+                        <td className="p-4 text-sm text-text-secondary font-normal">{product.category || 'N/A'}</td>
+                        <td className="p-4 text-text-brand-600 font-normal">{formatPrice(product.price)}</td>
+                        <td className="p-4 font-normal">
+                          {product.stock === 0 ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger-600/10 text-danger-600 text-xs font-normal">
+                              <span className="w-1.5 h-1.5 rounded-full bg-danger-600 font-normal"></span>
+                              Out of Stock
+                            </div>
+                          ) : (
+                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${product.stock <= lowStockThreshold
+                                ? 'bg-warning-500/10 text-warning-600'
+                                : 'bg-success-500/10 text-success-600'
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${product.stock <= lowStockThreshold ? 'bg-warning-500' : 'bg-success-500'
+                                }`}></span>
+                              {product.stock} in stock
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4 pr-6 text-right space-x-2 font-normal">
+                          <button
+                            onClick={() => handleOpenModal(product)}
+                            disabled={isBulkDeleting}
+                            className="p-2 text-text-muted hover:text-brand-600 bg-white hover:bg-brand-50 rounded-lg transition-colors border border-transparent hover:border-brand-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Edit2 className="w-4 h-4 font-normal" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenDelete(product)}
+                            disabled={isBulkDeleting}
+                            className="p-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 bg-white rounded-lg transition-colors border border-transparent hover:border-danger-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 className="w-4 h-4 font-normal" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {shouldVirtualize && (totalHeight - startOffset - (virtualItems.length * 72)) > 0 && (
+                    <tr style={{ height: `${totalHeight - startOffset - (virtualItems.length * 72)}px` }}>
+                      <td colSpan="6" className="p-0 border-none font-normal" />
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Sticky Pagination Footer */}
         {pagination && pagination.totalPages > 0 && (
-          <div className="p-4 border-t border-border bg-surface-background">
-            <Pagination 
-              currentPage={pagination.currentPage} 
-              totalPages={pagination.totalPages} 
-              onPageChange={(page) => fetchAdminProducts(page, { search, filters })} 
-              itemsPerPage={pagination.itemsPerPage}
+          <div className="shrink-0 border-t border-border bg-white shadow-[0_-1px_4px_rgba(0,0,0,0.06)] px-4 py-3 font-normal">
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              filteredItems={pagination.filteredItems}
+              isFiltered={hasActiveFilters}
+              label="Products"
+              onPageChange={(page) => {
+                setPage(page);
+                fetchAdminProducts(page, { search: filters.search || '', filters, limit: itemsPerPage });
+                // ── Selection persists across pages ── (no clearSelection here)
+              }}
+              itemsPerPage={itemsPerPage}
               onItemsPerPageChange={(limit) => {
-                setItemsPerPage(limit);
-                fetchAdminProducts(1, { search, filters });
+                setLimit(limit);
+                fetchAdminProducts(1, { search: filters.search || '', filters, limit });
+                // ── Selection persists across page-size changes ──
               }}
             />
           </div>
@@ -307,6 +597,12 @@ const AdminProducts = () => {
         product={selectedProduct}
         onSave={handleSaveProduct}
         isLoading={isCreating || (selectedProduct ? updatingProductIds.has(selectedProduct.id) : false)}
+      />
+
+      <BulkImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportComplete={() => fetchAdminProducts(1, { search: filters.search || '', filters, limit: itemsPerPage })}
       />
     </div>
   );

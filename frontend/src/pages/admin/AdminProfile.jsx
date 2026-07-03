@@ -181,19 +181,19 @@ const AdminProfile = () => {
   if (!profile) return null;
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-extrabold text-text-brand-600 flex items-center gap-2">
-          <Shield className="w-6 h-6" />
+    <div className="space-y-6 max-w-6xl mx-auto font-normal">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-normal">
+        <h1 className="text-2xl text-text-brand-600 flex items-center gap-2 font-bold">
+          <Shield className="w-6 h-6 font-normal" />
           Admin Profile
         </h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 font-normal">
         
         {/* LEFT SIDEBAR */}
-        <div className="w-full lg:w-1/3 shrink-0">
-          <div className="bg-white rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center">
+        <div className="w-full lg:w-1/3 shrink-0 font-normal">
+          <div className="bg-white rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center font-normal">
             
             <AvatarUploader 
               currentAvatarUrl={profile?.avatarUrl} 
@@ -207,26 +207,26 @@ const AdminProfile = () => {
             />
 
             <h2 className="text-xl font-bold text-text-primary mt-6 text-center">{profile.name}</h2>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-200 px-2.5 py-1 rounded-full">Administrator</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-success-700 bg-success-50 border border-success-200 px-2.5 py-1 rounded-full">Active</span>
+            <div className="flex items-center gap-2 mt-2 font-normal">
+              <span className="text-[10px] uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-200 px-2.5 py-1 rounded-full font-normal">Administrator</span>
+              <span className="text-[10px] uppercase tracking-wider text-success-700 bg-success-50 border border-success-200 px-2.5 py-1 rounded-full font-normal">Active</span>
             </div>
 
-            <div className="w-full mt-8 space-y-4 text-sm text-text-secondary border-t border-border pt-6">
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-text-muted" /> Member Since</span>
-                <span className="font-medium text-text-primary">{getMemberSince()}</span>
+            <div className="w-full mt-8 space-y-4 text-sm text-text-secondary border-t border-border pt-6 font-normal">
+              <div className="flex justify-between items-center font-normal">
+                <span className="flex items-center gap-2 font-normal"><Calendar className="w-4 h-4 text-text-muted font-medium" /> Member Since</span>
+                <span className="text-text-primary font-normal">{getMemberSince()}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-text-muted" /> Last Login</span>
-                <span className="font-medium text-text-primary">{getLastLogin()}</span>
+              <div className="flex justify-between items-center font-normal">
+                <span className="flex items-center gap-2 font-normal"><Globe className="w-4 h-4 text-text-muted font-medium" /> Last Login</span>
+                <span className="text-text-primary font-normal">{getLastLogin()}</span>
               </div>
             </div>
 
-            <div className="w-full mt-8 space-y-3">
+            <div className="w-full mt-8 space-y-3 font-normal">
               <Button 
                 variant={currentView === 'edit' ? 'primary' : 'outline'} 
-                className="w-full justify-center" 
+                className="w-full justify-center font-normal" 
                 onClick={async () => {
                   if (currentView === 'edit') return;
                   if (isProfileDirty) {
@@ -242,12 +242,12 @@ const AdminProfile = () => {
                   setCurrentView('edit');
                 }}
               >
-                <Edit2 className="w-4 h-4 mr-2" />
+                <Edit2 className="w-4 h-4 mr-2 font-normal" />
                 Edit Profile
               </Button>
               <Button 
                 variant={currentView === 'security' ? 'primary' : 'outline'} 
-                className="w-full justify-center" 
+                className="w-full justify-center font-normal" 
                 onClick={async () => {
                   if (currentView === 'security') return;
                   if (isProfileDirty) {
@@ -263,7 +263,7 @@ const AdminProfile = () => {
                   setCurrentView('security');
                 }}
               >
-                <Lock className="w-4 h-4 mr-2" />
+                <Lock className="w-4 h-4 mr-2 font-normal" />
                 Change Password
               </Button>
             </div>
@@ -271,55 +271,55 @@ const AdminProfile = () => {
         </div>
 
         {/* RIGHT CONTENT */}
-        <div className="w-full lg:w-2/3">
+        <div className="w-full lg:w-2/3 font-normal">
           
           {/* OVERVIEW MODE */}
           {currentView === 'overview' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
+            <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background font-normal">
                   <div>
                     <h3 className="text-lg font-bold text-text-primary">Personal Information</h3>
-                    <p className="text-sm text-text-muted mt-1">Review your personal details and preferences.</p>
+                    <p className="text-sm text-text-muted mt-1 font-medium">Review your personal details and preferences.</p>
                   </div>
                 </div>
-                <div className="p-6">
-                  <dl className="divide-y divide-border-light">
-                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
-                      <dt className="text-sm font-medium text-text-secondary">Full Name</dt>
-                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.name}</dd>
+                <div className="p-6 font-normal">
+                  <dl className="divide-y divide-border-light font-normal">
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1 font-normal">
+                      <dt className="text-sm text-text-secondary font-normal">Full Name</dt>
+                      <dd className="text-sm text-text-primary sm:col-span-2 font-normal">{profile.name}</dd>
                     </div>
-                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
-                      <dt className="text-sm font-medium text-text-secondary">Email Address</dt>
-                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.email}</dd>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1 font-normal">
+                      <dt className="text-sm text-text-secondary font-normal">Email Address</dt>
+                      <dd className="text-sm text-text-primary sm:col-span-2 font-normal">{profile.email}</dd>
                     </div>
-                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
-                      <dt className="text-sm font-medium text-text-secondary">Phone Number</dt>
-                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.phone || 'Not provided'}</dd>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1 font-normal">
+                      <dt className="text-sm text-text-secondary font-normal">Phone Number</dt>
+                      <dd className="text-sm text-text-primary sm:col-span-2 font-normal">{profile.phone || 'Not provided'}</dd>
                     </div>
-                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
-                      <dt className="text-sm font-medium text-text-secondary">Birthday</dt>
-                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1 font-normal">
+                      <dt className="text-sm text-text-secondary font-normal">Birthday</dt>
+                      <dd className="text-sm text-text-primary sm:col-span-2 font-normal">
                         {profile.birthday ? new Date(profile.birthday).toLocaleDateString() : 'Not provided'}
                       </dd>
                     </div>
-                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1">
-                      <dt className="text-sm font-medium text-text-secondary">Gender</dt>
-                      <dd className="text-sm font-semibold text-text-primary sm:col-span-2">{profile.gender || 'Not provided'}</dd>
+                    <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 flex flex-col gap-1 font-normal">
+                      <dt className="text-sm text-text-secondary font-normal">Gender</dt>
+                      <dd className="text-sm text-text-primary sm:col-span-2 font-normal">{profile.gender || 'Not provided'}</dd>
                     </div>
                   </dl>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                <div className="p-6 border-b border-border-light bg-surface-background">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+                <div className="p-6 border-b border-border-light bg-surface-background font-normal">
                   <h3 className="text-lg font-bold text-text-primary">System Preferences</h3>
                 </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
+                <div className="p-6 font-normal">
+                  <div className="flex items-center justify-between font-normal">
                     <div>
-                      <div className="text-sm font-medium text-text-primary">Interface Language</div>
-                      <div className="text-sm text-text-muted mt-1">{profile.language === 'en' ? 'English (US)' : profile.language}</div>
+                      <div className="text-sm text-text-primary font-normal">Interface Language</div>
+                      <div className="text-sm text-text-muted mt-1 font-medium">{profile.language === 'en' ? 'English (US)' : profile.language}</div>
                     </div>
                   </div>
                 </div>
@@ -329,28 +329,28 @@ const AdminProfile = () => {
 
           {/* EDIT MODE */}
           {currentView === 'edit' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
+            <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background font-normal">
                   <div>
                     <h3 className="text-lg font-bold text-text-primary">Edit Personal Information</h3>
-                    <p className="text-sm text-text-muted mt-1">Update your profile details below.</p>
+                    <p className="text-sm text-text-muted mt-1 font-medium">Update your profile details below.</p>
                   </div>
-                  <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
-                    <X className="w-5 h-5" />
+                  <button onClick={cancelProfileEdit} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors font-medium">
+                    <X className="w-5 h-5 font-normal" />
                   </button>
                 </div>
-                <div className="p-6">
-                  <form onSubmit={submitProfile} className="space-y-6">
+                <div className="p-6 font-normal">
+                  <form onSubmit={submitProfile} className="space-y-6 font-normal">
                     
                     {isProfileDirty && (
-                      <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl text-sm font-medium border border-amber-200">
-                        <AlertCircle className="w-5 h-5" />
+                      <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl text-sm border border-amber-200 font-normal">
+                        <AlertCircle className="w-5 h-5 font-normal" />
                         You have unsaved changes.
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-normal">
                       <Input 
                         label="Full Name" 
                         name="name" 
@@ -364,10 +364,10 @@ const AdminProfile = () => {
                         value={profile.email} 
                         disabled 
                         readOnly
-                        className="bg-surface-background opacity-70 cursor-not-allowed"
+                        className="bg-surface-background opacity-70 cursor-not-allowed font-normal"
                         error="Email cannot be changed."
                       />
-                      <div className="sm:col-span-2">
+                      <div className="sm:col-span-2 font-normal">
                         <PhoneInput 
                           label="Phone Number" 
                           name="phone" 
@@ -386,13 +386,13 @@ const AdminProfile = () => {
                         error={formErrors.birthday}
                       />
                       
-                      <div className="space-y-1.5 md:col-span-2">
-                        <label className="block text-sm font-semibold text-text-primary">Gender</label>
+                      <div className="space-y-1.5 md:col-span-2 font-normal">
+                        <label className="block text-sm text-text-primary font-normal">Gender</label>
                         <select 
                           name="gender" 
                           value={formData.gender || ''} 
                           onChange={handleProfileChange} 
-                          className="w-full px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
+                          className="w-full px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm font-normal"
                         >
                           <option value="">Select Gender</option>
                           <option value="Male">Male</option>
@@ -402,13 +402,13 @@ const AdminProfile = () => {
                         </select>
                       </div>
 
-                      <div className="space-y-1.5 md:col-span-2 pt-4 border-t border-border-light">
-                        <label className="block text-sm font-semibold text-text-primary">Interface Language</label>
+                      <div className="space-y-1.5 md:col-span-2 pt-4 border-t border-border-light font-normal">
+                        <label className="block text-sm text-text-primary font-normal">Interface Language</label>
                         <select 
                           name="language" 
                           value={formData.language || 'en'} 
                           onChange={handleProfileChange}
-                          className="w-full md:w-1/2 px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm"
+                          className="w-full md:w-1/2 px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition-all shadow-sm font-normal"
                         >
                           <option value="en">English (US)</option>
                           <option value="fr">Français</option>
@@ -417,11 +417,11 @@ const AdminProfile = () => {
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-end gap-4">
+                    <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-end gap-4 font-normal">
                       {!isProfileDirty && (
-                        <span className="text-sm text-text-muted mr-auto">No changes to save.</span>
+                        <span className="text-sm text-text-muted mr-auto font-medium">No changes to save.</span>
                       )}
-                      <Button type="button" variant="outline" onClick={cancelProfileEdit} className="w-full sm:w-auto">
+                      <Button type="button" variant="outline" onClick={cancelProfileEdit} className="w-full sm:w-auto font-normal">
                         Cancel
                       </Button>
                       <Button 
@@ -429,7 +429,7 @@ const AdminProfile = () => {
                         disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })} 
                         aria-disabled={!isProfileDirty || !isFormValid(formErrors, { name: formData.name })}
                         isLoading={isSaving} 
-                        className="w-full sm:w-auto min-w-[140px]"
+                        className="w-full sm:w-auto min-w-[140px] font-normal"
                       >
                         Save Changes
                       </Button>
@@ -442,22 +442,22 @@ const AdminProfile = () => {
 
           {/* SECURITY & PASSWORD MODE */}
           {currentView === 'security' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
-                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background">
+            <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+              <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden font-normal">
+                <div className="p-6 border-b border-border-light flex justify-between items-center bg-surface-background font-normal">
                   <div>
                     <h3 className="text-lg font-bold text-text-primary">Change Password</h3>
-                    <p className="text-sm text-text-muted mt-1">Ensure your account is using a secure password.</p>
+                    <p className="text-sm text-text-muted mt-1 font-medium">Ensure your account is using a secure password.</p>
                   </div>
                   <button onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="p-2 text-text-muted hover:bg-border-light rounded-full transition-colors">
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 font-normal" />
                   </button>
                 </div>
-                <div className="p-6">
-                  <form onSubmit={submitPassword} className="space-y-6 max-w-lg">
+                <div className="p-6 font-normal">
+                  <form onSubmit={submitPassword} className="space-y-6 max-w-lg font-normal">
                     {passError && (
-                      <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm font-medium rounded-xl border border-red-200">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> 
+                      <div className="flex items-start gap-2 p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200 font-normal">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 font-normal" /> 
                         <span>{passError}</span>
                       </div>
                     )}
@@ -495,7 +495,7 @@ const AdminProfile = () => {
                       aria-invalid={!!passErrors.confirmPassword}
                     />
                     
-                    <div className="pt-6 border-t border-border flex items-center justify-end gap-4">
+                    <div className="pt-6 border-t border-border flex items-center justify-end gap-4 font-normal">
                       <Button type="button" variant="outline" onClick={() => { setCurrentView('overview'); setPassError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}>
                         Cancel
                       </Button>
@@ -504,7 +504,7 @@ const AdminProfile = () => {
                         isLoading={isSaving} 
                         disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })} 
                         aria-disabled={!isFormValid(passErrors, { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword, confirmPassword: passwordData.confirmPassword })}
-                        className="min-w-[140px]"
+                        className="min-w-[140px] font-normal"
                       >
                         Update Password
                       </Button>

@@ -85,6 +85,21 @@ const useAdminFilters = (defaultFilters = {}) => {
     setSearchParams(params);
   }, [defaultFilters, setSearchParams]);
 
+  /** Navigate to a specific page without resetting filters */
+  const setPage = useCallback((page) => {
+    const currentParams = Object.fromEntries(searchParams.entries());
+    currentParams.page = String(page);
+    setSearchParams(currentParams);
+  }, [searchParams, setSearchParams]);
+
+  /** Change items per page and reset to page 1 */
+  const setLimit = useCallback((limit) => {
+    const currentParams = Object.fromEntries(searchParams.entries());
+    currentParams.limit = String(limit);
+    currentParams.page = '1';
+    setSearchParams(currentParams);
+  }, [searchParams, setSearchParams]);
+
   const activeFilters = useMemo(() => {
     return Object.fromEntries(searchParams.entries());
   }, [searchParams]);
@@ -96,6 +111,8 @@ const useAdminFilters = (defaultFilters = {}) => {
     updateFilter,
     updateFilters,
     resetFilters,
+    setPage,
+    setLimit,
     isInitialized
   };
 };

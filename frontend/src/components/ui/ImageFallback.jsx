@@ -16,15 +16,15 @@ const ImageFallback = ({ src, alt, className = '', fallbackClassName = '', type 
     if (type === 'avatar') {
       return (
         <div className={`flex items-center justify-center bg-brand-100 text-brand-600 ${className} ${fallbackClassName}`}>
-          <User className="w-1/2 h-1/2 opacity-70" />
+          <User className="w-1/2 h-1/2 opacity-70 font-normal" />
         </div>
       );
     }
     
     return (
       <div className={`flex flex-col items-center justify-center bg-border-light text-secondary-400 ${className} ${fallbackClassName}`}>
-        <ImageOff className="w-8 h-8 mb-2 opacity-50" />
-        <span className="text-xs font-medium uppercase tracking-widest opacity-50 text-center px-2">Unavailable</span>
+        <ImageOff className="w-8 h-8 mb-2 opacity-50 font-normal" />
+        <span className="text-xs uppercase tracking-widest opacity-50 text-center px-2 font-normal">Unavailable</span>
       </div>
     );
   }

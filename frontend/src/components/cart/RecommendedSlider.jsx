@@ -33,11 +33,11 @@ const RecommendedSlider = ({ currentCartItemIds = [] }) => {
 
   if (isLoading) {
     return (
-      <div className="mt-12">
-        <div className="h-7 w-48 bg-slate-200 rounded animate-pulse mb-6" />
-        <div className="flex gap-5 overflow-hidden">
+      <div className="mt-12 font-normal">
+        <div className="h-7 w-48 bg-slate-200 rounded animate-pulse mb-6 font-normal" />
+        <div className="flex gap-5 overflow-hidden font-normal">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="min-w-[200px] sm:min-w-[220px] aspect-[4/5] bg-slate-200 rounded-2xl animate-pulse" />
+            <div key={i} className="min-w-[200px] sm:min-w-[220px] aspect-[4/5] bg-slate-200 rounded-2xl animate-pulse font-normal" />
           ))}
         </div>
       </div>
@@ -47,36 +47,36 @@ const RecommendedSlider = ({ currentCartItemIds = [] }) => {
   if (products.length === 0) return null;
 
   return (
-    <div className="mt-12">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mt-12 font-normal">
+      <div className="flex items-center justify-between mb-6 font-normal">
         <h2 className="text-xl font-bold text-[#1B2340]">Customers also bought</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 font-normal">
           <button
             onClick={() => scroll('left')}
             className="w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm focus:outline-none"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-4 h-4 text-slate-600" />
+            <ChevronLeft className="w-4 h-4 text-slate-600 font-normal" />
           </button>
           <button
             onClick={() => scroll('right')}
             className="w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm focus:outline-none"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-slate-600 font-normal" />
           </button>
         </div>
       </div>
 
       <div
         ref={sliderRef}
-        className="flex gap-5 overflow-x-auto pb-2 snap-x hide-scrollbar"
+        className="flex gap-5 overflow-x-auto pb-2 snap-x hide-scrollbar font-normal"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {products.map((product) => (
           <div
             key={product.id}
-            className="min-w-[200px] sm:min-w-[220px] snap-start"
+            className="min-w-[200px] sm:min-w-[220px] snap-start font-normal"
           >
             <ProductCard product={product} />
           </div>

@@ -40,22 +40,22 @@ const getProductBadge = (p) => {
    Page-level skeleton
 ────────────────────────────────────────────────────── */
 const DetailSkeleton = () => (
-  <PageContainer className="py-8 lg:py-12">
-    <div className="h-4 w-56 bg-slate-200 rounded animate-pulse mb-8" />
-    <div className="flex flex-col lg:flex-row gap-10 xl:gap-14">
-      <div className="w-full lg:w-[48%] space-y-3 animate-pulse">
-        <div className="aspect-square bg-slate-200 rounded-2xl" />
-        <div className="flex gap-2">{[1,2,3].map(i=><div key={i} className="w-16 h-16 bg-slate-200 rounded-xl"/>)}</div>
+  <PageContainer className="py-8 lg:py-12 font-normal">
+    <div className="h-4 w-56 bg-slate-200 rounded animate-pulse mb-8 font-normal" />
+    <div className="flex flex-col lg:flex-row gap-10 xl:gap-14 font-normal">
+      <div className="w-full lg:w-[48%] space-y-3 animate-pulse font-normal">
+        <div className="aspect-square bg-slate-200 rounded-2xl font-normal" />
+        <div className="flex gap-2 font-normal">{[1,2,3].map(i=><div key={i} className="w-16 h-16 bg-slate-200 rounded-xl font-normal"/>)}</div>
       </div>
-      <div className="flex-1 space-y-4 animate-pulse pt-2">
-        <div className="h-5 w-24 bg-slate-200 rounded-full" />
-        <div className="h-9 w-3/4 bg-slate-200 rounded" />
-        <div className="h-4 w-52 bg-slate-200 rounded" />
-        <div className="h-8 w-40 bg-slate-200 rounded" />
-        <div className="h-px bg-slate-200" />
-        <div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-4 bg-slate-200 rounded" style={{width:`${90-i*10}%`}} />)}</div>
-        <div className="h-12 bg-slate-200 rounded-xl w-full" />
-        <div className="grid grid-cols-3 gap-4">{[1,2,3].map(i=><div key={i} className="h-20 bg-slate-200 rounded-2xl"/>)}</div>
+      <div className="flex-1 space-y-4 animate-pulse pt-2 font-normal">
+        <div className="h-5 w-24 bg-slate-200 rounded-full font-normal" />
+        <div className="h-9 w-3/4 bg-slate-200 rounded font-normal" />
+        <div className="h-4 w-52 bg-slate-200 rounded font-normal" />
+        <div className="h-8 w-40 bg-slate-200 rounded font-normal" />
+        <div className="h-px bg-slate-200 font-normal" />
+        <div className="space-y-2 font-normal">{[1,2,3].map(i=><div key={i} className="h-4 bg-slate-200 rounded font-normal" style={{width:`${90-i*10}%`}} />)}</div>
+        <div className="h-12 bg-slate-200 rounded-xl w-full font-normal" />
+        <div className="grid grid-cols-3 gap-4 font-normal">{[1,2,3].map(i=><div key={i} className="h-20 bg-slate-200 rounded-2xl font-normal"/>)}</div>
       </div>
     </div>
   </PageContainer>
@@ -103,9 +103,9 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
   const freeShipping = publicConfig?.shipping?.freeShippingThreshold;
 
   return (
-    <div className="border-t border-slate-200">
+    <div className="border-t border-slate-200 font-normal">
       {/* Tab bar */}
-      <div className="flex overflow-x-auto hide-scrollbar border-b border-slate-200">
+      <div className="flex overflow-x-auto hide-scrollbar border-b border-slate-200 font-normal">
         {TABS.map((tab) => {
           const Icon = TabIcons[tab];
           return (
@@ -115,10 +115,10 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
               className={`flex items-center gap-1.5 px-5 py-4 text-sm font-semibold whitespace-nowrap shrink-0 relative transition-colors focus:outline-none
                 ${activeTab === tab ? 'text-[#1B2340]' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              {Icon && <Icon className="w-3.5 h-3.5" />}
+              {Icon && <Icon className="w-3.5 h-3.5 font-normal" />}
               {tab}
               {activeTab === tab && (
-                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#1B2340] rounded-t-sm" />
+                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#1B2340] rounded-t-sm font-normal" />
               )}
             </button>
           );
@@ -126,17 +126,17 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
       </div>
 
       {/* Tab content area — 3 column layout matching reference */}
-      <div className="py-8">
+      <div className="py-8 font-normal">
         {activeTab === 'Description' && (
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1.4fr] gap-8 xl:gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1.4fr] gap-8 xl:gap-12 font-normal">
             {/* Left: Description + bullets */}
-            <div className="space-y-5">
-              <p className="text-slate-600 leading-relaxed text-sm">{product.description}</p>
-              <ul className="space-y-2.5 mt-4">
+            <div className="space-y-5 font-normal">
+              <p className="text-slate-600 leading-relaxed text-sm font-normal">{product.description}</p>
+              <ul className="space-y-2.5 mt-4 font-normal">
                 {highlights.map((h, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <span className="text-sm text-slate-600">{h}</span>
+                  <li key={i} className="flex items-start gap-2.5 font-normal">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0 font-normal" />
+                    <span className="text-sm text-slate-600 font-normal">{h}</span>
                   </li>
                 ))}
               </ul>
@@ -145,16 +145,16 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
             {/* Middle: Key specs table */}
             <div>
               {specs.length > 0 ? (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 font-normal">
                   {specs.map(([label, value]) => (
-                    <div key={label} className="flex justify-between py-3">
-                      <span className="text-sm text-slate-500 font-medium">{label}</span>
-                      <span className="text-sm text-slate-800 font-medium text-right ml-4">{value}</span>
+                    <div key={label} className="flex justify-between py-3 font-normal">
+                      <span className="text-sm text-slate-500 font-normal">{label}</span>
+                      <span className="text-sm text-slate-800 text-right ml-4 font-normal">{value}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">No specifications available.</p>
+                <p className="text-sm text-slate-400 font-normal">No specifications available.</p>
               )}
             </div>
 
@@ -162,24 +162,24 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
             <div>
               <h3 className="text-sm font-bold text-slate-700 mb-4">You may also like</h3>
               {relatedLoading ? (
-                <div className="space-y-3">
-                  {[1,2,3].map(i => <div key={i} className="h-20 bg-slate-100 rounded-xl animate-pulse" />)}
+                <div className="space-y-3 font-normal">
+                  {[1,2,3].map(i => <div key={i} className="h-20 bg-slate-100 rounded-xl animate-pulse font-normal" />)}
                 </div>
               ) : relatedProducts.length === 0 ? null : (
-                <div className="space-y-3">
+                <div className="space-y-3 font-normal">
                   {relatedProducts.slice(0, 3).map(p => (
-                    <Link key={p.id} to={`/products/${p.slug || p.id}`} className="flex gap-3 group">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                    <Link key={p.id} to={`/products/${p.slug || p.id}`} className="flex gap-3 group font-normal">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 font-normal">
                         <img
                           src={p.thumbnail}
                           alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 font-normal"
                           loading="lazy"
                         />
                       </div>
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <p className="text-xs font-semibold text-slate-700 truncate leading-snug group-hover:text-[#1B2340] transition-colors">{p.name}</p>
-                        <p className="text-xs font-bold text-[#1B2340] mt-1">{formatPrice(p.finalPrice || p.price)}</p>
+                      <div className="flex-1 min-w-0 pt-0.5 font-normal">
+                        <p className="text-xs text-slate-700 truncate leading-snug group-hover:text-[#1B2340] transition-colors font-normal">{p.name}</p>
+                        <p className="text-xs text-[#1B2340] mt-1 font-normal">{formatPrice(p.finalPrice || p.price)}</p>
                       </div>
                     </Link>
                   ))}
@@ -190,31 +190,31 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
         )}
 
         {activeTab === 'Specifications' && (
-          <div className="max-w-2xl border border-slate-100 rounded-2xl overflow-hidden">
+          <div className="max-w-2xl border border-slate-100 rounded-2xl overflow-hidden font-normal">
             {specs.length > 0 ? specs.map(([label, value], i) => (
               <div key={label} className={`flex items-center justify-between px-6 py-4 ${i%2===0?'bg-white':'bg-slate-50'}`}>
-                <span className="text-sm font-semibold text-slate-500">{label}</span>
-                <span className="text-sm font-medium text-slate-800">{value}</span>
+                <span className="text-sm text-slate-500 font-normal">{label}</span>
+                <span className="text-sm text-slate-800 font-normal">{value}</span>
               </div>
             )) : (
-              <div className="px-6 py-8 text-slate-400 text-sm text-center">No specifications available for this product.</div>
+              <div className="px-6 py-8 text-slate-400 text-sm text-center font-normal">No specifications available for this product.</div>
             )}
           </div>
         )}
 
         {activeTab === 'Shipping' && (
-          <div className="max-w-2xl space-y-4">
+          <div className="max-w-2xl space-y-4 font-normal">
             {[
               { icon: Truck,   title: 'Free Standard Delivery', body: `${freeShipping ? `Complimentary on orders over ${formatPrice(freeShipping)}.` : 'Complimentary on qualifying orders.'} Estimated 5–7 business days.` },
               { icon: Package, title: `White Glove Delivery — ${formatPrice(1499)}`, body: 'Room-of-choice placement, full assembly, and packaging removal.' },
             ].map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex gap-4 p-5 bg-slate-50 rounded-2xl">
-                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-[#1B2340]" />
+              <div key={title} className="flex gap-4 p-5 bg-slate-50 rounded-2xl font-normal">
+                <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 font-normal">
+                  <Icon className="w-5 h-5 text-[#1B2340] font-normal" />
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-800 text-sm">{title}</p>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{body}</p>
+                  <p className="text-slate-800 text-sm font-normal">{title}</p>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed font-normal">{body}</p>
                 </div>
               </div>
             ))}
@@ -222,42 +222,42 @@ const TabSection = ({ product, publicConfig, relatedProducts, relatedLoading }) 
         )}
 
         {activeTab === 'Returns' && (
-          <div className="max-w-2xl">
-            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                <RotateCcw className="w-5 h-5 text-[#1B2340]" />
+          <div className="max-w-2xl font-normal">
+            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl font-normal">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 font-normal">
+                <RotateCcw className="w-5 h-5 text-[#1B2340] font-normal" />
               </div>
               <div>
-                <p className="font-semibold text-slate-800 text-sm">30-Day Return Policy</p>
-                <p className="text-sm text-slate-500 mt-1 leading-relaxed">Return most items within 30 days of delivery for a full refund or store credit. Items must be in original condition and packaging. Return shipping charges apply.</p>
+                <p className="text-slate-800 text-sm font-normal">30-Day Return Policy</p>
+                <p className="text-sm text-slate-500 mt-1 leading-relaxed font-normal">Return most items within 30 days of delivery for a full refund or store credit. Items must be in original condition and packaging. Return shipping charges apply.</p>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'Warranty' && (
-          <div className="max-w-2xl">
-            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5 text-[#1B2340]" />
+          <div className="max-w-2xl font-normal">
+            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl font-normal">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 font-normal">
+                <ShieldCheck className="w-5 h-5 text-[#1B2340] font-normal" />
               </div>
               <div>
-                <p className="font-semibold text-slate-800 text-sm">2-Year Limited Warranty</p>
-                <p className="text-sm text-slate-500 mt-1 leading-relaxed">Covers manufacturing defects under normal use. Does not cover normal wear and tear or accidental damage. Contact support to initiate a claim.</p>
+                <p className="text-slate-800 text-sm font-normal">2-Year Limited Warranty</p>
+                <p className="text-sm text-slate-500 mt-1 leading-relaxed font-normal">Covers manufacturing defects under normal use. Does not cover normal wear and tear or accidental damage. Contact support to initiate a claim.</p>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'Care Instructions' && (
-          <div className="max-w-2xl">
-            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-[#1B2340]" />
+          <div className="max-w-2xl font-normal">
+            <div className="flex gap-4 p-5 bg-slate-50 rounded-2xl font-normal">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 font-normal">
+                <Sparkles className="w-5 h-5 text-[#1B2340] font-normal" />
               </div>
               <div>
-                <p className="font-semibold text-slate-800 text-sm">Care & Maintenance</p>
-                <ul className="text-sm text-slate-500 mt-2 space-y-1.5 leading-relaxed">
+                <p className="text-slate-800 text-sm font-normal">Care & Maintenance</p>
+                <ul className="text-sm text-slate-500 mt-2 space-y-1.5 leading-relaxed font-normal">
                   <li>• Dust regularly with a soft, dry cloth.</li>
                   <li>• Avoid direct sunlight to prevent fading or warping.</li>
                   <li>• Wipe spills immediately with a damp cloth.</li>
@@ -344,7 +344,7 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <PageContainer className="py-20">
+      <PageContainer className="py-20 font-normal">
         <EmptyState
           title="Product not found"
           message={error || "We couldn't find the product you're looking for."}
@@ -365,37 +365,37 @@ const ProductDetail = () => {
   const freeShipping = publicConfig?.shipping?.freeShippingThreshold;
 
   return (
-    <div className="min-h-screen bg-white">
-      <PageContainer className="py-6 lg:py-10">
+    <div className="min-h-screen bg-white pb-8 font-normal">
+      <PageContainer className="py-6 lg:py-10 font-normal">
 
         {/* ── Breadcrumb ── */}
-        <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-8 flex-wrap">
-          <Link to="/" className="hover:text-[#1B2340] transition-colors">Home</Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link to={`/products?category=${product.category}`} className="hover:text-[#1B2340] transition-colors capitalize">{product.category || 'Furniture'}</Link>
-          <ChevronRight className="w-3 h-3" />
+        <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-8 flex-wrap font-normal">
+          <Link to="/" className="hover:text-[#1B2340] transition-colors font-normal">Home</Link>
+          <ChevronRight className="w-3 h-3 font-normal" />
+          <Link to={`/products?category=${product.category}`} className="hover:text-[#1B2340] transition-colors capitalize font-normal">{product.category || 'Furniture'}</Link>
+          <ChevronRight className="w-3 h-3 font-normal" />
           {product.subcategory && <>
-            <Link to={`/products?category=${product.subcategory}`} className="hover:text-[#1B2340] transition-colors capitalize">{product.subcategory}</Link>
-            <ChevronRight className="w-3 h-3" />
+            <Link to={`/products?category=${product.subcategory}`} className="hover:text-[#1B2340] transition-colors capitalize font-normal">{product.subcategory}</Link>
+            <ChevronRight className="w-3 h-3 font-normal" />
           </>}
-          <span className="text-slate-600 truncate max-w-[220px]">{product.name}</span>
+          <span className="text-slate-600 truncate max-w-[220px] font-normal">{product.name}</span>
         </nav>
 
         {/* ── Two-column layout ── */}
-        <div className="flex flex-col lg:flex-row gap-10 xl:gap-14 mb-12">
+        <div className="flex flex-col lg:flex-row gap-10 xl:gap-14 mb-12 font-normal">
 
           {/* Left: Gallery (48%) */}
-          <div className="w-full lg:w-[48%] shrink-0">
+          <div className="w-full lg:w-[48%] shrink-0 font-normal">
             <ProductGallery images={images} />
           </div>
 
           {/* Right: Product Info — sticky on desktop */}
-          <div className="flex-1">
-            <div className="lg:sticky lg:top-24">
+          <div className="flex-1 font-normal">
+            <div className="lg:sticky lg:top-24 font-normal">
 
               {/* Product badge */}
               {badge && (
-                <div className="mb-3">
+                <div className="mb-3 font-normal">
                   <span className={`inline-block text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full ${badge.cls}`}>
                     {badge.label}
                   </span>
@@ -403,41 +403,41 @@ const ProductDetail = () => {
               )}
 
               {/* Product name */}
-              <h1 className="text-3xl sm:text-[2.1rem] font-extrabold text-[#1B2340] leading-tight tracking-tight mb-3">
+              <h1 className="text-3xl sm:text-[2.1rem] text-[#1B2340] leading-tight tracking-tight mb-3 font-bold">
                 {product.name}
               </h1>
 
               {/* Rating + SKU */}
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400 mb-5">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400 mb-5 font-normal">
                 <RatingDisplay rating={product.rating || 0} count={product.reviewCount || 0} />
                 {product.sku && (
                   <>
-                    <span className="text-slate-300">|</span>
-                    <span>SKU: <span className="font-mono text-slate-500">{product.sku}</span></span>
+                    <span className="text-slate-300 font-normal">|</span>
+                    <span>SKU: <span className="font-mono text-slate-500 font-normal">{product.sku}</span></span>
                   </>
                 )}
               </div>
 
               {/* Price row + In Stock badge */}
-              <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-extrabold text-[#1B2340]">
+              <div className="flex items-center justify-between flex-wrap gap-3 mb-5 font-normal">
+                <div className="flex items-baseline gap-3 font-normal">
+                  <span className="text-3xl text-[#1B2340] font-normal">
                     {formatPrice(product.finalPrice || product.price)}
                   </span>
                   {product.discountPercentage > 0 && (
-                    <span className="text-lg text-slate-400 line-through font-medium">
+                    <span className="text-lg text-slate-400 line-through font-normal">
                       {formatPrice(product.price)}
                     </span>
                   )}
                 </div>
                 {isInStock ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full font-normal">
+                    <CheckCircle2 className="w-3.5 h-3.5 font-normal" />
                     In Stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full">
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                  <span className="inline-flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full font-normal">
+                    <AlertTriangle className="w-3.5 h-3.5 font-normal" />
                     Out of Stock
                   </span>
                 )}
@@ -445,40 +445,40 @@ const ProductDetail = () => {
 
               {/* Savings + GST note */}
               {savings > 0 && (
-                <p className="text-xs text-emerald-600 font-semibold mb-1">
+                <p className="text-xs text-emerald-600 mb-1 font-normal">
                   You save {formatPrice(savings)} on this order
                 </p>
               )}
-              <p className="text-xs text-slate-400 mb-1">Inclusive of all taxes (GST)</p>
+              <p className="text-xs text-slate-400 mb-1 font-normal">Inclusive of all taxes (GST)</p>
               {(product.finalPrice || product.price) >= 3000 && (
-                <p className="text-xs text-[#1B2340] font-semibold mb-4">
+                <p className="text-xs text-[#1B2340] mb-4 font-normal">
                   ✦ EMI from {formatPrice(Math.round((product.finalPrice || product.price) / 12))}/month available
                 </p>
               )}
 
               {/* Divider */}
-              <div className="h-px bg-slate-200 my-5" />
+              <div className="h-px bg-slate-200 my-5 font-normal" />
 
               {/* Description */}
-              <p className="text-sm text-slate-500 leading-relaxed mb-5 max-w-md">
+              <p className="text-sm text-slate-500 leading-relaxed mb-5 max-w-md font-normal">
                 {product.description}
               </p>
 
               {/* Divider */}
-              <div className="h-px bg-slate-200 my-5" />
+              <div className="h-px bg-slate-200 my-5 font-normal" />
 
               {/* Purchase area */}
               {isOutOfStock ? (
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex-1">
+                <div className="space-y-4 font-normal">
+                  <div className="flex gap-3 font-normal">
+                    <div className="flex-1 font-normal">
                       {isSubscribed ? (
-                        <Button size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700 border-none cursor-default" disabled>
-                          <CheckCircle2 className="w-5 h-5 mr-2" />
+                        <Button size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700 border-none cursor-default font-normal" disabled>
+                          <CheckCircle2 className="w-5 h-5 mr-2 font-normal" />
                           You're Notified
                         </Button>
                       ) : (
-                        <Button size="lg" className="w-full" onClick={() => setIsNotifyModalOpen(true)}>
+                        <Button size="lg" className="w-full font-normal" onClick={() => setIsNotifyModalOpen(true)}>
                           Notify Me When Available
                         </Button>
                       )}
@@ -493,7 +493,7 @@ const ProductDetail = () => {
                     </button>
                   </div>
                   {isSubscribed && (
-                    <p className="text-xs text-slate-400">We'll notify you by email when this product is back in stock.</p>
+                    <p className="text-xs text-slate-400 font-normal">We'll notify you by email when this product is back in stock.</p>
                   )}
                   <NotifyMeModal
                     isOpen={isNotifyModalOpen}
@@ -504,17 +504,17 @@ const ProductDetail = () => {
                   />
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 font-normal">
                   {/* Quantity label */}
                   <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Quantity</p>
-                    <div className="flex items-center gap-3">
+                    <p className="text-xs text-slate-500 uppercase tracking-widest mb-2 font-normal">Quantity</p>
+                    <div className="flex items-center gap-3 font-normal">
                       <QuantityStepper quantity={quantity} setQuantity={setQuantity} min={1} max={product.stock} />
                       <Button
                         size="lg"
                         onClick={handleAddToCart}
                         isLoading={isCartLoading}
-                        className="flex-1 bg-[#1B2340] hover:bg-[#252f50] border-none text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-bold"
+                        className="flex-1 bg-[#1B2340] hover:bg-[#252f50] border-none text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-normal"
                       >
                         Add to Cart
                       </Button>
@@ -532,19 +532,19 @@ const ProductDetail = () => {
               )}
 
               {/* ── Benefits strip ── */}
-              <div className="flex items-stretch mt-6 border border-slate-200 rounded-2xl overflow-hidden divide-x divide-slate-200 bg-slate-50">
+              <div className="flex items-stretch mt-6 border border-slate-200 rounded-2xl overflow-hidden divide-x divide-slate-200 bg-slate-50 font-normal">
                 {[
                   { icon: Truck,       title: 'Free Delivery',  sub: freeShipping ? `Over ${formatPrice(freeShipping)}` : 'On qualifying orders' },
                   { icon: RotateCcw,   title: '30-Day Returns', sub: 'No questions asked' },
                   { icon: ShieldCheck, title: '2-Year Warranty',sub: 'On all products' },
                 ].map(({ icon: Icon, title, sub }) => (
-                  <div key={title} className="flex-1 flex flex-col items-center text-center gap-2 py-4 px-2">
-                    <div className="w-9 h-9 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-[#1B2340]" />
+                  <div key={title} className="flex-1 flex flex-col items-center text-center gap-2 py-4 px-2 font-normal">
+                    <div className="w-9 h-9 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center font-normal">
+                      <Icon className="w-4 h-4 text-[#1B2340] font-normal" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-700 leading-tight">{title}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{sub}</p>
+                      <p className="text-[11px] text-slate-700 leading-tight font-normal">{title}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-tight font-normal">{sub}</p>
                     </div>
                   </div>
                 ))}
@@ -564,21 +564,21 @@ const ProductDetail = () => {
         />
 
         {/* ── Bottom trust bar ── */}
-        <div className="mt-12 pt-8 border-t border-slate-100">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-12 pt-8 border-t border-slate-100 font-normal">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 font-normal">
             {[
               { icon: CreditCard,   title: 'Secure Checkout',    sub: '100% protected payments' },
               { icon: Star,         title: 'Premium Quality',     sub: 'Crafted to last' },
               { icon: Wrench,       title: 'Easy Installation',   sub: 'Mounting kit included' },
               { icon: Headphones,   title: 'Customer Support',    sub: 'We\'re here to help' },
             ].map(({ icon: Icon, title, sub }) => (
-              <div key={title} className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-[#1B2340]" />
+              <div key={title} className="flex items-start gap-3 font-normal">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 font-normal">
+                  <Icon className="w-5 h-5 text-[#1B2340] font-normal" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-700">{title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+                  <p className="text-sm text-slate-700 font-normal">{title}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 font-normal">{sub}</p>
                 </div>
               </div>
             ))}

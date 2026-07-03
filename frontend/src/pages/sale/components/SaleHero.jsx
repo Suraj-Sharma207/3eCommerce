@@ -23,8 +23,8 @@ const SaleHero = () => {
 
   if (loading) {
     return (
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-slate-200 animate-pulse rounded-[32px]" />
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 font-normal">
+        <div className="w-full h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px] bg-slate-200 animate-pulse rounded-[32px] font-normal" />
       </div>
     );
   }
@@ -32,12 +32,12 @@ const SaleHero = () => {
   const imageUrl = banner ? banner.image : '/images/sale_banner.png';
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-      <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full">
+    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 font-normal">
+      <div className="relative rounded-[32px] overflow-hidden border border-[#E3D8C8] shadow-sm w-full font-normal">
         <img
           src={imageUrl}
           alt="The Grand Sale Banner"
-          className="w-full h-auto block select-none pointer-events-none"
+          className="w-full h-auto block select-none pointer-events-none font-normal"
           draggable={false}
         />
       </div>

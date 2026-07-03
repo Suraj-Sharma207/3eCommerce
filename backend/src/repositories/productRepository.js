@@ -61,7 +61,7 @@ class ProductRepository {
     if (inStock === 'true' || inStock === true) {
       availabilityConditions.push({ stock: { gt: 0 } });
     }
-    
+
     // New stockStatus explicit handling
     if (stockStatus === 'active') {
       andClauses.push({ stock: { gt: 0 } });
@@ -128,7 +128,7 @@ class ProductRepository {
     const baseFilters = { ...filters };
     delete baseFilters.stockStatus;
     delete baseFilters.inStock;
-    
+
     const baseWhere = this._buildWhereClause(baseFilters);
 
     // Run all counts in a single transaction
@@ -184,6 +184,19 @@ class ProductRepository {
 
   async delete(id) {
     return await prisma.product.delete({ where: { id } });
+  }
+
+  /**
+   * Returns all matching product IDs for the current filters — used for
+   * enterprise "Select All" that spans the entire dataset, not just one page.
+   */
+  async findAllIds({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
+    const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
+    const rows = await prisma.product.findMany({
+      where,
+      select: { id: true },
+    });
+    return rows.map(r => r.id);
   }
 
   async getCategories() {

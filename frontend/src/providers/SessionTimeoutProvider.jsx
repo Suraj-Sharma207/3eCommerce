@@ -64,9 +64,9 @@ const SessionTimeoutProvider = ({ children }) => {
     <>
       {children}
       <Modal isOpen={showWarning} onClose={() => setShowWarning(false)} title="Session Expiring">
-        <div className="p-4">
-          <p className="text-text-primary mb-4">Your session will expire soon due to inactivity. Do you want to stay logged in?</p>
-          <div className="flex justify-end gap-3">
+        <div className="p-4 font-normal">
+          <p className="text-text-primary mb-4 font-normal">Your session will expire soon due to inactivity. Do you want to stay logged in?</p>
+          <div className="flex justify-end gap-3 font-normal">
             <Button variant="outline" onClick={() => logout()}>Log Out</Button>
             <Button onClick={() => setShowWarning(false)}>Stay Logged In</Button>
           </div>

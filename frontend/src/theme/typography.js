@@ -1,6 +1,6 @@
 export const typography = {
   fontFamily: {
-    sans: ['"Source Sans Pro"', 'sans-serif'],
+    sans: ['"Inter"', 'inter-fallback'],
   },
   fontSize: {
     xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.02em' }],
@@ -14,11 +14,9 @@ export const typography = {
     '5xl': ['3rem', { lineHeight: '1', letterSpacing: '-0.03em' }],
   },
   fontWeight: {
-    light: '300',
     normal: '400',
     medium: '500',
     semibold: '600',
     bold: '700',
-    extrabold: '800',
   }
 };

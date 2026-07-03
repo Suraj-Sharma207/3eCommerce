@@ -37,9 +37,9 @@ const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 
 const AppRoutes = () => {
   return (
-    <div className="min-h-[100dvh] bg-background-default font-sans flex flex-col">
+    <div className="min-h-[100dvh] bg-background-default font-sans flex flex-col font-normal">
       <Suspense fallback={
-        <div className="flex-1 flex justify-center items-center h-[50vh]">
+        <div className="flex-1 flex justify-center items-center h-[50vh] font-normal">
           <LoadingSpinner size="lg" />
         </div>
       }>
@@ -84,8 +84,8 @@ const AppRoutes = () => {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="profile" element={<AdminProfile />} />
-            <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
-            <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
+            <Route path="categories" element={<div className="p-8 font-normal">Categories feature coming soon.</div>} />
+            <Route path="analytics" element={<div className="p-8 font-normal">Analytics feature coming soon.</div>} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="settings/:tab" element={<AdminSettings />} />
             <Route path="homepage" element={<AdminHomepageSettings />} />

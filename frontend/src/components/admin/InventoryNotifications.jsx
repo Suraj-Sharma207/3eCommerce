@@ -18,10 +18,10 @@ const InventoryNotifications = () => {
 
   if (inventoryAlertsError && !inventoryAlerts) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[300px] text-center">
-        <AlertCircle className="w-8 h-8 text-danger-500 mb-3" />
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[300px] text-center font-normal">
+        <AlertCircle className="w-8 h-8 text-danger-500 mb-3 font-normal" />
         <h3 className="text-sm font-bold text-text-primary mb-1">Unable to load Inventory Alerts</h3>
-        <p className="text-xs text-text-muted mb-4">{inventoryAlertsError}</p>
+        <p className="text-xs text-text-muted mb-4 font-medium">{inventoryAlertsError}</p>
         <button 
           onClick={() => fetchInventoryAlerts()}
           className="px-4 py-1.5 bg-brand-600 text-white text-xs font-semibold rounded-lg hover:bg-brand-700 transition-colors"
@@ -34,7 +34,7 @@ const InventoryNotifications = () => {
 
   if (!inventoryAlerts) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[300px]">
+      <div className="flex-1 flex items-center justify-center min-h-[300px] font-normal">
         <LoadingSpinner />
       </div>
     );
@@ -49,20 +49,20 @@ const InventoryNotifications = () => {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[400px]">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-full max-h-[400px] font-normal">
+      <div className="flex items-center justify-between mb-6 font-normal">
         <h3 className="text-lg font-bold text-text-brand-600 flex items-center gap-2">
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5 h-5 font-normal" />
           Inventory Notifications
         </h3>
         {totalAlerts > 0 && (
-          <span className="px-2 py-1 rounded-full bg-danger-100 text-danger-700 text-xs font-bold">
+          <span className="px-2 py-1 rounded-full bg-danger-100 text-danger-700 text-xs font-normal">
             {totalAlerts} Alert{totalAlerts !== 1 ? 's' : ''}
           </span>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 -mr-2">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2 -mr-2 font-normal">
         {outOfStock.map((p) => (
           <NotificationCard 
             key={`oos-${p.id}`}
@@ -119,12 +119,12 @@ const InventoryNotifications = () => {
         ))}
 
         {(outOfStock.length + lowStock.length + recentlyRestocked.length + recentlyAdded.length === 0) && (
-          <div className="flex flex-col items-center justify-center p-8 text-center h-full">
-            <div className="w-12 h-12 bg-border-light rounded-full flex items-center justify-center mb-3">
-              <Package className="w-6 h-6 text-secondary-400" />
+          <div className="flex flex-col items-center justify-center p-8 text-center h-full font-normal">
+            <div className="w-12 h-12 bg-border-light rounded-full flex items-center justify-center mb-3 font-normal">
+              <Package className="w-6 h-6 text-secondary-400 font-normal" />
             </div>
-            <p className="text-sm font-bold text-text-brand-600">All caught up!</p>
-            <p className="text-xs text-text-muted mt-1">Your inventory is well stocked and healthy.</p>
+            <p className="text-sm text-text-brand-600 font-normal">All caught up!</p>
+            <p className="text-xs text-text-muted mt-1 font-medium">Your inventory is well stocked and healthy.</p>
           </div>
         )}
       </div>
@@ -138,13 +138,13 @@ const NotificationCard = ({ icon: Icon, iconColor, bgColor, borderColor, title, 
     className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${bgColor} ${borderColor} flex gap-3 items-start group`}
   >
     <div className={`mt-0.5 ${iconColor}`}>
-      <Icon className="w-5 h-5" />
+      <Icon className="w-5 h-5 font-normal" />
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-bold text-sm text-text-primary truncate group-hover:text-brand-600 transition-colors">
+    <div className="flex-1 min-w-0 font-normal">
+      <p className="text-sm text-text-primary truncate group-hover:text-brand-600 transition-colors font-normal">
         {title}
       </p>
-      <div className="flex items-center justify-between mt-1">
+      <div className="flex items-center justify-between mt-1 font-normal">
         <span className={`text-xs font-bold ${iconColor}`}>{subtitle}</span>
         {meta && <span className="text-[10px] font-medium text-text-muted">{meta}</span>}
       </div>

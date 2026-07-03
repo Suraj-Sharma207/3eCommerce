@@ -12,12 +12,14 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "seed:admin": "node src/scripts/seedAdmin.js",
+    "seed:customers": "node src/scripts/seedCustomers.js",
     "audit:images": "node src/scripts/auditImages.js"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^1.41.3",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -30,7 +32,9 @@
     "multer": "^2.2.0",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^9.0.1",
+    "redis": "^6.1.0",
     "ua-parser-js": "^2.0.10",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

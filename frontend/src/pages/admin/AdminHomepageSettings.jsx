@@ -54,71 +54,71 @@ const AdminHomepageSettings = () => {
     setSaving(false);
   };
 
-  if (loading) return <div className="p-8 flex justify-center"><RefreshCw className="animate-spin text-text-brand-600" /></div>;
+  if (loading) return <div className="p-8 flex justify-center font-normal"><RefreshCw className="animate-spin text-text-brand-600 font-normal" /></div>;
 
   return (
-    <div className="p-8 space-y-12 h-full overflow-y-auto">
+    <div className="p-8 space-y-12 h-full overflow-y-auto font-normal">
       <div>
         <h1 className="text-2xl font-bold text-text-brand-600 mb-2">Homepage Sections</h1>
-        <p className="text-text-primary-light">Manage and preview homepage content dynamically</p>
+        <p className="text-text-primary-light font-normal">Manage and preview homepage content dynamically</p>
       </div>
 
       {/* Featured Collection Management */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-border font-normal">
+        <div className="flex items-center justify-between mb-6 font-normal">
           <h2 className="text-xl font-bold">Featured Collection (Drag & Drop)</h2>
-          <Button onClick={handleSaveFeaturedOrder} isLoading={saving} className="flex items-center gap-2">
+          <Button onClick={handleSaveFeaturedOrder} isLoading={saving} className="flex items-center gap-2 font-normal">
             <Save size={16} /> Save Order
           </Button>
         </div>
-        <p className="text-sm text-text-primary-light mb-4">Reorder products to control how they appear on the homepage.</p>
+        <p className="text-sm text-text-primary-light mb-4 font-normal">Reorder products to control how they appear on the homepage.</p>
         
-        <Reorder.Group axis="y" values={featured} onReorder={setFeatured} className="space-y-3">
+        <Reorder.Group axis="y" values={featured} onReorder={setFeatured} className="space-y-3 font-normal">
           {featured.map((product) => (
-            <Reorder.Item key={product.id} value={product} className="flex items-center p-4 bg-surface-background rounded-xl border border-border-light cursor-grab active:cursor-grabbing">
-              <GripVertical className="text-text-primary-light mr-4" />
-              <img src={product.thumbnail || product.images?.[0]?.url} alt={product.name} className="w-12 h-12 rounded object-cover mr-4 bg-gray-100" />
-              <div className="flex-1">
-                <p className="font-semibold">{product.name}</p>
-                <p className="text-sm text-text-primary-light">{product.brand}</p>
+            <Reorder.Item key={product.id} value={product} className="flex items-center p-4 bg-surface-background rounded-xl border border-border-light cursor-grab active:cursor-grabbing font-normal">
+              <GripVertical className="text-text-primary-light mr-4 font-normal" />
+              <img src={product.thumbnail || product.images?.[0]?.url} alt={product.name} className="w-12 h-12 rounded object-cover mr-4 bg-gray-100 font-normal" />
+              <div className="flex-1 font-normal">
+                <p className="font-normal">{product.name}</p>
+                <p className="text-sm text-text-primary-light font-normal">{product.brand}</p>
               </div>
             </Reorder.Item>
           ))}
         </Reorder.Group>
-        {featured.length === 0 && <p className="text-sm text-text-primary-light text-center py-4">No featured products found.</p>}
+        {featured.length === 0 && <p className="text-sm text-text-primary-light text-center py-4 font-normal">No featured products found.</p>}
       </div>
 
       {/* Analytics Previews */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 font-normal">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-border font-normal">
           <h2 className="text-xl font-bold mb-4">Best Sellers Analytics (Auto)</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 font-normal">
             {bestSellers.map((product, i) => (
-              <div key={product.id} className="flex justify-between items-center pb-2 border-b border-border-light last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-text-brand-600 w-4">{i + 1}</span>
-                  <p className="text-sm font-medium">{product.name}</p>
+              <div key={product.id} className="flex justify-between items-center pb-2 border-b border-border-light last:border-0 font-normal">
+                <div className="flex items-center gap-3 font-normal">
+                  <span className="text-text-brand-600 w-4 font-normal">{i + 1}</span>
+                  <p className="text-sm font-normal">{product.name}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-green-600">{product.totalSold} sold</p>
-                  <p className="text-xs text-text-primary-light">Rev: ${(product.totalRevenue || 0).toFixed(2)}</p>
+                <div className="text-right font-normal">
+                  <p className="text-sm text-green-600 font-normal">{product.totalSold} sold</p>
+                  <p className="text-xs text-text-primary-light font-normal">Rev: ${(product.totalRevenue || 0).toFixed(2)}</p>
                 </div>
               </div>
             ))}
-            {bestSellers.length === 0 && <p className="text-sm text-text-primary-light">No best sellers yet.</p>}
+            {bestSellers.length === 0 && <p className="text-sm text-text-primary-light font-normal">No best sellers yet.</p>}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-border font-normal">
           <h2 className="text-xl font-bold mb-4">Trending Score (Auto)</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 font-normal">
             {trending.map((product, i) => (
-              <div key={product.id} className="flex justify-between items-center pb-2 border-b border-border-light last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-text-brand-600 w-4">{i + 1}</span>
-                  <p className="text-sm font-medium">{product.name}</p>
+              <div key={product.id} className="flex justify-between items-center pb-2 border-b border-border-light last:border-0 font-normal">
+                <div className="flex items-center gap-3 font-normal">
+                  <span className="text-text-brand-600 w-4 font-normal">{i + 1}</span>
+                  <p className="text-sm font-normal">{product.name}</p>
                 </div>
-                <div className="text-right text-sm text-text-primary-light">
+                <div className="text-right text-sm text-text-primary-light font-normal">
                   <p>Views: {product.totalViews}</p>
                   <p>Wish: {product.wishlistCount} | Cart: {product.cartCount}</p>
                 </div>
@@ -129,33 +129,33 @@ const AdminHomepageSettings = () => {
       </div>
 
       {/* Live Homepage Preview */}
-      <div className="mt-12 bg-white rounded-2xl border border-border overflow-hidden">
-        <div className="bg-slate-800 text-white p-4 text-center font-bold">
+      <div className="mt-12 bg-white rounded-2xl border border-border overflow-hidden font-normal">
+        <div className="bg-slate-800 text-white p-4 text-center font-normal">
           Live Homepage Preview
         </div>
-        <div className="p-4 sm:p-8 bg-background-default">
+        <div className="p-4 sm:p-8 bg-background-default font-normal">
           <PageContainer>
             {/* Render featured as it would appear */}
-            <section className="mb-16">
+            <section className="mb-16 font-normal">
               <SectionHeader 
                 title="Featured Collection" 
                 subtitle="Curated products selected just for you"
                 align="center"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12 font-normal">
                 {featured.slice(0, 8).map(product => (
                   <ProductCard key={product.id} product={product} previewMode={true} />
                 ))}
               </div>
             </section>
             
-            <section className="mb-16">
+            <section className="mb-16 font-normal">
               <SectionHeader 
                 title="Special Offers" 
                 subtitle="Don't miss these amazing deals"
                 align="center"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12 font-normal">
                 {specialOffers.slice(0, 4).map(product => (
                   <ProductCard key={product.id} product={product} previewMode={true} />
                 ))}

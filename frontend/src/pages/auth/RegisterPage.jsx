@@ -142,48 +142,48 @@ const RegisterPage = () => {
 
   // Determine confirm password styling
   let confirmBorderClass = '';
-  let ConfirmHelper = () => <div className="min-h-[6px] mt-[4px]" />; // Spacer
+  let ConfirmHelper = () => <div className="min-h-[6px] mt-[4px] font-normal" />; // Spacer
 
   if (errors.confirmPassword) {
     confirmBorderClass = '!border-danger-500 focus:!ring-danger-200';
     ConfirmHelper = () => (
-      <div className="text-xs text-danger-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300">
-        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="font-medium">Passwords do not match.</span>
+      <div className="text-xs text-danger-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300 font-normal">
+        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 font-normal" />
+        <span className="font-normal">Passwords do not match.</span>
       </div>
     );
   } else if (confirmTouched && passwordsMatch) {
     // Optional: green check
     ConfirmHelper = () => (
-      <div className="text-xs text-success-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300">
-        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="font-medium">Passwords match.</span>
+      <div className="text-xs text-success-600 mt-[4px] min-h-[16px] flex items-center gap-1.5 transition-colors duration-300 font-normal">
+        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 font-normal" />
+        <span className="font-normal">Passwords match.</span>
       </div>
     );
   }
 
   return (
-    <div className="w-full flex flex-col justify-center">
-      <div className="mb-4 stagger-1 text-center shrink-0">
+    <div className="w-full flex flex-col justify-center font-normal">
+      <div className="mb-4 stagger-1 text-center shrink-0 font-normal">
         <h2 className="text-[28px] md:text-[32px] leading-tight font-bold text-text-primary tracking-tight">Create Account</h2>
         <p className="mt-1 text-[14px] text-text-primary-hover font-medium stagger-2">
           Join {branding?.platformName || 'PRIYAL'} | Home Appliances Pvt Ltd. to experience premium shopping.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-3 font-normal">
 
         {backendError && (
-          <div className="p-3 rounded-lg bg-danger-50 text-danger-700 text-[12px] font-medium flex items-start gap-2 border border-danger-200">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div className="p-3 rounded-lg bg-danger-50 text-danger-700 text-[12px] flex items-start gap-2 border border-danger-200 font-normal">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 font-normal" />
             <span>{backendError}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-3">
-          <div className="space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-3 font-normal">
+          <div className="space-y-1 font-normal">
             <Input
-              label={<span className="font-medium text-[13px] text-text-primary">Full Name</span>}
+              label={<span className="text-[13px] text-text-primary font-normal">Full Name</span>}
               type="text"
               name="name"
               required
@@ -192,15 +192,15 @@ const RegisterPage = () => {
               onBlur={handleBlur}
               placeholder="Enter your full name"
               error={errors.name}
-              leftIcon={<User className="w-4 h-4" />}
+              leftIcon={<User className="w-4 h-4 font-normal" />}
               inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
               className={errors.name ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 font-normal">
             <PhoneInput
-              label={<span className="font-medium text-[13px] text-text-primary">Phone <span className="text-text-muted font-normal text-[11px]">(Optional)</span></span>}
+              label={<span className="text-[13px] text-text-primary font-normal">Phone <span className="text-text-muted text-[11px] font-normal">(Optional)</span></span>}
               name="phone"
               value={formData.phone}
               onChange={handleChange}
@@ -211,9 +211,9 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        <div className="space-y-1 stagger-3">
+        <div className="space-y-1 stagger-3 font-normal">
           <Input
-            label={<span className="font-medium text-[13px] text-text-primary">Email Address</span>}
+            label={<span className="text-[13px] text-text-primary font-normal">Email Address</span>}
             type="email"
             name="email"
             required
@@ -222,15 +222,15 @@ const RegisterPage = () => {
             onBlur={handleBlur}
             placeholder="you@example.com"
             error={errors.email}
-            leftIcon={<Mail className="w-4 h-4" />}
+            leftIcon={<Mail className="w-4 h-4 font-normal" />}
             inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             className={errors.email ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200' : ''}
           />
         </div>
 
-        <div className="relative stagger-3">
+        <div className="relative stagger-3 font-normal">
           <Input
-            label={<span className="font-medium text-[13px] text-text-primary">Password</span>}
+            label={<span className="text-[13px] text-text-primary font-normal">Password</span>}
             type="password"
             name="password"
             required
@@ -239,22 +239,22 @@ const RegisterPage = () => {
             onBlur={handleBlur}
             placeholder="Create a strong password"
             className={passwordBorderClass}
-            leftIcon={<Lock className="w-4 h-4" />}
+            leftIcon={<Lock className="w-4 h-4 font-normal" />}
             inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             aria-invalid={!!errors.password}
             error={errors.password}
           />
           
           {!errors.password && (
-            <div className="text-[11px] text-text-secondary mt-1.5 leading-snug">
+            <div className="text-[11px] text-text-secondary mt-1.5 leading-snug font-normal">
               <span>Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.</span>
             </div>
           )}
         </div>
 
-        <div className="relative stagger-3">
+        <div className="relative stagger-3 font-normal">
           <Input
-            label={<span className="font-medium text-[13px] text-text-primary">Confirm Password</span>}
+            label={<span className="text-[13px] text-text-primary font-normal">Confirm Password</span>}
             type="password"
             name="confirmPassword"
             required
@@ -263,15 +263,15 @@ const RegisterPage = () => {
             onBlur={handleBlur}
             placeholder="Confirm your password"
             className={confirmBorderClass}
-            leftIcon={<Lock className="w-4 h-4" />}
+            leftIcon={<Lock className="w-4 h-4 font-normal" />}
             inputClassName="!h-[46px] !rounded-[12px] pl-10 !border-brand-500 focus:!ring-brand-500/20"
             aria-invalid={!!errors.confirmPassword}
           />
           <ConfirmHelper />
         </div>
 
-        <div className="flex items-start pt-1 stagger-4">
-          <div className="flex items-center h-5">
+        <div className="flex items-start pt-1 stagger-4 font-normal">
+          <div className="flex items-center h-5 font-normal">
             <input
               id="terms"
               name="terms"
@@ -284,32 +284,32 @@ const RegisterPage = () => {
               className="h-4 w-4 text-brand-600 focus:ring-brand-600 border-border rounded transition-colors cursor-pointer"
             />
           </div>
-          <div className="ml-2 text-[12px] mt-[2px]">
-            <label htmlFor="terms" className={`cursor-pointer font-medium ${errors.terms ? 'text-danger-600' : 'text-text-secondary'}`}>
-              I agree to the <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Terms of Service</a> and <a href="#" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">Privacy Policy.</a>
+          <div className="ml-2 text-[12px] mt-[2px] font-normal">
+            <label htmlFor="terms" className={`cursor-pointer font-normal ${errors.terms ? 'text-danger-600' : 'text-text-secondary'}`}>
+              I agree to the <a href="#" className="text-brand-600 hover:text-brand-700 transition-colors font-semibold">Terms of Service</a> and <a href="#" className="text-brand-600 hover:text-brand-700 transition-colors font-semibold">Privacy Policy.</a>
             </label>
-            {errors.terms && <p className="mt-0.5 text-danger-600 font-medium">{errors.terms}</p>}
+            {errors.terms && <p className="mt-0.5 text-danger-600 font-normal">{errors.terms}</p>}
           </div>
         </div>
 
-        <div className="pt-2 stagger-4">
+        <div className="pt-2 stagger-4 font-normal">
           <Button
             type="submit"
             fullWidth
             isLoading={isLoading}
             disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
             aria-disabled={!checkFormValid(errors, { name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }) || !termsAccepted}
-            className="rounded-[12px] h-[48px] text-[15px] font-bold shadow-md bg-[#0F2343] hover:bg-[#1a345c] transition-all"
+            className="rounded-[12px] h-[48px] text-[15px] shadow-md bg-[#0F2343] hover:bg-[#1a345c] transition-all font-normal"
           >
             Create Account
           </Button>
         </div>
       </form>
 
-      <div className="mt-3.5 text-center stagger-6">
-        <p className="text-[14px] text-text-secondary font-medium">
+      <div className="mt-3.5 text-center stagger-6 font-normal">
+        <p className="text-[14px] text-text-secondary font-normal">
           Already have an account?{' '}
-          <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">
+          <Link to="/login" className="text-brand-600 hover:text-brand-700 transition-colors font-semibold">
             Sign in
           </Link>
         </p>
@@ -317,7 +317,7 @@ const RegisterPage = () => {
 
       {/* Non-blocking Toast */}
       {socialMessage && (
-        <div className="fixed bottom-6 right-6 bg-secondary-900 text-white px-5 py-3 rounded-xl shadow-2xl text-[14px] font-medium z-[100] animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <div className="fixed bottom-6 right-6 bg-secondary-900 text-white px-5 py-3 rounded-xl shadow-2xl text-[14px] z-[100] animate-in fade-in slide-in-from-bottom-8 duration-300 font-normal">
           {socialMessage}
         </div>
       )}

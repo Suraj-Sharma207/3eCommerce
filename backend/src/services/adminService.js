@@ -1,6 +1,12 @@
 import adminRepository from '../repositories/adminRepository.js';
 
 class AdminService {
+  async getKpis() { return await adminRepository.getKpis(); }
+  async getRecentOrders() { return await adminRepository.getRecentOrders(); }
+  async getTopProducts() { return await adminRepository.getTopProducts(); }
+  async getOrderStatuses() { return await adminRepository.getOrderStatuses(); }
+  async getExtendedStats() { return await adminRepository.getExtendedStats(); }
+
   async getDashboardAnalytics(timeFilter = '7d') {
     const data = await adminRepository.getDashboardMetrics(timeFilter);
 

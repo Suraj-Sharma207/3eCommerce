@@ -10,13 +10,13 @@ const Stats = () => {
   ];
 
   return (
-    <div className="bg-brand-600 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/20">
+    <div className="bg-brand-600 py-16 font-normal">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-normal">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/20 font-normal">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center px-4">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stat.number}</div>
-              <div className="text-brand-100 font-medium">{stat.label}</div>
+            <div key={index} className="text-center px-4 font-normal">
+              <div className="text-4xl md:text-5xl text-white mb-2 font-normal">{stat.number}</div>
+              <div className="text-brand-100 font-normal">{stat.label}</div>
             </div>
           ))}
         </div>

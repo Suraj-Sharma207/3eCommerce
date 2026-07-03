@@ -8,9 +8,11 @@ import useSettingsStore from './store/settingsStore';
 import { useBrandingStore } from './store/brandingStore';
 import useCartStore from './store/cartStore';
 import useWishlistStore from './store/wishlistStore';
+import useCategoryStore from './store/categoryStore';
 import ConfirmDialog from './components/ui/ConfirmDialog';
 import ToastProvider from './components/ui/ToastProvider';
 import WishlistDrawer from './components/wishlist/WishlistDrawer';
+import { CookieProvider } from './components/cookies/CookieProvider';
 
 function App() {
   const { checkAuth, token, user, hasCheckedAuth } = useAuthStore();
@@ -19,11 +21,37 @@ function App() {
   const { branding, fetchBranding } = useBrandingStore();
   const { fetchCart } = useCartStore();
   const { fetchWishlist } = useWishlistStore();
+  const { fetchCategories } = useCategoryStore();
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
+  // ── Centralized Category Loading ───────────────────────────────────────────
+  // Categories are loaded once here at startup. All child components (Navbar,
+  // CategoryNavigation, ProductList, HomePage) consume from the store without
+  // triggering their own fetch calls.
   useEffect(() => {
-    fetchPublicConfig();
-    fetchBranding();
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // ── Non-critical startup requests (deferred after first paint) ─────────────
+  // Branding (title/favicon) and settings (currency symbol) are not required
+  // before first paint. Defer them so the React tree can mount and the critical
+  // products fetch doesn't compete for Neon connection pool slots.
+  useEffect(() => {
+    // Use requestIdleCallback where available, fallback to setTimeout(0)
+    const schedule = typeof requestIdleCallback === 'function'
+      ? requestIdleCallback
+      : (cb) => setTimeout(cb, 0);
+
+    const idleId = schedule(() => {
+      fetchPublicConfig();
+      fetchBranding();
+    });
+
+    return () => {
+      if (typeof cancelIdleCallback === 'function') {
+        cancelIdleCallback(idleId);
+      }
+    };
   }, [fetchPublicConfig, fetchBranding]);
 
   useEffect(() => {
@@ -62,9 +90,11 @@ function App() {
       <ToastProvider />
       <ConfirmDialog />
       <WishlistDrawer />
-      <SessionTimeoutProvider>
-        <AppRoutes />
-      </SessionTimeoutProvider>
+      <CookieProvider>
+        <SessionTimeoutProvider>
+          <AppRoutes />
+        </SessionTimeoutProvider>
+      </CookieProvider>
     </Router>
   );
 }

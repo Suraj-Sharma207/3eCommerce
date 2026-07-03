@@ -45,56 +45,56 @@ const HeroSlide = ({ slide, direction }) => {
       initial="enter"
       animate="center"
       exit="exit"
-      className="absolute inset-0 rounded-2xl overflow-hidden"
+      className="absolute inset-0 rounded-2xl overflow-hidden font-normal"
       aria-label={`Slide: ${slide.title} ${slide.titleHighlight}`}
     >
       {/* Background image */}
       <img
         src={slide.image}
         alt={`${slide.title} ${slide.titleHighlight}`}
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        className="absolute inset-0 w-full h-full object-cover object-center font-normal"
         loading="lazy"
         decoding="async"
       />
 
       {/* Dark left-side gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10 pointer-events-none font-normal" />
 
       {/* Slide content */}
-      <div className="relative z-10 h-full flex items-center">
+      <div className="relative z-10 h-full flex items-center font-normal">
         <motion.div
           key={`content-${slide.id}`}
           variants={contentVariants}
           initial="hidden"
           animate="visible"
-          className="p-8 md:p-12 lg:p-16 max-w-lg xl:max-w-2xl text-left"
+          className="p-8 md:p-12 lg:p-16 max-w-lg xl:max-w-2xl text-left font-normal"
         >
           {slide.badge && (
-            <span className="inline-block bg-white/15 backdrop-blur-sm border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-5">
+            <span className="inline-block bg-white/15 backdrop-blur-sm border border-white/20 text-white text-[10px] uppercase tracking-widest px-3 py-1 rounded-full mb-5 font-normal">
               {slide.badge}
             </span>
           )}
 
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] mb-2 drop-shadow">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.1] mb-2 drop-shadow font-bold">
             {slide.title}{' '}
-            <span className="text-accent-400">{slide.titleHighlight}</span>
+            <span className="text-accent-400 font-normal">{slide.titleHighlight}</span>
           </h2>
 
-          <p className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white/90 mb-4 drop-shadow">
+          <p className="text-xl sm:text-2xl lg:text-3xl text-white/90 mb-4 drop-shadow font-normal">
             {slide.subtitle}
           </p>
 
-          <p className="text-sm sm:text-base text-white/80 mb-8 leading-relaxed max-w-md">
+          <p className="text-sm sm:text-base text-white/80 mb-8 leading-relaxed max-w-md font-normal">
             {slide.description}
           </p>
 
           <Link
             to={slide.buttonLink}
-            className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold text-base px-7 py-3.5 rounded-[14px] shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-transparent"
+            className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-base px-7 py-3.5 rounded-[14px] shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-transparent font-normal"
             aria-label={slide.buttonText}
           >
             {slide.buttonText}
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 font-normal" />
           </Link>
         </motion.div>
       </div>

@@ -74,30 +74,30 @@ const SecurityTab = () => {
     }
   }
 
-  if (isLoading) return <div className="p-8 text-center text-text-muted">Loading security settings...</div>;
+  if (isLoading) return <div className="p-8 text-center text-text-muted font-medium">Loading security settings...</div>;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-300 font-normal">
+      <div className="flex items-center justify-between font-normal">
         <div>
-          <h3 className="text-lg font-extrabold text-text-primary mb-1">Store Security</h3>
-          <p className="text-sm text-text-muted">Manage authentication and session policies.</p>
+          <h3 className="text-lg text-text-primary mb-1 font-bold">Store Security</h3>
+          <p className="text-sm text-text-muted font-medium">Manage authentication and session policies.</p>
         </div>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" /> Edit
+            <Edit2 className="w-4 h-4 mr-2 font-normal" /> Edit
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-text-primary">Session Timeout (Admin)</label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 font-normal">
+        <div className="space-y-1.5 font-normal">
+          <label className="text-sm text-text-primary font-normal">Session Timeout (Admin)</label>
           <select 
             name="sessionTimeout" 
             value={formData.sessionTimeout || '24h'} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted"
+            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted font-medium"
           >
             <option value="15m">15 Minutes</option>
             <option value="30m">30 Minutes</option>
@@ -108,13 +108,13 @@ const SecurityTab = () => {
             <option value="24h">24 Hours</option>
           </select>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-text-primary">JWT Expiry</label>
+        <div className="space-y-1.5 font-normal">
+          <label className="text-sm text-text-primary font-normal">JWT Expiry</label>
           <select 
             name="jwtExpiry" 
             value={formData.jwtExpiry || '15m'} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted"
+            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted font-medium"
           >
             <option value="5m">5 Minutes</option>
             <option value="10m">10 Minutes</option>
@@ -124,13 +124,13 @@ const SecurityTab = () => {
             <option value="2h">2 Hours</option>
           </select>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-text-primary">Refresh Token Expiry</label>
+        <div className="space-y-1.5 font-normal">
+          <label className="text-sm text-text-primary font-normal">Refresh Token Expiry</label>
           <select 
             name="refreshTokenExpiry" 
             value={formData.refreshTokenExpiry || '30d'} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted"
+            className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted font-medium"
           >
             <option value="1d">1 Day</option>
             <option value="7d">7 Days</option>
@@ -142,42 +142,42 @@ const SecurityTab = () => {
         </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 font-normal">
         <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${formData.accountLockoutEnabled && isEditing ? 'border-brand-600 bg-brand-50/10' : 'border-border'} ${!isEditing && 'opacity-70 cursor-not-allowed'}`}>
           <input 
             type="checkbox" name="accountLockoutEnabled" 
             checked={formData.accountLockoutEnabled || false} onChange={handleChange} 
             disabled={!isEditing}
-            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50" 
+            className="w-5 h-5 text-brand-600 rounded border-border focus:ring-brand-600 disabled:opacity-50 font-normal" 
           />
           <div>
-            <div className="font-bold text-text-primary">Enable Account Lockout</div>
-            <div className="text-xs text-text-muted">Lock accounts after failed login attempts.</div>
+            <div className="text-text-primary font-normal">Enable Account Lockout</div>
+            <div className="text-xs text-text-muted font-medium">Lock accounts after failed login attempts.</div>
           </div>
         </label>
 
         {formData.accountLockoutEnabled && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 ml-8 p-4 bg-surface-background rounded-xl border border-border">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary">Failed Login Limit</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 ml-8 p-4 bg-surface-background rounded-xl border border-border font-normal">
+            <div className="space-y-1.5 font-normal">
+              <label className="text-sm text-text-primary font-normal">Failed Login Limit</label>
               <select 
                 name="failedLoginLimit" 
                 value={formData.failedLoginLimit || 5} onChange={handleChange} 
                 disabled={!isEditing}
-                className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted"
+                className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted font-medium"
               >
                 <option value="3">3 Attempts</option>
                 <option value="5">5 Attempts</option>
                 <option value="10">10 Attempts</option>
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-text-primary">Lock Duration</label>
+            <div className="space-y-1.5 font-normal">
+              <label className="text-sm text-text-primary font-normal">Lock Duration</label>
               <select 
                 name="lockDuration" 
                 value={formData.lockDuration || '15m'} onChange={handleChange} 
                 disabled={!isEditing}
-                className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted"
+                className="w-full px-4 py-3 rounded-[12px] border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-600 disabled:bg-surface-background disabled:text-text-muted font-medium"
               >
                 <option value="5m">5 Minutes</option>
                 <option value="15m">15 Minutes</option>
@@ -189,18 +189,18 @@ const SecurityTab = () => {
         )}
       </div>
 
-      <div className="pt-6 border-t border-border mt-8">
-        <h3 className="text-sm font-bold text-error flex items-center mb-2"><ShieldAlert className="w-4 h-4 mr-1" /> Danger Zone</h3>
+      <div className="pt-6 border-t border-border mt-8 font-normal">
+        <h3 className="text-sm font-bold text-error flex items-center mb-2"><ShieldAlert className="w-4 h-4 mr-1 font-normal" /> Danger Zone</h3>
         <Button variant="danger" onClick={handleForceLogout}>Force Logout All Users</Button>
       </div>
 
       {isEditing && (
-        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-6 sticky bottom-0 bg-white py-4 z-10 font-normal">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-            <X className="w-4 h-4 mr-2" /> Cancel
+            <X className="w-4 h-4 mr-2 font-normal" /> Cancel
           </Button>
           <Button type="button" onClick={handleSave} isLoading={isSaving}>
-            <Save className="w-4 h-4 mr-2" /> Save Changes
+            <Save className="w-4 h-4 mr-2 font-normal" /> Save Changes
           </Button>
         </div>
       )}

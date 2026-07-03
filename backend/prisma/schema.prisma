@@ -46,6 +46,7 @@ model User {
   emailLogs EmailLog[]
   sessions  Session[]
   securityLogs SecurityLog[]
+  cookieConsent CookieConsent?
 }
 
 enum Role {
@@ -96,6 +97,11 @@ model Product {
   @@index([stock])
   @@index([createdAt])
   @@index([category])
+  @@index([name])
+  @@index([brand])
+  @@index([price])
+  @@index([finalPrice])
+  @@index([updatedAt])
 }
 
 model ProductImage {
@@ -290,6 +296,8 @@ model Promotion {
   products      PromotionProduct[]
   categories    PromotionCategory[]
   brands        PromotionBrand[]
+
+  @@index([status, startDate, endDate])
 }
 
 model PromotionProduct {
@@ -461,6 +469,23 @@ model SecurityLog {
   device    String?
   details   Json?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model CookieConsent {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics  Boolean  @default(false)
+  functional Boolean  @default(false)
+  marketing  Boolean  @default(false)
+  necessary  Boolean  @default(true)
+  version    String   @default("1.0")
+  ip         String?
+  browser    String?
+  acceptedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([userId])
 }

@@ -53,21 +53,21 @@ const SalePage = () => {
   }, [products, selectedDiscount, sortParam]);
 
   return (
-    <div className="min-h-screen bg-surface-background pb-24">
+    <div className="min-h-screen bg-surface-background pb-24 font-normal">
       {/* ── Premium Hero ── */}
       <SaleHero />
 
       {/* ── Main content area — wider container ── */}
       <div
         id="sale-products"
-        className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-10 mt-8"
+        className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-10 mt-8 font-normal"
       >
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 font-normal">
 
           {/* ── Sidebar ── */}
-          <aside className="w-full lg:w-52 xl:w-56 flex-shrink-0">
+          <aside className="w-full lg:w-52 xl:w-56 flex-shrink-0 font-normal">
             {/* Mobile: horizontal chip strip */}
-            <div className="flex lg:hidden flex-wrap gap-2 mb-4">
+            <div className="flex lg:hidden flex-wrap gap-2 mb-4 font-normal">
               {[0, 10, 20, 30, 40, 50].map((v) => (
                 <button
                   key={v}
@@ -84,8 +84,8 @@ const SalePage = () => {
             </div>
 
             {/* Desktop: vertical sidebar card */}
-            <div className="hidden lg:block bg-white rounded-3xl border border-border-light shadow-sm p-5 sticky top-24">
-              <h3 className="text-sm font-extrabold text-text-primary uppercase tracking-wider mb-4 pb-3 border-b border-border-light">
+            <div className="hidden lg:block bg-white rounded-3xl border border-border-light shadow-sm p-5 sticky top-24 font-normal">
+              <h3 className="text-sm text-text-primary uppercase tracking-wider mb-4 pb-3 border-b border-border-light font-bold">
                 Filter by Discount
               </h3>
               <DiscountFilters
@@ -96,7 +96,7 @@ const SalePage = () => {
           </aside>
 
           {/* ── Main grid area ── */}
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 font-normal">
             <SaleToolbar
               totalProducts={isLoading ? '…' : filteredAndSortedProducts.length}
               sortParam={sortParam}

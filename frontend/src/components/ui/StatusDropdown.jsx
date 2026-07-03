@@ -103,9 +103,9 @@ const StatusDropdown = ({ value, onChange, isLoading = false, disabled = false }
           ${isLoading || disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:opacity-90 hover:shadow-sm'}
         `}
       >
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5 font-normal">
           {isLoading
-            ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
+            ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0 font-normal" />
             : <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
           }
           {cfg.label}
@@ -120,7 +120,7 @@ const StatusDropdown = ({ value, onChange, isLoading = false, disabled = false }
           role="listbox"
           aria-label="Order status"
           style={dropdownStyle}
-          className="bg-white border border-border rounded-xl shadow-xl overflow-hidden py-1 animate-in fade-in-0 zoom-in-95 duration-100"
+          className="bg-white border border-border rounded-xl shadow-xl overflow-hidden py-1 animate-in fade-in-0 zoom-in-95 duration-100 font-normal"
         >
           {STATUS_ORDER.map((status) => {
             const s = STATUS_CONFIG[status];
@@ -140,7 +140,7 @@ const StatusDropdown = ({ value, onChange, isLoading = false, disabled = false }
                 `}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
-                <span className="flex-1">{s.label}</span>
+                <span className="flex-1 font-normal">{s.label}</span>
                 {isSelected && <Check className={`w-3.5 h-3.5 ${s.text}`} />}
               </li>
             );

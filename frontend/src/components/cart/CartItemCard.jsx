@@ -41,59 +41,59 @@ const CartItemCard = ({ item, onUpdateQuantity, onRemove, isUpdating }) => {
       {/* ── Product Image ── */}
       <Link
         to={`/products/${product.slug || item.productId}`}
-        className="w-[110px] h-[110px] shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 block"
+        className="w-[110px] h-[110px] shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 block font-normal"
       >
         <ImageFallback
           src={getOptimizedUrl(product.thumbnail, 'thumbnail')}
           alt={product.name}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 font-normal"
           loading="lazy"
         />
       </Link>
 
       {/* ── Info (grows) ── */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 font-normal">
         {/* Brand • Category */}
-        <p className="text-xs text-slate-400 font-medium mb-1">
-          {product.brand && <span className="uppercase tracking-wide">{product.brand}</span>}
-          {product.brand && product.category && <span className="mx-1.5 text-slate-300">•</span>}
-          {product.category && <span className="capitalize">{product.category.replace(/_/g, ' ')}</span>}
+        <p className="text-xs text-slate-400 mb-1 font-normal">
+          {product.brand && <span className="uppercase tracking-wide font-normal">{product.brand}</span>}
+          {product.brand && product.category && <span className="mx-1.5 text-slate-300 font-normal">•</span>}
+          {product.category && <span className="capitalize font-normal">{product.category.replace(/_/g, ' ')}</span>}
         </p>
 
         {/* Product name */}
         <Link
           to={`/products/${product.slug || item.productId}`}
-          className="block text-sm font-bold text-[#1B2340] hover:underline underline-offset-2 line-clamp-2 leading-snug mb-1.5"
+          className="block text-sm text-[#1B2340] hover:underline underline-offset-2 line-clamp-2 leading-snug mb-1.5 font-normal"
         >
           {product.name}
         </Link>
 
         {/* Stock badge */}
         {isUnavailable ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-500">
-            <AlertTriangle className="w-3.5 h-3.5" /> Out of Stock
+          <span className="inline-flex items-center gap-1 text-xs text-red-500 font-normal">
+            <AlertTriangle className="w-3.5 h-3.5 font-normal" /> Out of Stock
           </span>
         ) : isLowStock ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
-            <AlertTriangle className="w-3.5 h-3.5" /> Only {product.stock} left
+          <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-normal">
+            <AlertTriangle className="w-3.5 h-3.5 font-normal" /> Only {product.stock} left
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
-            <CheckCircle2 className="w-3.5 h-3.5" /> In Stock
+          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-normal">
+            <CheckCircle2 className="w-3.5 h-3.5 font-normal" /> In Stock
           </span>
         )}
 
         {/* Unit price */}
-        <div className="flex items-baseline gap-2 mt-2">
-          <span className="text-sm font-bold text-[#1B2340]">{formatPrice(itemPrice)}</span>
+        <div className="flex items-baseline gap-2 mt-2 font-normal">
+          <span className="text-sm text-[#1B2340] font-normal">{formatPrice(itemPrice)}</span>
           {hasDiscount && (
-            <span className="text-xs text-slate-400 line-through">{formatPrice(product.price)}</span>
+            <span className="text-xs text-slate-400 line-through font-normal">{formatPrice(product.price)}</span>
           )}
         </div>
       </div>
 
       {/* ── Controls (right-aligned) ── */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 font-normal">
         {/* Quantity Stepper */}
         <QuantityStepper
           quantity={quantity}
@@ -104,7 +104,7 @@ const CartItemCard = ({ item, onUpdateQuantity, onRemove, isUpdating }) => {
         />
 
         {/* Subtotal */}
-        <span className="text-sm font-extrabold text-[#1B2340] w-20 text-right tabular-nums">
+        <span className="text-sm text-[#1B2340] w-20 text-right tabular-nums font-normal">
           {formatPrice(subtotal)}
         </span>
 

@@ -8,17 +8,17 @@ const RatingDisplay = ({ rating, count, className = '', showCount = true }) => {
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="flex items-center text-accent-500">
+      <div className="flex items-center text-accent-500 font-normal">
         {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} className="w-4 h-4 fill-current" />
+          <Star key={`full-${i}`} className="w-4 h-4 fill-current font-normal" />
         ))}
-        {hasHalfStar && <StarHalf className="w-4 h-4 fill-current" />}
+        {hasHalfStar && <StarHalf className="w-4 h-4 fill-current font-normal" />}
         {[...Array(emptyStars)].map((_, i) => (
-          <Star key={`empty-${i}`} className="w-4 h-4 text-secondary-300" />
+          <Star key={`empty-${i}`} className="w-4 h-4 text-secondary-300 font-normal" />
         ))}
       </div>
       {showCount && (
-        <span className="text-xs font-medium text-text-secondary">
+        <span className="text-xs text-text-secondary font-normal">
           {rating.toFixed(1)} {count !== undefined && `(${count})`}
         </span>
       )}
