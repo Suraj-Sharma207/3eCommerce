@@ -26,8 +26,11 @@ class OrderRepository {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw { status: 401, message: 'Unauthorized user' };
 
-    const shippingAddress = await prisma.address.findUnique({ where: { id: shippingAddressId } });
-    const billingAddress = billingAddressId ? await prisma.address.findUnique({ where: { id: billingAddressId } }) : shippingAddress;
+    // C-5 FIX: Verify address ownership — prevent IDOR
+    const shippingAddress = await prisma.address.findFirst({ where: { id: shippingAddressId, userId } });
+    const billingAddress = billingAddressId 
+      ? await prisma.address.findFirst({ where: { id: billingAddressId, userId } }) 
+      : shippingAddress;
     
     if (!shippingAddress || !billingAddress) {
       throw { status: 400, message: 'Invalid shipping or billing address' };
@@ -106,13 +109,14 @@ class OrderRepository {
       for (const item of cart.items) {
         const product = productMap.get(item.productId);
         const newStock = product.stock - item.quantity;
+        // C-2 FIX: Use pre-computed price from orderItemsData instead of undefined product.finalPrice
+        const preComputedItem = orderItemsData.find(oi => oi.productId === product.id);
 
         await tx.product.update({
           where: { id: product.id },
           data: {
             stock: Math.max(0, newStock),
-            totalSold: { increment: item.quantity },
-            totalRevenue: { increment: item.quantity * product.finalPrice },
+            // C-1 FIX: Only decrement stock at checkout — totalSold/totalRevenue are updated on DELIVERED
             lastPurchasedAt: new Date()
           }
         });
@@ -225,6 +229,7 @@ class OrderRepository {
         }
       });
 
+      // C-1 FIX: totalSold/totalRevenue are ONLY incremented here on DELIVERED (not at checkout)
       if (previousStatus !== 'DELIVERED' && status === 'DELIVERED') {
         const updatePromises = order.items
           .filter(item => item.product)
@@ -272,10 +277,11 @@ class OrderRepository {
     if (status && status !== 'All') where.orderStatus = status;
     if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
     
-    if (minDate || maxDate) {
+    const isValidDate = (d) => d && !isNaN(Date.parse(d));
+    if ((minDate && isValidDate(minDate)) || (maxDate && isValidDate(maxDate))) {
       where.createdAt = {};
-      if (minDate) where.createdAt.gte = new Date(minDate);
-      if (maxDate) {
+      if (minDate && isValidDate(minDate)) where.createdAt.gte = new Date(minDate);
+      if (maxDate && isValidDate(maxDate)) {
         const endDate = new Date(maxDate);
         endDate.setHours(23, 59, 59, 999);
         where.createdAt.lte = endDate;
@@ -326,10 +332,11 @@ class OrderRepository {
     if (status && status !== 'All') where.orderStatus = status;
     if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
     
-    if (minDate || maxDate) {
+    const isValidDate = (d) => d && !isNaN(Date.parse(d));
+    if ((minDate && isValidDate(minDate)) || (maxDate && isValidDate(maxDate))) {
       where.createdAt = {};
-      if (minDate) where.createdAt.gte = new Date(minDate);
-      if (maxDate) {
+      if (minDate && isValidDate(minDate)) where.createdAt.gte = new Date(minDate);
+      if (maxDate && isValidDate(maxDate)) {
         const endDate = new Date(maxDate);
         endDate.setHours(23, 59, 59, 999);
         where.createdAt.lte = endDate;

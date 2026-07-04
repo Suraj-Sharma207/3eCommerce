@@ -16,7 +16,7 @@ class CookieController {
           marketing: Boolean(marketing),
           necessary: Boolean(necessary),
           version: version || '1.0',
-          ip: req.ip || req.connection.remoteAddress,
+          ip: req.ip || req.socket?.remoteAddress,
           browser: req.headers['user-agent']
         },
         create: {
@@ -26,7 +26,7 @@ class CookieController {
           marketing: Boolean(marketing),
           necessary: Boolean(necessary),
           version: version || '1.0',
-          ip: req.ip || req.connection.remoteAddress,
+          ip: req.ip || req.socket?.remoteAddress,
           browser: req.headers['user-agent']
         }
       });

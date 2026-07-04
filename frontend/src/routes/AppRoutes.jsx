@@ -1,8 +1,8 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import PublicLayout from '../components/layout/PublicLayout';
-import AuthLayout from '../components/layout/AuthLayout';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import React, { Suspense, lazy } from'react';
+import { Routes, Route, Navigate } from'react-router-dom';
+import PublicLayout from'../components/layout/PublicLayout';
+import AuthLayout from'../components/layout/AuthLayout';
+import { PageSkeleton } from '../components/ui/SkeletonLoader';
 
 const HomePage = lazy(() => import('../pages/home/HomePage'));
 const AboutPage = lazy(() => import('../pages/about/AboutPage'));
@@ -36,66 +36,62 @@ const AddressBook = lazy(() => import('../pages/addresses/AddressBook'));
 const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 
 const AppRoutes = () => {
-  return (
-    <div className="min-h-[100dvh] bg-background-default font-sans flex flex-col font-normal">
-      <Suspense fallback={
-        <div className="flex-1 flex justify-center items-center h-[50vh] font-normal">
-          <LoadingSpinner size="lg" />
-        </div>
-      }>
-        <Routes>
-          {/* Public Storefront Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/sale" element={<SalePage />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/order-success/:id" element={<OrderSuccessPage />} />
-            
-            {/* Customer Protected Routes */}
-            <Route element={<CustomerProtectedRoute />}>
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/addresses" element={<AddressBook />} />
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/orders/:id" element={<OrderDetailPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
+ return (
+ <div className="min-h-[100dvh] bg-background-default font-sans flex flex-col">
+ <Suspense fallback={<PageSkeleton />}>
+ <Routes>
+ {/* Public Storefront Routes */}
+ <Route element={<PublicLayout />}>
+ <Route path="/" element={<HomePage />} />
+ <Route path="/about" element={<AboutPage />} />
+ <Route path="/sale" element={<SalePage />} />
+ <Route path="/products" element={<ProductList />} />
+ <Route path="/products/:id" element={<ProductDetail />} />
+ <Route path="/cart" element={<CartPage />} />
+ <Route path="/order-success/:id" element={<OrderSuccessPage />} />
+ 
+ {/* Customer Protected Routes */}
+ <Route element={<CustomerProtectedRoute />}>
+ <Route path="/checkout" element={<CheckoutPage />} />
+ <Route path="/profile" element={<ProfilePage />} />
+ <Route path="/addresses" element={<AddressBook />} />
+ <Route path="/orders" element={<OrdersPage />} />
+ <Route path="/orders/:id" element={<OrderDetailPage />} />
+ <Route path="/settings" element={<SettingsPage />} />
+ </Route>
 
-            <Route path="*" element={<HomePage />} />
-          </Route>
+ <Route path="*" element={<HomePage />} />
+ </Route>
 
-          {/* Authentication Routes */}
-          <Route element={<AuthLayout />}>
-            <Route element={<GuestProtectedRoute />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/admin/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
-          </Route>
+ {/* Authentication Routes */}
+ <Route element={<AuthLayout />}>
+ <Route element={<GuestProtectedRoute />}>
+ <Route path="/login" element={<LoginPage />} />
+ <Route path="/admin/login" element={<LoginPage />} />
+ <Route path="/register" element={<RegisterPage />} />
+ </Route>
+ </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="customers" element={<AdminCustomers />} />
-            <Route path="profile" element={<AdminProfile />} />
-            <Route path="categories" element={<div className="p-8 font-normal">Categories feature coming soon.</div>} />
-            <Route path="analytics" element={<div className="p-8 font-normal">Analytics feature coming soon.</div>} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="settings/:tab" element={<AdminSettings />} />
-            <Route path="homepage" element={<AdminHomepageSettings />} />
-            <Route path="offers" element={<AdminOffers />} />
-          </Route>
+ {/* Admin Routes */}
+ <Route path="/admin" element={<AdminLayout />}>
+ <Route index element={<Navigate to="/admin/dashboard" replace />} />
+ <Route path="dashboard" element={<Dashboard />} />
+ <Route path="products" element={<AdminProducts />} />
+ <Route path="orders" element={<AdminOrders />} />
+ <Route path="customers" element={<AdminCustomers />} />
+ <Route path="profile" element={<AdminProfile />} />
+ <Route path="categories" element={<div className="p-8">Categories feature coming soon.</div>} />
+ <Route path="analytics" element={<div className="p-8">Analytics feature coming soon.</div>} />
+ <Route path="settings" element={<AdminSettings />} />
+ <Route path="settings/:tab" element={<AdminSettings />} />
+ <Route path="homepage" element={<AdminHomepageSettings />} />
+ <Route path="offers" element={<AdminOffers />} />
+ </Route>
 
-        </Routes>
-      </Suspense>
-    </div>
-  );
+ </Routes>
+ </Suspense>
+ </div>
+ );
 };
 
 export default AppRoutes;

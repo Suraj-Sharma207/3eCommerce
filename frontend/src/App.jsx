@@ -69,14 +69,17 @@ function App() {
   }, [branding]);
 
   useEffect(() => {
-    // If we have a token but haven't checked auth yet, check it on load
-    if (token && !user && !hasCheckedAuth) {
-      checkAuth().then(() => {
-        // Also sync the userStore for any legacy components that still rely on it
-        fetchProfile();
+    // We now rely on HttpOnly cookies, so we don't check for 'token' in state anymore.
+    // Try to verify auth on mount to see if the server recognizes our cookie.
+    if (!hasCheckedAuth) {
+      checkAuth().then((isLoggedIn) => {
+        if (isLoggedIn) {
+          // Sync the userStore for any legacy components that still rely on it
+          fetchProfile();
+        }
       });
     }
-  }, [token, user, checkAuth, fetchProfile, hasCheckedAuth]);
+  }, [hasCheckedAuth, checkAuth, fetchProfile]);
 
   useEffect(() => {
     if (isAuthenticated) {

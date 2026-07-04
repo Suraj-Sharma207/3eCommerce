@@ -12,7 +12,7 @@ export const errorHandler = (err, req, res, next) => {
   const timestamp = new Date().toISOString();
   const route = `${req.method} ${req.originalUrl}`;
   const userId = req.user ? req.user.id : 'Anonymous';
-  const ipAddress = req.ip || req.connection.remoteAddress;
+  const ipAddress = req.ip || req.socket?.remoteAddress;
   const requestId = req.id || 'N/A';
 
   // Log complete diagnostic information on the server
@@ -44,8 +44,9 @@ export const errorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
-  // Backup check to prevent any raw string leak containing ORM/Prisma names
-  if (message.toLowerCase().includes('prisma') || message.toLowerCase().includes('database')) {
+  // Phase 9: Never expose raw error messages for 500 errors.
+  // 4xx errors use controlled messages (e.g. 'Product not found') which are safe.
+  if (statusCode >= 500 || message.toLowerCase().includes('prisma') || message.toLowerCase().includes('database')) {
     return res.status(500).json({
       success: false,
       message: 'Unable to complete your request. Please try again later.'

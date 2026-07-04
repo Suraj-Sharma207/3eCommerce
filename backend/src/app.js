@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 import { globalLimiter, authLimiter, adminLimiter, readLimiter } from './middleware/rateLimiter.js';
+import { csrfProtection } from './middleware/csrfMiddleware.js';
 
 // Import routes
 import { getBranding } from './controllers/brandingController.js';
@@ -37,21 +37,17 @@ if (trustProxy === 'true' || trustProxy === '1') {
   app.set('trust proxy', trustProxy);
 }
 
-// Request logger for troubleshooting request cycles
+// Phase 10: Sanitized request logger — masks sensitive headers
+const SENSITIVE_HEADERS = new Set(['authorization', 'cookie', 'x-xsrf-token']);
 app.use((req, res, next) => {
-  console.log(`[HTTP] ${req.method} ${req.originalUrl}`);
+  // Log only method and path — never log headers, query params with tokens, or body
+  console.log(`[HTTP] ${req.method} ${req.path}`);
   next();
 });
 
-// Compression Middleware
-app.use(compression({
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) {
-      return false;
-    }
-    return compression.filter(req, res);
-  }
-}));
+// Phase 3: Compression middleware — removed public x-no-compression bypass.
+// Only the default compression filter is used (based on content type).
+app.use(compression());
 
 // Security Middlewares
 app.use(helmet());
@@ -75,10 +71,15 @@ app.use(cors({
   credentials: true,
 }));
 
-// Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Phase 3: Explicit request body size limits
+// L-6 FIX: Reduced from 5mb to 500kb to prevent large-payload DoS
+app.use(express.json({ limit: '500kb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
+
+// H-3: CSRF protection — validates X-XSRF-TOKEN header on state-changing requests.
+// Must be after cookieParser so it can read the XSRF-TOKEN cookie.
+app.use(csrfProtection);
 
 // Routes with granular rate limiters
 app.use('/api/home', readLimiter, homeRoutes);
@@ -100,8 +101,9 @@ app.use('/api/shop-banner', readLimiter, shopBannerRoutes);
 app.get('/api/branding', readLimiter, getBranding);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Server is running' });
+// L-7 FIX: Added rate limiter to prevent unthrottled probing
+app.get('/health', readLimiter, (req, res) => {
+  res.status(200).json({ status: 'OK' });
 });
 
 // Error handling

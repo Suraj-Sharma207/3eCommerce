@@ -274,7 +274,7 @@ class AdminRepository {
     const productMap = {};
 
     deliveredItemsRaw.forEach(item => {
-      const itemRev = item.quantity * item.price;
+      const itemRev = Number(item.quantity) * Number(item.price);
       const cat = item.product?.category || 'Unknown';
       const prodId = item.product?.id || 'UnknownId';
       const prodName = item.product?.name || 'Unknown Product';
@@ -398,43 +398,110 @@ class AdminRepository {
   }
 
   async getDeliveriesAnalytics() {
-    const [allOrders, recent] = await Promise.all([
-      prisma.order.findMany({ select: { orderStatus: true } }),
-      prisma.order.findMany({
-        where: { orderStatus: { in: ['SHIPPED', 'DELIVERED'] } },
-        orderBy: { updatedAt: 'desc' },
-        take: 10,
-        select: { id: true, orderNumber: true, orderStatus: true, totalAmount: true, updatedAt: true, user: { select: { name: true } } }
-      })
-    ]);
-
-    const summary = { total: allOrders.length, processing: 0, inTransit: 0, delivered: 0, delayed: 0 };
-    allOrders.forEach(o => {
-      if (o.orderStatus === 'CONFIRMED' || o.orderStatus === 'PENDING') summary.processing++;
-      if (o.orderStatus === 'SHIPPED') summary.inTransit++;
-      if (o.orderStatus === 'DELIVERED') summary.delivered++;
+    const allOrders = await prisma.order.findMany({
+      select: { orderStatus: true, updatedAt: true, totalAmount: true }
     });
 
-    return { ...summary, recent: recent.map(r => ({ ...r, status: r.orderStatus })) };
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let totalDelivered = 0;
+    let todayDelivered = 0;
+    let thisWeekDelivered = 0;
+    let thisMonthDelivered = 0;
+
+    let totalForRate = 0;
+    let deliveredForRate = 0;
+
+    allOrders.forEach(o => {
+      if (o.orderStatus !== 'PENDING') {
+        totalForRate++;
+        if (o.orderStatus === 'DELIVERED') {
+          deliveredForRate++;
+        }
+      }
+
+      if (o.orderStatus === 'DELIVERED') {
+        totalDelivered++;
+        const updateDate = new Date(o.updatedAt);
+        if (updateDate >= startOfToday) todayDelivered++;
+        if (updateDate >= startOfWeek) thisWeekDelivered++;
+        if (updateDate >= startOfMonth) thisMonthDelivered++;
+      }
+    });
+
+    const successRate = totalForRate > 0 ? (deliveredForRate / totalForRate) * 100 : 100;
+
+    const recent = await prisma.order.findMany({
+      where: { orderStatus: { in: ['SHIPPED', 'DELIVERED'] } },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+      select: { id: true, orderNumber: true, orderStatus: true, totalAmount: true, updatedAt: true, user: { select: { name: true } } }
+    });
+
+    return {
+      summary: {
+        total: totalDelivered,
+        today: todayDelivered,
+        thisWeek: thisWeekDelivered,
+        thisMonth: thisMonthDelivered
+      },
+      successRate,
+      recent: recent.map(r => ({ ...r, status: r.orderStatus }))
+    };
   }
 
   async getCancellationsAnalytics() {
-    const [allOrders, recent] = await Promise.all([
-      prisma.order.findMany({ select: { orderStatus: true } }),
-      prisma.order.findMany({
-        where: { orderStatus: 'CANCELLED' },
-        orderBy: { updatedAt: 'desc' },
-        take: 10,
-        select: { id: true, orderNumber: true, orderStatus: true, totalAmount: true, updatedAt: true, user: { select: { name: true } } }
-      })
-    ]);
-
-    const summary = { total: allOrders.length, cancelled: 0, refunded: 0, rejected: 0 };
-    allOrders.forEach(o => {
-      if (o.orderStatus === 'CANCELLED') summary.cancelled++;
+    const allOrders = await prisma.order.findMany({
+      select: { orderStatus: true, updatedAt: true, totalAmount: true }
     });
 
-    return { ...summary, recent: recent.map(r => ({ ...r, status: r.orderStatus })) };
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let totalCancelled = 0;
+    let todayCancelled = 0;
+    let thisWeekCancelled = 0;
+    let thisMonthCancelled = 0;
+    let refundAmount = 0;
+
+    allOrders.forEach(o => {
+      if (o.orderStatus === 'CANCELLED') {
+        totalCancelled++;
+        refundAmount += Number(o.totalAmount || 0);
+        const updateDate = new Date(o.updatedAt);
+        if (updateDate >= startOfToday) todayCancelled++;
+        if (updateDate >= startOfWeek) thisWeekCancelled++;
+        if (updateDate >= startOfMonth) thisMonthCancelled++;
+      }
+    });
+
+    const cancelRate = allOrders.length > 0 ? (totalCancelled / allOrders.length) * 100 : 0;
+
+    const recent = await prisma.order.findMany({
+      where: { orderStatus: 'CANCELLED' },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+      select: { id: true, orderNumber: true, orderStatus: true, totalAmount: true, updatedAt: true, user: { select: { name: true } } }
+    });
+
+    return {
+      summary: {
+        total: totalCancelled,
+        today: todayCancelled,
+        thisWeek: thisWeekCancelled,
+        thisMonth: thisMonthCancelled
+      },
+      cancelRate,
+      refundAmount,
+      recent: recent.map(r => ({ ...r, status: r.orderStatus }))
+    };
   }
 
   async getAllCustomers({ page = 1, limit = 10, search = '', status, minDate, maxDate, sort }) {
@@ -462,10 +529,11 @@ class AdminRepository {
     if (status === 'active') whereClause.active = true;
     if (status === 'inactive') whereClause.active = false;
 
-    if (minDate || maxDate) {
+    const isValidDate = (d) => d && !isNaN(Date.parse(d));
+    if ((minDate && isValidDate(minDate)) || (maxDate && isValidDate(maxDate))) {
       whereClause.createdAt = {};
-      if (minDate) whereClause.createdAt.gte = new Date(minDate);
-      if (maxDate) {
+      if (minDate && isValidDate(minDate)) whereClause.createdAt.gte = new Date(minDate);
+      if (maxDate && isValidDate(maxDate)) {
         const endDate = new Date(maxDate);
         endDate.setHours(23, 59, 59, 999);
         whereClause.createdAt.lte = endDate;
@@ -495,7 +563,26 @@ class AdminRepository {
       where: whereClause,
       skip,
       take,
-      orderBy
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        gender: true,
+        birthday: true,
+        avatarUrl: true,
+        avatarPublicId: true,
+        role: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+        failedLoginAttempts: true,
+        lockoutUntil: true,
+        tokenVersion: true,
+        passwordUpdatedAt: true,
+        isEmailVerified: true
+      }
     });
 
     const customerIds = customers.map(c => c.id);

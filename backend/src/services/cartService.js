@@ -61,8 +61,9 @@ class CartService {
     if (quantity <= 0) {
       await cartRepository.removeCartItem(item.id);
       import('../lib/prisma.js').then(({ default: prisma }) => {
-        prisma.product.update({
-          where: { id: productId },
+        // L-2 FIX: Guard against negative cartCount
+        prisma.product.updateMany({
+          where: { id: productId, cartCount: { gt: 0 } },
           data: { cartCount: { decrement: 1 } }
         }).catch(err => console.error(`Failed to decrement cartCount for product ${productId}:`, err));
       });
@@ -90,8 +91,9 @@ class CartService {
     await cartRepository.removeCartItem(item.id);
 
     import('../lib/prisma.js').then(({ default: prisma }) => {
-      prisma.product.update({
-        where: { id: productId },
+      // L-2 FIX: Guard against negative cartCount
+      prisma.product.updateMany({
+        where: { id: productId, cartCount: { gt: 0 } },
         data: { cartCount: { decrement: 1 } }
       }).catch(err => console.error(`Failed to decrement cartCount for product ${productId}:`, err));
     });
@@ -107,9 +109,10 @@ class CartService {
       await cartRepository.clearCart(cart.id);
       if (items.length > 0) {
         import('../lib/prisma.js').then(({ default: prisma }) => {
+          // L-2 FIX: Guard against negative cartCount
           Promise.all(items.map(item => 
-            prisma.product.update({
-              where: { id: item.productId },
+            prisma.product.updateMany({
+              where: { id: item.productId, cartCount: { gt: 0 } },
               data: { cartCount: { decrement: 1 } }
             }).catch(() => {})
           ));

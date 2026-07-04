@@ -1,7 +1,17 @@
+/**
+ * Admin Controller
+ * 
+ * Phase 13: Replaced dynamic imports with static imports at module top.
+ * Phase 8: Added configurable bulk operation batch limits.
+ * Phase 9: Removed raw error.message exposure — all 500 errors return generic messages.
+ */
 import adminService from '../services/adminService.js';
-import { successResponse } from '../utils/response.js';
+import { successResponse, errorResponse } from '../utils/response.js';
 import orderController from './orderController.js';
 import { cacheGet, cacheSet } from '../services/cacheService.js';
+import orderService from '../services/orderService.js';
+import productService from '../services/productService.js';
+import { env } from '../config/env.js';
 
 class AdminController {
   async getDashboardAnalytics(req, res, next) {
@@ -15,8 +25,9 @@ class AdminController {
       await cacheSet(cacheKey, data, 300); // 5 mins
       return successResponse(res, 'Analytics retrieved', data, 200);
     } catch (error) {
+      // Phase 9: Log full error server-side, return generic message to client
       console.error('Dashboard Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -101,7 +112,7 @@ class AdminController {
       return successResponse(res, 'Revenue analytics retrieved', data, 200);
     } catch (error) {
       console.error('Revenue Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -116,7 +127,7 @@ class AdminController {
       return successResponse(res, 'Inventory alerts retrieved', data, 200);
     } catch (error) {
       console.error('Inventory Alerts Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -131,7 +142,7 @@ class AdminController {
       return successResponse(res, 'Orders analytics retrieved', data, 200);
     } catch (error) {
       console.error('Orders Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -146,7 +157,7 @@ class AdminController {
       return successResponse(res, 'Customers analytics retrieved', data, 200);
     } catch (error) {
       console.error('Customers Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -161,7 +172,7 @@ class AdminController {
       return successResponse(res, 'Products analytics retrieved', data, 200);
     } catch (error) {
       console.error('Products Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -176,7 +187,7 @@ class AdminController {
       return successResponse(res, 'Deliveries analytics retrieved', data, 200);
     } catch (error) {
       console.error('Deliveries Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
@@ -191,11 +202,10 @@ class AdminController {
       return successResponse(res, 'Cancellations analytics retrieved', data, 200);
     } catch (error) {
       console.error('Cancellations Analytics Error:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
-  // Reuse order controller methods for admin
   async getAllOrders(req, res, next) {
     try {
       const { page = 1, limit = 10, search = '', status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort } = req.query;
@@ -205,10 +215,6 @@ class AdminController {
       const cached = await cacheGet(cacheKey);
       if (cached) return successResponse(res, 'All orders retrieved (cached)', cached, 200);
 
-      // We import adminService for consistency if needed, but it currently uses orderController. 
-      // We should use adminService if it exists, or just import orderService directly since adminController shouldn't ideally call orderController. 
-      // I'll stick to orderService directly since orderController is what it delegated to before.
-      const { default: orderService } = await import('../services/orderService.js');
       const data = await orderService.getAllOrders({ page, limit, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort });
       
       await cacheSet(cacheKey, data, 60); // 60 seconds TTL
@@ -222,8 +228,6 @@ class AdminController {
   async getAllProducts(req, res, next) {
     try {
       const { page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts } = req.query;
-      // We must import productService at the top of the file.
-      const { default: productService } = await import('../services/productService.js');
       const data = await productService.getProducts({ page, limit, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, includeInventoryCounts, isAdmin: true });
       return successResponse(res, 'Admin products retrieved successfully', data, 200);
     } catch (error) {
@@ -238,7 +242,6 @@ class AdminController {
   async getFilteredProductIds(req, res, next) {
     try {
       const { search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale } = req.query;
-      const { default: productService } = await import('../services/productService.js');
       const ids = await productService.getFilteredProductIds({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin: true });
       return successResponse(res, 'Filtered product IDs retrieved', { ids }, 200);
     } catch (error) {
@@ -248,21 +251,31 @@ class AdminController {
 
   /**
    * Bulk delete products by IDs — admin only, transactional.
+   * Phase 8: Enforces configurable maximum batch size (default: 100).
    * Body: { productIds: string[] }
    */
   async bulkDeleteProducts(req, res, next) {
     try {
       const { productIds } = req.body;
       if (!Array.isArray(productIds) || productIds.length === 0) {
-        const { errorResponse } = await import('../utils/response.js');
         return errorResponse(res, 'productIds must be a non-empty array', [], 400);
       }
-      const { default: productService } = await import('../services/productService.js');
+
+      // Phase 8: Enforce configurable batch size limit
+      const maxBatchSize = env.bulkDeleteMax;
+      if (productIds.length > maxBatchSize) {
+        return errorResponse(
+          res,
+          `Batch size exceeds maximum allowed limit of ${maxBatchSize}. Please reduce the number of items.`,
+          [],
+          400
+        );
+      }
+
       const result = await productService.bulkDeleteProducts(productIds);
       return successResponse(res, `${result.deleted} product(s) deleted successfully`, result, 200);
     } catch (error) {
       if (error.statusCode) {
-        const { errorResponse } = await import('../utils/response.js');
         return errorResponse(res, error.message, [], error.statusCode);
       }
       next(error);
@@ -287,7 +300,7 @@ class AdminController {
     try {
       const { id } = req.params;
       const data = await adminService.getCustomerById(id);
-      if (!data) return res.status(404).json({ success: false, message: 'Customer not found' });
+      if (!data) return errorResponse(res, 'Customer not found', [], 404);
       return successResponse(res, 'Customer details retrieved', data, 200);
     } catch (error) {
       next(error);
@@ -298,6 +311,10 @@ class AdminController {
     try {
       const { id } = req.params;
       const { active } = req.body;
+      // H-4 FIX: Validate active is a boolean
+      if (typeof active !== 'boolean') {
+        return errorResponse(res, 'active must be a boolean value', [], 400);
+      }
       const data = await adminService.updateCustomerStatus(id, active);
       return successResponse(res, 'Customer status updated', data, 200);
     } catch (error) {
@@ -309,7 +326,7 @@ class AdminController {
     try {
       const { id } = req.params;
       const data = await adminService.getOrderById(id);
-      if (!data) return res.status(404).json({ success: false, message: 'Order not found' });
+      if (!data) return errorResponse(res, 'Order not found', [], 404);
       return successResponse(res, 'Order details retrieved', data, 200);
     } catch (error) {
       next(error);

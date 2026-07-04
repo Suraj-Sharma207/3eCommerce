@@ -90,3 +90,17 @@
     transform: translateX(0) scale(1);
   }
 }
+
+@media print {
+  /* Hide the entire main app container on print */
+  #root {
+    display: none !important;
+  }
+  
+  /* Ensure backgrounds and colors print exactly as styled */
+  body, html {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: #FFFFFF !important;
+  }
+}

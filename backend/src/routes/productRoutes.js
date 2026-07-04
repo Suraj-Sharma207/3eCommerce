@@ -8,9 +8,25 @@ import { productSchema } from '../validations/productValidation.js';
 import uploadProduct from '../middleware/uploadProduct.js';
 import multer from 'multer';
 
+// M-4 FIX: Added MIME-type filter — only allow CSV and XLSX files
+const ALLOWED_DOC_TYPES = [
+  'text/csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+];
+
 const uploadDoc = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_DOC_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      const err = new Error(`Invalid file type: ${file.mimetype}. Allowed: CSV, XLSX`);
+      err.statusCode = 400;
+      cb(err, false);
+    }
+  },
 });
 
 const router = express.Router();

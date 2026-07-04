@@ -31,6 +31,15 @@ class UserService {
     }
 
     const updatedUser = await userRepository.update(userId, dataToUpdate);
+    
+    // M-1 FIX: Invalidate user session status cache on profile update
+    try {
+      const { cacheInvalidateByPattern } = await import('./cacheService.js');
+      await cacheInvalidateByPattern(`user:session:${userId}:*`);
+    } catch (err) {
+      console.error('Failed to invalidate user session cache on profile update:', err);
+    }
+
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
@@ -72,7 +81,17 @@ class UserService {
     }
 
     const hashedPassword = await hashPassword(newPassword);
-    await userRepository.update(userId, { password: hashedPassword });
+    // H-1 + M-6 FIX: Increment tokenVersion to invalidate all JWTs and set passwordUpdatedAt
+    await userRepository.update(userId, { 
+      password: hashedPassword,
+      passwordUpdatedAt: new Date(),
+      tokenVersion: { increment: 1 }
+    });
+
+    // H-1 FIX: Delete all active sessions for this user
+    const { default: prisma } = await import('../lib/prisma.js');
+    await prisma.session.deleteMany({ where: { userId } });
+
     return true;
   }
 }

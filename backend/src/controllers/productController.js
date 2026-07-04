@@ -1,6 +1,30 @@
 import productService from '../services/productService.js';
 import { successResponse, errorResponse } from '../utils/response.js';
+import { env } from '../config/env.js';
 
+// H-5 FIX: SSRF protection — block requests to private/internal networks
+const BLOCKED_HOSTNAMES = ['localhost', '127.0.0.1', '0.0.0.0', '::1', 'metadata.google.internal'];
+const BLOCKED_IP_PREFIXES = ['10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '192.168.', '169.254.', 'fd', 'fe80'];
+
+function isSafeUrl(urlStr) {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    const hostname = parsed.hostname.toLowerCase();
+    if (BLOCKED_HOSTNAMES.includes(hostname)) return false;
+    if (BLOCKED_IP_PREFIXES.some(prefix => hostname.startsWith(prefix))) return false;
+    // Block AWS/GCP/Azure metadata endpoints
+    if (hostname === '169.254.169.254') return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+// C-6 FIX: Import rate limiting — per-window counter
+const importCounters = new Map();
+const IMPORT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_IMPORTS_PER_WINDOW = 500;
 class ProductController {
   async getProducts(req, res, next) {
     try {
@@ -201,6 +225,9 @@ class ProductController {
       if (!Array.isArray(productIds) || productIds.length === 0) {
         return errorResponse(res, 'productIds must be a non-empty array', [], 400);
       }
+      if (productIds.length > 100) {
+        return errorResponse(res, 'Bulk delete is limited to a maximum of 100 products at a time.', [], 400);
+      }
       const result = await productService.bulkDeleteProducts(productIds);
       return successResponse(res, `${result.deleted} product(s) deleted successfully`, result, 200);
     } catch (error) {
@@ -316,6 +343,10 @@ class ProductController {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const rawRows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
+      if (rawRows.length > 500) {
+        return errorResponse(res, 'Import file contains too many rows. Maximum limit is 500 rows per file.', [], 400);
+      }
 
       // Fetch existing name + brand keys from database to find duplicates
       const { default: prisma } = await import('../lib/prisma.js');
@@ -435,9 +466,13 @@ class ProductController {
           }
         }
 
-        // 4. Image URLs validation
+        // H-5 FIX: Validate URLs for SSRF before passing to image service
         const checkUrl = (url, label) => {
           if (url) {
+            if (!isSafeUrl(url)) {
+              errors.push(`Blocked URL for ${label}: internal/private network addresses are not allowed`);
+              return;
+            }
             try {
               const parsed = new URL(url);
               if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -505,6 +540,19 @@ class ProductController {
 
   async importRow(req, res, next) {
     try {
+      // C-6 FIX: Rate limit imports per admin user
+      const userId = req.user?.id || 'unknown';
+      const now = Date.now();
+      const entry = importCounters.get(userId);
+      if (entry && (now - entry.startedAt) < IMPORT_WINDOW_MS) {
+        if (entry.count >= MAX_IMPORTS_PER_WINDOW) {
+          return errorResponse(res, `Import limit of ${MAX_IMPORTS_PER_WINDOW} rows per ${IMPORT_WINDOW_MS / 60000} minutes exceeded. Please wait.`, [], 429);
+        }
+        entry.count++;
+      } else {
+        importCounters.set(userId, { count: 1, startedAt: now });
+      }
+
       const data = req.body;
 
       const price = parseFloat(data.price);

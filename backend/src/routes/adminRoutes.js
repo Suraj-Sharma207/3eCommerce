@@ -61,9 +61,4 @@ router.get('/customers', adminController.getAllCustomers);
 router.get('/customers/:id', adminController.getCustomerById);
 router.put('/customers/:id/status', adminController.updateCustomerStatus);
 
-// Temporary test endpoint
-router.get('/test-admin', (req, res) => {
-  res.json({ user: req.user });
-});
-
 export default router;

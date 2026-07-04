@@ -52,13 +52,20 @@ class SettingsController {
       await cacheDel(`settings:domain:${domain}`);
       await cacheDel('settings:public');
 
+      // L-9 FIX: Scrub sensitive fields before writing to audit log
+      const sanitizedBody = { ...req.body };
+      delete sanitizedBody.password;
+      delete sanitizedBody.apiSecret;
+      delete sanitizedBody.apiKey;
+      delete sanitizedBody.secretKey;
+
       // Log Audit
       await logAudit({
         adminName: req.user.name,
         section: domain,
         oldValue: oldData,
-        newValue: req.body, // Log unencrypted intended values
-        ipAddress: req.ip || req.connection.remoteAddress
+        newValue: sanitizedBody,
+        ipAddress: req.ip || req.socket?.remoteAddress
       });
 
       let responseData = newData[domain] || {};
@@ -155,8 +162,9 @@ class SettingsController {
       });
       return successResponse(res, 'SMTP connection verified successfully', null);
     } catch (sendError) {
+      // M-7 FIX: Don't leak raw SMTP error details to client
       console.error(`[SMTP TEST] Send failed. Host: ${host}:${port}, User: ${user}, PassLength: ${password?.length || 0}`, sendError);
-      return errorResponse(res, `Failed to send test email: ${sendError.message}`, [], 400);
+      return errorResponse(res, 'Failed to send test email. Check server logs for details.', [], 400);
     }
   }
 
@@ -192,7 +200,8 @@ class SettingsController {
         diagnostics.smtpConnection = true;
         diagnostics.gmailAuthentication = true;
 
-        const { brandingService } = await import('../../services/brandingService.js');
+        // H-6 FIX: Corrected import path (was ../../services/ which doesn't exist)
+      const { default: brandingService } = await import('../services/brandingService.js');
         const branding = await brandingService.getBranding();
 
         const toEmail = req.user?.email || `admin@${branding.platformName.toLowerCase().replace(/\s+/g, '')}.com`;
@@ -214,7 +223,8 @@ class SettingsController {
         return errorResponse(res, `SMTP Diagnostics failed: ${reason}`, diagnostics, 400);
       }
     } catch (error) {
-      return errorResponse(res, `Diagnostics system error: ${error.message}`, null, 500);
+      console.error('[Diagnostics] System error:', error);
+      return errorResponse(res, 'Diagnostics system error. Check server logs for details.', null, 500);
     }
   }
 
@@ -276,7 +286,7 @@ class SettingsController {
       return res.status(200).send(rendered.html);
     } catch (error) {
       console.error('Email preview failed:', error);
-      return res.status(500).json({ message: `Email preview failed: ${error.message}` });
+      return res.status(500).json({ success: false, message: 'Email preview failed. Check server logs for details.' });
     }
   }
 }

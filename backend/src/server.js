@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
+// SECURITY: Import env validation first — this will fail-fast if required
+// secrets are missing, before any other module loads.
+import { env } from './config/env.js';
 import app from './app.js';
-import { config } from './config/index.js';
 import prisma from './lib/prisma.js';
 import { initializeTemplates } from './email/utils/templateCompiler.js';
 import { initRedis, closeRedis } from './services/cacheService.js';
@@ -17,8 +21,8 @@ const startServer = async () => {
     // Pre-compile and cache all email templates at startup
     initializeTemplates();
 
-    const server = app.listen(config.port, () => {
-      console.log(`🚀 Server is running on port ${config.port}`);
+    const server = app.listen(env.port, () => {
+      console.log(`🚀 Server is running on port ${env.port}`);
     });
 
     // Handle graceful shutdown
@@ -28,7 +32,7 @@ const startServer = async () => {
       // Force exit after 1.5 seconds if cleanup hangs (e.g. due to keep-alive TCP connections)
       setTimeout(() => {
         console.warn('[Server] Graceful shutdown timed out. Force exiting...');
-        process.exit(0);
+        process.exit(1);
       }, 1500);
 
       server.close(async () => {
@@ -57,5 +61,18 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// Phase 13: Global error handlers for unexpected crashes.
+// These ensure the process exits with a non-zero code and logs the error
+// instead of silently hanging or producing undefined behavior.
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Promise Rejection:', reason);
+  process.exit(1);
+});
 
 startServer();

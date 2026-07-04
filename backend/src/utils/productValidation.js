@@ -70,6 +70,8 @@ export const validateProductInput = (data) => {
     const descStr = String(data.description).trim().replace(/<[^>]*>?/gm, '');
     if (descStr.length < 20 || descStr.length > 1000) {
       errors.description = 'Description must be between 20 and 1000 characters.';
+    } else {
+      data.description = descStr; // Clean description in-place
     }
   }
 

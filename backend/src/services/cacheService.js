@@ -169,17 +169,29 @@ export const cacheDel = async (key) => {
 
 /**
  * Invalidates cache keys matching a glob pattern (e.g. "products:*").
+ * Phase 7: Uses SCAN instead of KEYS to avoid blocking the Redis event loop.
  */
 export const cacheInvalidateByPattern = async (pattern) => {
   console.log(`[Cache] Invalidating pattern: ${pattern}`);
   
-  // 1. Invalidate Redis keys
+  // 1. Invalidate Redis keys using SCAN (non-blocking)
   if (isRedisConnected && redisClient) {
     try {
-      const keys = await redisClient.keys(pattern);
-      if (keys && keys.length > 0) {
-        await redisClient.del(keys);
-        console.log(`[Cache] Invalidated ${keys.length} keys in Redis`);
+      let cursor = 0;
+      let totalDeleted = 0;
+      do {
+        // SCAN returns { cursor, keys } in the node-redis v4+ client
+        const result = await redisClient.scan(cursor, { MATCH: pattern, COUNT: 100 });
+        cursor = result.cursor;
+        const keys = result.keys;
+        if (keys && keys.length > 0) {
+          await redisClient.del(keys);
+          totalDeleted += keys.length;
+        }
+      } while (cursor !== 0);
+      
+      if (totalDeleted > 0) {
+        console.log(`[Cache] Invalidated ${totalDeleted} keys in Redis`);
       }
     } catch (err) {
       console.error('[Cache] Redis pattern invalidation failed:', err.message);

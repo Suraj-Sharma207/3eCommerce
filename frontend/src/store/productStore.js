@@ -390,6 +390,10 @@ const useProductStore = create((set, get) => ({
   bulkDeleteProducts: async () => {
     const ids = [...get().selectedProductIds];
     if (ids.length === 0) return { success: false, deleted: 0 };
+    if (ids.length > 100) {
+      set({ error: 'Bulk delete is limited to a maximum of 100 products at a time' });
+      return { success: false, deleted: 0 };
+    }
 
     set({ isBulkDeleting: true, error: null });
     try {

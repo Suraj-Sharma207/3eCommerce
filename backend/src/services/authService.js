@@ -10,6 +10,15 @@ import ms from 'ms';
 import { UAParser } from 'ua-parser-js';
 
 class AuthService {
+  /**
+   * Phase 4: Hash a token before storing in the database.
+   * The plaintext token is sent to the user (via email), and only the hash is stored.
+   * On verification, the incoming token is hashed and compared against the stored hash.
+   */
+  _hashToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
   async register(data) {
     const { name, email, password, phone } = data;
     
@@ -23,28 +32,31 @@ class AuthService {
     const hashedPassword = await hashPassword(password);
 
     // Generate verification token (24 hours expiry)
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Phase 4: Store HASH of the token, email the PLAINTEXT
+    const verificationTokenPlain = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = this._hashToken(verificationTokenPlain);
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Create user
+    // Create user with hashed verification token
     const user = await userRepository.create({
       name,
       email,
       password: hashedPassword,
       phone: phone || null,
-      verificationToken,
+      verificationToken: verificationTokenHash,
       verificationExpires,
       isEmailVerified: false
     });
 
     // Emit event listeners asynchronously
     emailEvents.emit('user.registered', user);
-    const verificationUrl = `${getFrontendUrl()}/verify-email?token=${verificationToken}`;
+    // Phase 4: Send PLAINTEXT token in verification URL (user-facing)
+    const verificationUrl = `${getFrontendUrl()}/verify-email?token=${verificationTokenPlain}`;
     emailEvents.emit('user.verification_requested', { user, verificationUrl });
 
-    // Generate token
-    const token = generateToken({ id: user.id, role: user.role, tokenVersion: user.tokenVersion });
-
+    // H-1: Do not return a token — registration does not auto-login.
+    // User data is returned for the frontend to display; authentication
+    // happens via the login flow which sets HttpOnly cookies.
     return {
       user: {
         id: user.id,
@@ -59,8 +71,7 @@ class AuthService {
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
-      },
-      token
+      }
     };
   }
 
@@ -102,6 +113,11 @@ class AuthService {
     // Reset lockout if successful
     if (user.failedLoginAttempts > 0) {
       await userRepository.update(user.id, { failedLoginAttempts: 0, lockoutUntil: null });
+    }
+
+    // L-5 FIX: Enforce email verification if configured
+    if (settings.requireEmailVerification && !user.isEmailVerified) {
+      throw new Error('Please verify your email before logging in.');
     }
 
     // Parse User Agent
@@ -193,15 +209,82 @@ class AuthService {
     });
 
     if (!session) {
+      // C-3 FIX: Query directly by hash using Prisma JSON filter instead of scanning globally
+      const replayedLog = await prisma.securityLog.findFirst({
+        where: {
+          action: 'TOKEN_REFRESHED',
+          details: { path: ['oldRefreshTokenHash'], equals: refreshTokenHash }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (replayedLog) {
+        const userId = replayedLog.userId;
+        // Terminate all sessions of the user due to detected theft/replay
+        await prisma.session.deleteMany({ where: { userId } });
+        await prisma.securityLog.create({
+          data: {
+            userId,
+            action: 'REFRESH_TOKEN_REPLAY_DETECTED',
+            ipAddress: reqInfo.ip,
+            details: {
+              replayedTokenHash: refreshTokenHash,
+              severity: 'CRITICAL',
+              message: 'Refresh token reuse detected. All user sessions revoked.'
+            }
+          }
+        });
+        // M-2 FIX: Tag error so controller can distinguish replay from normal expiry
+        const err = new Error('Security Alert: Session revoked due to reuse detection.');
+        err.isReplayAttack = true;
+        throw err;
+      }
       throw new Error('Invalid refresh token');
     }
 
-    if (session.expiresAt < new Date()) {
+    const now = new Date();
+
+    // 1. Refresh token expiration check (expiresAt is max session age/refresh token age)
+    if (session.expiresAt < now) {
       await prisma.session.delete({ where: { id: session.id } });
       throw new Error('Refresh token expired');
     }
 
     const settings = await securitySettingsService.getSettings();
+
+    // 2. Absolute Session Timeout Check (using sessionTimeout settings, default 24h)
+    const absoluteTimeoutMs = ms(settings.sessionTimeout || '24h');
+    const sessionAge = now - new Date(session.createdAt);
+    if (sessionAge > absoluteTimeoutMs) {
+      await prisma.session.delete({ where: { id: session.id } });
+      await prisma.securityLog.create({
+        data: {
+          userId: session.userId,
+          action: 'SESSION_ABSOLUTE_TIMEOUT',
+          ipAddress: reqInfo.ip,
+          details: { sessionAgeHours: (sessionAge / (3600 * 1000)).toFixed(2) }
+        }
+      });
+      throw new Error('Session expired due to absolute timeout limit.');
+    }
+
+    // 3. Inactivity Idle Timeout Check
+    // M-5 FIX: Read from configurable settings instead of hardcoding
+    const idleTimeoutMs = ms(settings.idleTimeout || '30m');
+    const idleTime = now - new Date(session.lastActivity);
+    if (idleTime > idleTimeoutMs) {
+      await prisma.session.delete({ where: { id: session.id } });
+      await prisma.securityLog.create({
+        data: {
+          userId: session.userId,
+          action: 'SESSION_IDLE_TIMEOUT',
+          ipAddress: reqInfo.ip,
+          details: { idleTimeMinutes: (idleTime / (60 * 1000)).toFixed(2) }
+        }
+      });
+      throw new Error('Session expired due to inactivity.');
+    }
+
     const accessMaxAge = ms(settings.jwtExpiry);
     const refreshMaxAge = ms(settings.refreshTokenExpiry);
 
@@ -213,7 +296,7 @@ class AuthService {
       where: { id: session.id },
       data: {
         refreshTokenHash: newRefreshTokenHash,
-        lastActivity: new Date(),
+        lastActivity: now,
         expiresAt: new Date(Date.now() + refreshMaxAge)
       }
     });
@@ -223,8 +306,17 @@ class AuthService {
       { expiresIn: settings.jwtExpiry }
     );
 
+    // Log the rotation event with details for subsequent replay checks
     await prisma.securityLog.create({
-      data: { userId: session.user.id, action: 'TOKEN_REFRESHED', ipAddress: reqInfo.ip }
+      data: {
+        userId: session.user.id,
+        action: 'TOKEN_REFRESHED',
+        ipAddress: reqInfo.ip,
+        details: {
+          oldRefreshTokenHash: refreshTokenHash,
+          newRefreshTokenHash: newRefreshTokenHash
+        }
+      }
     });
 
     return {
@@ -260,6 +352,9 @@ class AuthService {
       passwordUpdatedAt: new Date(),
       tokenVersion: { increment: 1 }
     });
+
+    // H-1 FIX: Delete all active sessions for this user
+    await prisma.session.deleteMany({ where: { userId } });
     
     return { success: true };
   }
@@ -271,14 +366,17 @@ class AuthService {
       return { success: true };
     }
 
+    // Phase 4: Generate plaintext token, store HASH only
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = this._hashToken(resetToken);
     const resetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await userRepository.update(user.id, {
-      resetPasswordToken: resetToken,
+      resetPasswordToken: resetTokenHash,
       resetPasswordExpires: resetExpires
     });
 
+    // Phase 4: Send PLAINTEXT token in reset URL (user-facing email)
     const resetUrl = `${getFrontendUrl()}/reset-password?token=${resetToken}`;
     emailEvents.emit('user.password_reset_requested', { user, resetUrl });
 
@@ -286,9 +384,12 @@ class AuthService {
   }
 
   async resetPassword(token, newPassword) {
+    // Phase 4: Hash the incoming token before querying the database
+    const tokenHash = this._hashToken(token);
+    
     const user = await prisma.user.findFirst({
       where: {
-        resetPasswordToken: token,
+        resetPasswordToken: tokenHash,
         resetPasswordExpires: { gt: new Date() }
       }
     });
@@ -311,9 +412,12 @@ class AuthService {
   }
 
   async verifyEmail(token) {
+    // Phase 4: Hash the incoming token before querying the database
+    const tokenHash = this._hashToken(token);
+
     const user = await prisma.user.findFirst({
       where: {
-        verificationToken: token,
+        verificationToken: tokenHash,
         verificationExpires: { gt: new Date() }
       }
     });

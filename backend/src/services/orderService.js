@@ -2,6 +2,18 @@ import orderRepository from '../repositories/orderRepository.js';
 import emailService from './emailService.js';
 import emailEvents from '../email/utils/emailEvents.js';
 import settingsService from './settingsService.js';
+// L-4 FIX: Static import instead of dynamic import in hot path
+import { cacheGet, cacheSet, cacheInvalidateByPattern } from './cacheService.js';
+
+// H-3 FIX: Order state machine — defines valid status transitions
+const ALLOWED_TRANSITIONS = {
+  PENDING:    ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED:  ['PROCESSING', 'CANCELLED'],
+  PROCESSING: ['SHIPPED', 'CANCELLED'],
+  SHIPPED:    ['DELIVERED'],
+  DELIVERED:  [],       // terminal state
+  CANCELLED:  [],       // terminal state
+};
 
 class OrderService {
   async checkout(userId, { shippingAddressId, billingAddressId, paymentMethod, paymentMetadata, deliveryMethod }) {
@@ -25,11 +37,10 @@ class OrderService {
         // Emit order.created event
         emailEvents.emit('order.created', order);
 
-        import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
-          cacheInvalidateByPattern('home:*');
-          cacheInvalidateByPattern('products:*');
-          cacheInvalidateByPattern('admin:dashboard:*');
-        });
+        // L-4 FIX: Use statically imported cacheInvalidateByPattern
+        cacheInvalidateByPattern('home:*');
+        cacheInvalidateByPattern('products:*');
+        cacheInvalidateByPattern('admin:dashboard:*');
 
         // Check for low stock on any of the ordered items
         const settings = await settingsService.getSettingsByKeys(['notifications']);
@@ -63,11 +74,24 @@ class OrderService {
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid order status');
     }
+
+    // H-3 FIX: Validate state transition before updating
+    const currentOrder = await orderRepository.getOrderById(orderId);
+    if (!currentOrder) {
+      throw new Error('Order not found');
+    }
+    const currentStatus = currentOrder.orderStatus;
+    const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
+    if (!allowed.includes(status)) {
+      const error = new Error(`Cannot transition order from ${currentStatus} to ${status}`);
+      error.statusCode = 400;
+      throw error;
+    }
+
     const order = await orderRepository.updateOrderStatus(orderId, status);
     
-    import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
-      cacheInvalidateByPattern('admin:dashboard:*');
-    });
+    // L-4 FIX: Use statically imported cacheInvalidateByPattern
+    cacheInvalidateByPattern('admin:dashboard:*');
 
     // Emit status transition events
     try {
@@ -75,10 +99,8 @@ class OrderService {
         emailEvents.emit('order.shipped', { order });
       } else if (status === 'DELIVERED') {
         emailEvents.emit('order.delivered', { order, deliveredDate: new Date().toLocaleDateString() });
-        import('./cacheService.js').then(({ cacheInvalidateByPattern }) => {
-          cacheInvalidateByPattern('home:*');
-          cacheInvalidateByPattern('products:*');
-        });
+        cacheInvalidateByPattern('home:*');
+        cacheInvalidateByPattern('products:*');
       } else if (status === 'CANCELLED') {
         emailEvents.emit('order.cancelled', { order, cancellationReason: 'Fulfillment cancellation' });
         if (order.paymentStatus === 'PAID') {
@@ -104,7 +126,8 @@ class OrderService {
     // Safe integer clamping
     let take = parseInt(limit, 10);
     if (!Number.isFinite(take) || take < 1) take = 10;
-    if (take > 50000) take = 50000;
+    // H-7 FIX: Cap at 200 to prevent DoS
+    if (take > 200) take = 200;
 
     let currentPage = parseInt(page, 10);
     if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;
@@ -115,7 +138,7 @@ class OrderService {
     // totalItems = all orders (no filters)
     const totalItemsCacheKey = 'admin:orders:total_count';
     let totalItems;
-    const { cacheGet, cacheSet } = await import('./cacheService.js');
+    // L-4 FIX: Use statically imported cacheGet/cacheSet
     const cachedTotal = await cacheGet(totalItemsCacheKey);
     if (cachedTotal !== null) {
       totalItems = cachedTotal;

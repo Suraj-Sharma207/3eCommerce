@@ -1,9 +1,15 @@
-import dotenv from 'dotenv';
-dotenv.config();
+/**
+ * Application Configuration
+ * 
+ * SECURITY: All secrets are sourced from validated environment variables.
+ * No insecure fallback values. The application will not start without
+ * properly configured secrets (see config/env.js).
+ */
+import { env } from './env.js';
 
 export const config = {
-  port: process.env.PORT || 5000,
-  jwtSecret: process.env.JWT_SECRET || 'secret',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  aesSecretKey: process.env.AES_SECRET_KEY,
+  port: env.port,
+  jwtSecret: env.jwtSecret,
+  jwtExpiresIn: env.jwtExpiresIn,
+  aesSecretKey: env.aesSecretKey,
 };

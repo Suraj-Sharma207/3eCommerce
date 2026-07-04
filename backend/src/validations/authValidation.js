@@ -16,10 +16,15 @@ export const registerSchema = z.object({
   }),
 });
 
+/**
+ * Phase 12: Login uses basic presence validation only.
+ * Users with legacy weak passwords must still be able to log in.
+ * Strong validation is enforced only on registration and password reset.
+ */
 export const loginSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email format.'),
-    password: passwordValidation,
+    password: z.string().min(1, 'Password is required.'),
   }),
 });
 

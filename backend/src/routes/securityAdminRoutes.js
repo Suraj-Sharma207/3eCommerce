@@ -23,16 +23,31 @@ router.get('/settings', async (req, res, next) => {
 
 router.put('/settings', async (req, res, next) => {
   try {
+    const oldSettings = await securitySettingsService.getSettings();
     const updatedSettings = await securitySettingsService.updateSettings(req.body);
     
-    // Log the change
+    // Log the change in AuditLog
     await prisma.auditLog.create({
       data: {
         adminName: req.user.name,
         section: 'SECURITY_SETTINGS',
-        oldValue: {},
+        oldValue: oldSettings,
         newValue: updatedSettings,
         ipAddress: req.ip
+      }
+    });
+
+    // Also log the change in SecurityLog to ensure it displays in the Admin Security Audit Logs UI
+    await prisma.securityLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'SECURITY_SETTINGS_UPDATED',
+        ipAddress: req.ip,
+        details: {
+          adminName: req.user.name,
+          oldValue: oldSettings,
+          newValue: updatedSettings
+        }
       }
     });
 
@@ -93,6 +108,8 @@ router.post('/logout-all', async (req, res, next) => {
 
     await prisma.securityLog.create({
       data: {
+        // H-2 FIX: Include userId at top level for proper log attribution
+        userId: req.user.id,
         action: 'FORCE_LOGOUT_ALL',
         ipAddress: req.ip,
         details: { adminId: req.user.id }
@@ -112,7 +129,8 @@ router.get('/audit-logs', async (req, res, next) => {
     // Safe integer clamping
     let take = parseInt(limit, 10);
     if (!Number.isFinite(take) || take < 1) take = 10;
-    if (take > 50000) take = 50000;
+    // H-7 FIX: Capped at 200 to prevent DoS against the database
+    if (take > 200) take = 200;
 
     let currentPage = parseInt(page, 10);
     if (!Number.isFinite(currentPage) || currentPage < 1) currentPage = 1;

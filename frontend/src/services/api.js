@@ -1,6 +1,17 @@
 import axios from 'axios';
 import { handleCachedRequest, invalidateFrontendCachePattern } from './apiCache';
 
+/**
+ * Axios API Client
+ * 
+ * H-2: Removed the request interceptor that read JWT from localStorage.
+ * Authentication is now handled exclusively via HttpOnly cookies sent
+ * automatically by the browser (withCredentials: true).
+ * 
+ * H-3: Configured Axios CSRF support. Axios will automatically read the
+ * XSRF-TOKEN cookie and send it as the X-XSRF-TOKEN header on
+ * state-changing requests (POST/PUT/DELETE).
+ */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
@@ -21,33 +32,9 @@ const AUTH_PATHS = [
   '/auth/verify-email',
 ];
 
-// Request interceptor: attach token from Zustand persisted state
-api.interceptors.request.use((config) => {
-  let token = null;
-
-  try {
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      const parsed = JSON.parse(authStorage);
-      token = parsed?.state?.token;
-    }
-  } catch (e) {
-    // Ignore parse errors silently
-  }
-
-  // Fallback to legacy standalone token key
-  if (!token || token === 'null' || token === 'undefined') {
-    token = localStorage.getItem('token');
-  }
-
-  if (token && token !== 'null' && token !== 'undefined') {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+// H-2: Request interceptor removed entirely.
+// No more reading from localStorage or setting Authorization header.
+// The browser sends HttpOnly cookies automatically via withCredentials: true.
 
 // Token refresh state
 let isRefreshing = false;
@@ -69,10 +56,9 @@ api.interceptors.response.use(
     const config = response.config;
     const method = (config.method || '').toLowerCase();
     
-    // Check if it's a successful write operation
+    // Check if it is a successful write operation
     if (method === 'post' || method === 'put' || method === 'delete') {
       const url = config.url || '';
-      console.log(`[APICache] Mutation succeeded for: ${url}. Clearing caches.`);
 
       if (url.includes('/products') || url.includes('/admin/products')) {
         invalidateFrontendCachePattern('/products');
@@ -130,9 +116,19 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        // Clear all auth state on refresh failure
-        localStorage.removeItem('token');
-        localStorage.removeItem('auth-storage');
+        
+        // H-2: Clear in-memory auth state via store instead of localStorage.
+        // Cookies are cleared by the server on refresh failure.
+        try {
+          const { default: useAuthStore } = await import('../store/authStore');
+          useAuthStore.setState({ 
+            user: null, 
+            isAuthenticated: false, 
+            hasCheckedAuth: true 
+          });
+        } catch (storeError) {
+          // Store import failed — still redirect to login
+        }
 
         // Redirect to login only if not already there
         if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
