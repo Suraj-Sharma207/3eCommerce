@@ -24,6 +24,7 @@ import homeRoutes from './routes/homeRoutes.js';
 import saleBannerRoutes from './routes/saleBannerRoutes.js';
 import shopBannerRoutes from './routes/shopBannerRoutes.js';
 import securityAdminRoutes from './routes/securityAdminRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 import emailEvents from './email/utils/emailEvents.js';
 
 const app = express();
@@ -96,6 +97,7 @@ app.use('/api/settings', readLimiter, settingsRoutes);
 app.use('/api/promotions', readLimiter, promotionRoutes);
 app.use('/api/sale-banner', readLimiter, saleBannerRoutes);
 app.use('/api/shop-banner', readLimiter, shopBannerRoutes);
+app.use('/api/chatbot', globalLimiter, chatbotRoutes);
 
 // Public endpoints
 app.get('/api/branding', readLimiter, getBranding);

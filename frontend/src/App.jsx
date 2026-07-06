@@ -13,6 +13,7 @@ import ConfirmDialog from './components/ui/ConfirmDialog';
 import ToastProvider from './components/ui/ToastProvider';
 import WishlistDrawer from './components/wishlist/WishlistDrawer';
 import { CookieProvider } from './components/cookies/CookieProvider';
+import ChatWidget from './components/chat/ChatWidget';
 
 function App() {
   const { checkAuth, token, user, hasCheckedAuth } = useAuthStore();
@@ -93,6 +94,7 @@ function App() {
       <ToastProvider />
       <ConfirmDialog />
       <WishlistDrawer />
+      <ChatWidget />
       <CookieProvider>
         <SessionTimeoutProvider>
           <AppRoutes />

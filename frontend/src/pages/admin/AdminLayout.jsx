@@ -2,7 +2,7 @@ import React, { useState, useEffect } from'react';
 import { NavLink, Outlet, Navigate, useLocation } from'react-router-dom';
 import useAuthStore from'../../store/authStore';
 import { useBrandingStore } from'../../store/brandingStore';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X, Layout } from'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Tag, Menu, X, Layout, Bot } from'lucide-react';
 import useConfirmStore from'../../store/confirmStore';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 
@@ -47,6 +47,7 @@ const AdminLayout = () => {
  { name:'Products', path:'/admin/products', icon: Package },
  { name:'Orders', path:'/admin/orders', icon: ShoppingBag },
  { name:'Customers', path:'/admin/customers', icon: Users },
+ { name:'AI Assistant', path:'/admin/ai', icon: Bot },
  { name:'Offers', path:'/admin/offers', icon: Tag },
  { name:'Homepage Sections', path:'/admin/homepage', icon: Layout },
  { name:'Settings', path:'/admin/settings', icon: Settings },

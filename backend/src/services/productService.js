@@ -3,6 +3,7 @@ import { validateProductInput } from '../utils/productValidation.js';
 import prisma from '../lib/prisma.js';
 import promotionService from './promotionService.js';
 import { cacheGet, cacheSet, cacheInvalidateByPattern } from './cacheService.js';
+import { env } from '../config/env.js';
 
 const normalizeCategory = (category) => {
   if (!category) return 'Decor';
@@ -141,6 +142,7 @@ class ProductService {
     await cacheInvalidateByPattern('products:*');
     await cacheInvalidateByPattern('home:*');
     await cacheInvalidateByPattern('admin:dashboard:*');
+    this._syncProductToAI('create', created);
     return created;
   }
 
@@ -194,6 +196,7 @@ class ProductService {
     await cacheInvalidateByPattern('products:*');
     await cacheInvalidateByPattern('home:*');
     await cacheInvalidateByPattern('admin:dashboard:*');
+    this._syncProductToAI('update', updated);
     return updated;
   }
 
@@ -203,6 +206,7 @@ class ProductService {
     await cacheInvalidateByPattern('products:*');
     await cacheInvalidateByPattern('home:*');
     await cacheInvalidateByPattern('admin:dashboard:*');
+    this._syncProductToAI('delete', { id });
     return deleted;
   }
 
@@ -218,6 +222,10 @@ class ProductService {
     await cacheInvalidateByPattern('products:*');
     await cacheInvalidateByPattern('home:*');
     await cacheInvalidateByPattern('admin:dashboard:*');
+    
+    // Sync to AI in background
+    ids.forEach(id => this._syncProductToAI('delete', { id }));
+    
     return { deleted: count };
   }
 
@@ -239,6 +247,25 @@ class ProductService {
   async createStockNotification(productId, email, phone, userId) {
     await this.getProductById(productId); // Ensure product exists
     return await productRepository.createStockNotification(productId, email, phone, userId);
+  }
+
+  /**
+   * Sync product data to AI vector store asynchronously
+   * Does not block the main execution thread
+   */
+  _syncProductToAI(action, product) {
+    const chatbotUrl = env.chatbotServiceUrl || 'http://localhost:8000';
+    const apiKey = env.chatbotApiKey || '';
+
+    // Fire and forget
+    fetch(`${chatbotUrl}/sync/product`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Chatbot-API-Key': apiKey,
+      },
+      body: JSON.stringify({ action, product }),
+    }).catch(err => console.error(`[AI Sync] Failed to sync product ${product.id} (${action}):`, err.message));
   }
 }
 

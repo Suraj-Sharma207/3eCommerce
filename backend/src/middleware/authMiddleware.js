@@ -40,3 +40,36 @@ export const protect = async (req, res, next) => {
     return errorResponse(res, 'Not authorized, token failed', [], 401);
   }
 };
+
+export const optionalAuth = async (req, res, next) => {
+  try {
+    let token;
+    const cookieNames = getAuthCookieNames(req);
+    
+    if (req.cookies && req.cookies[cookieNames.access]) {
+      token = req.cookies[cookieNames.access];
+    }
+
+    if (!token) {
+      return next(); // Proceed as guest
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return next(); // Token invalid, proceed as guest
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, name: true, email: true, role: true, tokenVersion: true }
+    });
+
+    if (user && decoded.tokenVersion === user.tokenVersion) {
+      req.user = user;
+    }
+    
+    next();
+  } catch (error) {
+    next(); // On any error, just proceed as guest
+  }
+};

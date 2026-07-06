@@ -6,7 +6,7 @@
  * This prevents the server from running with insecure defaults.
  */
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ override: true });
 
 class EnvValidationError extends Error {
   constructor(errors) {
@@ -96,7 +96,7 @@ export function validateEnv() {
   // --- Return validated config ---
 
   return {
-    port: parseInt(process.env.PORT, 10) || 5000,
+    port: process.env.PORT || 5000,
     databaseUrl: process.env.DATABASE_URL,
     jwtSecret: process.env.JWT_SECRET,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
@@ -120,6 +120,8 @@ export function validateEnv() {
     },
     trustProxy: process.env.TRUST_PROXY || false,
     bulkDeleteMax: parseInt(process.env.BULK_DELETE_MAX, 10) || 100,
+    chatbotServiceUrl: process.env.CHATBOT_SERVICE_URL || 'http://localhost:8000',
+    chatbotApiKey: process.env.CHATBOT_API_KEY || '',
   };
 }
 

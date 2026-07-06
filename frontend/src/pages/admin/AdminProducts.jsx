@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from'react';
 import { motion, AnimatePresence } from'framer-motion';
 import useProductStore from'../../store/productStore';
 import Button from'../../components/ui/Button';
-import { Plus, Edit2, Trash2, Search, Inbox, Upload, Trash, X, CheckSquare, Download, Loader2 } from'lucide-react';
+import { Plus, Edit2, Trash2, Search, Inbox, Upload, Trash, X, CheckSquare, Download, Loader2, RefreshCw } from'lucide-react';
 import useVirtual from'../../hooks/useVirtual';
 import { getOptimizedUrl } from'../../utils/cloudinary';
 import Input from'../../components/ui/Input';
@@ -125,6 +125,7 @@ const AdminProducts = () => {
  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
  const [selectedProductId, setSelectedProductId] = useState(null);
  const [isSelectingAll, setIsSelectingAll] = useState(false);
+ const [isSyncingAI, setIsSyncingAI] = useState(false);
  
  // Table virtualization container ref
  const tableContainerRef = useRef(null);
@@ -293,6 +294,24 @@ const AdminProducts = () => {
  }
  };
 
+  const handleSyncToAI = async () => {
+    setIsSyncingAI(true);
+    try {
+      const { default: api } = await import('../../services/api');
+      const response = await api.post('/chatbot/sync/bulk');
+      if (response.data?.success) {
+        toast.success(`Successfully synced ${response.data.total_synced} products to AI!`);
+      } else {
+        toast.error('Failed to sync products to AI.');
+      }
+    } catch (error) {
+      console.error('Error syncing to AI:', error);
+      toast.error('Error syncing products to AI.');
+    } finally {
+      setIsSyncingAI(false);
+    }
+  };
+
  // ── Render ───────────────────────────────────────────────────────────────────
 
  return (
@@ -301,6 +320,10 @@ const AdminProducts = () => {
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <h1 className="text-2xl text-text-brand-600 font-bold">Products</h1>
  <div className="flex items-center gap-3 shrink-0">
+ <Button variant="outline" className="group" onClick={handleSyncToAI} disabled={isSyncingAI}>
+ {isSyncingAI ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <RefreshCw className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform" />}
+ Sync to AI
+ </Button>
  <Button variant="outline" className="group" onClick={() => setIsImportModalOpen(true)}>
  <Upload className="w-5 h-5 mr-2 group-hover:-translate-y-0.5 transition-transform" />
  Bulk Import

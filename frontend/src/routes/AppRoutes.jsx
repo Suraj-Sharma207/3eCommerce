@@ -30,6 +30,13 @@ const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
 const AdminHomepageSettings = lazy(() => import('../pages/admin/AdminHomepageSettings'));
 const AdminSaleBanner = lazy(() => import('../pages/admin/AdminSaleBanner'));
 
+const AdminAILayout = lazy(() => import('../pages/admin/ai/AdminAILayout'));
+const AdminAIDashboard = lazy(() => import('../pages/admin/ai/AdminAIDashboard'));
+const AdminAIKnowledge = lazy(() => import('../pages/admin/ai/AdminAIKnowledge'));
+const AdminAIConversations = lazy(() => import('../pages/admin/ai/AdminAIConversations'));
+const AdminAIPlayground = lazy(() => import('../pages/admin/ai/AdminAIPlayground'));
+const AdminAISettings = lazy(() => import('../pages/admin/ai/AdminAISettings'));
+
 const CustomerProtectedRoute = lazy(() => import('../components/layout/CustomerProtectedRoute'));
 const GuestProtectedRoute = lazy(() => import('../components/layout/GuestProtectedRoute'));
 const AddressBook = lazy(() => import('../pages/addresses/AddressBook'));
@@ -86,6 +93,15 @@ const AppRoutes = () => {
  <Route path="settings/:tab" element={<AdminSettings />} />
  <Route path="homepage" element={<AdminHomepageSettings />} />
  <Route path="offers" element={<AdminOffers />} />
+
+ <Route path="ai" element={<AdminAILayout />}>
+   <Route index element={<Navigate to="dashboard" replace />} />
+   <Route path="dashboard" element={<AdminAIDashboard />} />
+   <Route path="knowledge" element={<AdminAIKnowledge />} />
+   <Route path="conversations" element={<AdminAIConversations />} />
+   <Route path="playground" element={<AdminAIPlayground />} />
+   <Route path="settings" element={<AdminAISettings />} />
+ </Route>
  </Route>
 
  </Routes>
