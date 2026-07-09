@@ -9,7 +9,7 @@ class ChatbotController {
    */
   async chat(req, res, next) {
     try {
-      const { message, conversation_id } = req.body;
+      const { message, conversation_id, history, metadata } = req.body;
 
       if (!message || message.trim().length === 0) {
         return errorResponse(res, 'Message is required', [], 400);
@@ -27,9 +27,11 @@ class ChatbotController {
         message,
         conversation_id,
         user_context: userContext,
+        history,
+        metadata,
       };
 
-      const chatbotUrl = env.chatbotServiceUrl || 'http://localhost:8000';
+      const chatbotUrl = env.chatbotServiceUrl || 'http://127.0.0.1:8000';
       const apiKey = env.chatbotApiKey || '';
 
       const response = await fetch(`${chatbotUrl}/chat`, {
@@ -165,7 +167,11 @@ class ChatbotController {
         orderBy: { createdAt: 'desc' },
         include: { 
           items: {
-            include: { product: true }
+            include: { 
+              product: {
+                include: { images: true }
+              }
+            }
           }
         }
       });

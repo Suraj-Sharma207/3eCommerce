@@ -26,6 +26,7 @@ class Settings(BaseSettings):
 
     # ── Node.js Backend ───────────────────────────────────────────────────────
     node_backend_url: str = "http://localhost:5000"
+    express_api_base_url: str = "http://127.0.0.1:5000"
 
     # ── Service Auth ──────────────────────────────────────────────────────────
     chatbot_api_key: str = ""

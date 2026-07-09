@@ -15,6 +15,11 @@
     --color-brand-bg-accent: #F2E9DD;
   }
 
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background-default text-text-primary antialiased font-sans;
   }
@@ -104,3 +109,106 @@
     background-color: #FFFFFF !important;
   }
 }
+
+/* Glassmorphism utility classes from NewBotUi */
+.glass-panel {
+  background: #111522;
+  border: 1px solid rgba(129, 140, 248, 0.08);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(129, 140, 248, 0.05) inset;
+}
+
+.glass-card {
+  background: rgba(23, 28, 44, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(129, 140, 248, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(23, 28, 44, 0.9);
+  border-color: rgba(129, 140, 248, 0.2);
+  transform: translateY(-2px);
+}
+
+.glass-bubble {
+  background: rgba(23, 28, 44, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #c084fc, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Typing indicator dot bounce animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.typing-dot {
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(129, 140, 248, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+

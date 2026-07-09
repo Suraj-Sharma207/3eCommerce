@@ -11,10 +11,6 @@ from contextlib import asynccontextmanager
 from app.config import get_settings
 from app.utils.logging import setup_logging, get_logger
 from app.api.router import api_router
-from app.rag.vectorstore import ensure_collections
-from app.services.node_client import close_http_client
-from app.services.conversation_log import close_redis as close_log_redis
-from app.core.memory import close_memory_redis
 from app.schemas.common import ErrorResponse
 
 # Initialize logging before app startup
@@ -26,37 +22,22 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     """
     Lifespan manager for FastAPI.
-    Handles startup (DB connections) and shutdown (cleanup) events.
+    Handles startup and shutdown.
     """
     settings = get_settings()
-    logger.info(f"Starting AI Shopping Assistant in {settings.environment} mode")
-    
-    # Ensure Qdrant collections exist
-    try:
-        await ensure_collections()
-        logger.info("Qdrant collections verified")
-    except Exception as e:
-        logger.error(f"Failed to verify Qdrant collections: {e}")
-
-    yield  # Application runs here
-
-    logger.info("Shutting down AI Shopping Assistant")
-    # Clean up connections
-    await close_http_client()
-    await close_log_redis()
-    await close_memory_redis()
+    logger.info(f"Starting AI Chatbot Service in {settings.environment} mode")
+    yield
+    logger.info("Shutting down AI Chatbot Service")
 
 
 def create_app() -> FastAPI:
     """Factory function to create the FastAPI application."""
     settings = get_settings()
-    
-    # Disable docs in production
     is_prod = settings.environment.lower() == "production"
     
     app = FastAPI(
-        title="AI Shopping Assistant",
-        description="Domain-specific RAG chatbot for eCommerce",
+        title="AI Chatbot Service",
+        description="Clean baseline chatbot service using CB fast-path router",
         version="1.0.0",
         lifespan=lifespan,
         docs_url=None if is_prod else "/docs",
@@ -65,10 +46,10 @@ def create_app() -> FastAPI:
         responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
     )
 
-    # CORS configuration — only allow Node.js backend
+    # CORS configuration
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Node.js backend URL might vary, restrict via API key instead
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["*"],

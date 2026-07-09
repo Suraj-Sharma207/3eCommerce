@@ -97,43 +97,43 @@ const ProductCard = ({ product, previewMode = false }) => {
  </div>
  </div>
 
- {/* Content Area */}
- <div className="flex flex-col flex-1 p-4">
- <div className="mb-1 flex justify-between items-center text-[10px] text-text-secondary uppercase tracking-widest">
- <span className="opacity-70">{product.category ||'Furniture'}</span>
- {product.brand && <span className="opacity-50">{product.brand}</span>}
- </div>
+  {/* Content Area */}
+  <div className="flex flex-col flex-1 p-3 sm:p-4">
+    <div className="mb-1 flex justify-between items-center text-[10px] text-text-secondary uppercase tracking-widest gap-1">
+      <span className="opacity-70 truncate">{product.category || 'Furniture'}</span>
+      {product.brand && <span className="opacity-50 truncate">{product.brand}</span>}
+    </div>
 
- <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors" onClick={(e) => previewMode && e.preventDefault()}>
- <h3 className="text-sm font-bold text-text-brand-600 line-clamp-1">{product.name}</h3>
- </Link>
+    <Link to={`/products/${product.slug || product.id}`} className="block mb-2 group-hover:text-brand-600 transition-colors" onClick={(e) => previewMode && e.preventDefault()}>
+      <h3 className="text-sm font-bold text-text-brand-600 line-clamp-1">{product.name}</h3>
+    </Link>
 
- <RatingDisplay rating={product.rating || 0} count={product.reviewCount || 0} className="mb-3" />
+    <RatingDisplay rating={product.rating || 0} count={product.reviewCount || 0} className="mb-3" />
 
- <div className="mt-auto flex items-center justify-between pt-3 border-t border-border-light">
- <div className="flex flex-col">
- <span className="text-base text-text-brand-600">
- {formatPrice(product.finalPrice || product.price)}
- </span>
- {hasDiscount && (
- <span className="text-[11px] text-text-muted line-through font-medium leading-none mt-1">
- {formatPrice(product.price)}
- </span>
- )}
- </div>
- <Button
- variant="primary"
- size="iconSm"
- onClick={handleAddToCart}
- className="rounded-full shadow-sm"
- isLoading={isCartLoading}
- disabled={!product.active || product.stock === 0}
- aria-label="Add to cart"
- >
- <ShoppingCart className="w-4 h-4" />
- </Button>
- </div>
- </div>
+    <div className="mt-auto flex items-center justify-between gap-1 pt-3 border-t border-border-light flex-wrap xs:flex-nowrap">
+      <div className="flex flex-col min-w-0">
+        <span className="text-sm sm:text-base text-text-brand-600 font-bold truncate">
+          {formatPrice(product.finalPrice || product.price)}
+        </span>
+        {hasDiscount && (
+          <span className="text-[10px] sm:text-[11px] text-text-muted line-through font-medium leading-none mt-1 truncate">
+            {formatPrice(product.price)}
+          </span>
+        )}
+      </div>
+      <Button
+        variant="primary"
+        size="iconSm"
+        onClick={handleAddToCart}
+        className="rounded-full shadow-sm shrink-0 scale-90 sm:scale-100"
+        isLoading={isCartLoading}
+        disabled={!product.active || product.stock === 0}
+        aria-label="Add to cart"
+      >
+        <ShoppingCart className="w-4 h-4" />
+      </Button>
+    </div>
+  </div>
  </div>
  );
 };

@@ -5,6 +5,7 @@ Chat endpoint schemas.
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from .common import UserContext
+from app.models.schema import ChatMessage, ConversationMetadata, PendingState
 
 
 class ChatRequest(BaseModel):
@@ -12,6 +13,8 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
     conversation_id: Optional[str] = None
     user_context: Optional[UserContext] = None
+    history: Optional[List[ChatMessage]] = []
+    metadata: Optional[ConversationMetadata] = None
 
 
 class ProductCard(BaseModel):
@@ -39,11 +42,17 @@ class ChatSource(BaseModel):
 class ChatResponse(BaseModel):
     """Response sent back to the frontend."""
     response: str
-    conversation_id: str
+    reply: str
     intent: str
+    type: str
+    conversation_id: str
     products: List[ProductCard] = []
     sources: List[ChatSource] = []
     gemini_used: bool = False
     response_time_ms: int = 0
     quick_replies: Optional[List[str]] = None
     action: Optional[str] = None
+    orders: Optional[List[dict]] = None
+    pending_state: Optional[PendingState] = None
+    category: Optional[str] = None
+

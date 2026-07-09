@@ -1,0 +1,32 @@
+[
+  {
+    "question": "What are your business hours?",
+    "keywords": ["hours", "open", "close", "time", "when", "business"],
+    "answer": "Our business hours are Monday through Friday, 9:00 AM to 6:00 PM EST. We are closed on weekends and major holidays."
+  },
+  {
+    "question": "How do I reset my password?",
+    "keywords": ["password", "reset", "forgot", "login", "cant log in", "recover"],
+    "answer": "To reset your password, click the 'Forgot Password' link on the login page. An email with a reset link will be sent to your registered email address."
+  },
+  {
+    "question": "Do you offer refunds?",
+    "keywords": ["refund", "return", "money back", "cancel"],
+    "answer": "Yes, we offer a 30 day money back guarantee. If you're not satisfied, you can request a full refund within 30 days of purchase."
+  },
+  {
+    "question": "How can I contact support?",
+    "keywords": ["contact", "support", "help", "email", "phone", "reach"],
+    "answer": "You can reach our support team by emailing support@example.com or calling 1-800-555-0199."
+  },
+  {
+    "question": "What payment methods do you accept?",
+    "keywords": ["payment", "pay", "credit card", "paypal", "method", "methods"],
+    "answer": "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and Apple Pay."
+  },
+  {
+    "question": "How do I cancel my order?",
+    "keywords": ["cancel order", "cancel my order", "cancel purchase"],
+    "answer": "To cancel an order, please visit your account dashboard and click 'Cancel Order' next to your recent purchase. Orders can only be cancelled within 1 hour of placement."
+  }
+]

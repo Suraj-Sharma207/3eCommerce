@@ -1,7 +1,7 @@
 import asyncio
 import time
 from app.core.intent import classify
-from app.handlers.greeting import handle_greeting
+from app.handlers.fast.greeting import handle_greeting
 from app.schemas.state import ConversationState
 
 async def main():

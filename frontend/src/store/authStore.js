@@ -34,6 +34,7 @@ const useAuthStore = create((set, get) => ({
   hasCheckedAuth: false,
 
   login: async (email, password) => {
+
     set({ isLoading: true, error: null });
     try {
       const response = await api.post('/auth/login', { email, password });

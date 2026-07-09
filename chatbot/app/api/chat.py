@@ -1,52 +1,77 @@
-"""
-Chat endpoint — the main conversational interface.
-
-Receives messages from the Node.js proxy (which has already
-verified the user's JWT) and routes them through the orchestrator.
-"""
-
-from fastapi import APIRouter, Request, BackgroundTasks
+import time
+from fastapi import APIRouter, BackgroundTasks
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.core.orchestrator import process_message
+from app.services.chatbot import ChatbotService
+from app.models.schema import ChatRequest as CBChatRequest, ConversationMetadata as CBMetadata
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
-
 router = APIRouter(tags=["Chat"])
+chatbot_service = ChatbotService()
 
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
     """
-    Process a chat message.
-    
-    The Node.js backend sends:
-      - message: The user's text
-      - conversation_id: Session ID (optional)
-      - user_context: Pre-verified user info (optional)
-    
-    Python never validates JWT — user_context is trusted
-    because it comes from the authenticated Node.js gateway.
+    Process a chat message using the clean CB foundation chatbot service.
+    Acts as a compatibility layer matching the original request/response contract.
     """
-    # Extract user context if provided
-    user_id = None
-    user_name = None
-
-    if request.user_context:
-        user_id = request.user_context.user_id
-        user_name = request.user_context.user_name
+    start_time = time.time()
+    user_name = request.user_context.user_name if request.user_context else "anonymous"
 
     logger.info(
-        f"Chat request: user={user_name or 'anonymous'}, "
+        f"Chat request: user={user_name}, "
         f"message='{request.message[:50]}...'"
     )
 
-    response = await process_message(
-        message=request.message,
-        conversation_id=request.conversation_id,
-        user_id=user_id,
-        user_name=user_name,
-        background_tasks=background_tasks,
+    # Map to CB ChatRequest model
+    cb_history = []
+    if request.history:
+        # Convert schemas.chat ChatMessage to models.schema ChatMessage
+        from app.models.schema import ChatMessage as CBChatMessage
+        cb_history = [
+            CBChatMessage(role=msg.role, content=msg.content)
+            for msg in request.history
+        ]
+
+    cb_metadata = request.metadata or CBMetadata(
+        conversationStarted=True,
+        conversationStatus="ACTIVE",
     )
 
-    return response
+    # Populate verified user context if available
+    if request.user_context:
+        cb_metadata.is_authenticated = True
+        cb_metadata.user_id = request.user_context.user_id
+    elif getattr(cb_metadata, "isAuthenticated", False):
+        cb_metadata.is_authenticated = True
+        cb_metadata.user_id = getattr(cb_metadata, "userId", None)
+
+    cb_request = CBChatRequest(
+        message=request.message,
+        history=cb_history,
+        metadata=cb_metadata
+    )
+
+    # Run the clean CB chatbot service
+    cb_response = chatbot_service.process_message(cb_request)
+
+    response_time_ms = int((time.time() - start_time) * 1000)
+
+    # Map back to eCommerce ChatResponse schema (satisfying both frontend formats)
+    return ChatResponse(
+        response=cb_response.reply,
+        reply=cb_response.reply,
+        intent=cb_response.type,
+        type=cb_response.type,
+        conversation_id=request.conversation_id or "default-session",
+        products=getattr(cb_response, "products", []) or [],
+        sources=[],
+        gemini_used=False,
+        response_time_ms=response_time_ms,
+        quick_replies=None,
+        action=getattr(cb_response, "action", None),
+        orders=getattr(cb_response, "orders", None),
+        pending_state=getattr(cb_response, "pending_state", None),
+        category=getattr(cb_response, "category", None)
+    )
