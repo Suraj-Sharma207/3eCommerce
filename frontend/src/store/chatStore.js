@@ -195,6 +195,7 @@ export const useChatStore = create((set, get) => ({
       lastGreeting: null,
       lastDetectedIntent: null,
       lastHandler: null,
+      pendingState: null,
       lastUserMessageAt: 0,
       lastBotMessageAt: 0,
       lastInteractionAt: t,

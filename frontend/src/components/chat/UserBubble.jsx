@@ -13,10 +13,10 @@ export const UserBubble = ({ message }) => {
   return (
     <div className="flex items-start justify-end gap-3 w-full animate-slide-up group">
       <div className="flex flex-col items-end gap-1.5 max-w-[80%]">
-        <div className="px-4 py-3 rounded-[16px] rounded-tr-[4px] text-[14px] leading-relaxed break-words whitespace-pre-wrap bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-md shadow-brand-900/30 font-light tracking-wide">
+        <div className="px-4 py-3 rounded-[16px] rounded-tr-[4px] text-[14px] leading-relaxed break-words whitespace-pre-wrap bg-[#0F172A] text-white shadow-sm font-medium tracking-wide" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           {message.text}
         </div>
-        <span className="text-[10px] text-slate-500 font-medium px-1 select-none">
+        <span className="text-[10px] text-[#9CA3AF] font-medium px-1 select-none">
           {formatTime(message.timestamp)}
         </span>
       </div>

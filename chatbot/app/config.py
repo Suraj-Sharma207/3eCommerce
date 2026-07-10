@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     # ── Qdrant ────────────────────────────────────────────────────────────────
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
+    intent_collection_name: str = "intent_examples"
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379"
@@ -38,6 +39,7 @@ class Settings(BaseSettings):
 
     # ── AI Defaults ───────────────────────────────────────────────────────────
     similarity_threshold: float = 0.50
+    semantic_similarity_threshold: float = 0.75
     conversation_memory_ttl: int = 1800  # 30 minutes in seconds
     conversation_history_length: int = 10
     max_search_results: int = 5

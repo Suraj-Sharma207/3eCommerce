@@ -25,6 +25,10 @@ class GibberishDetector(BaseDetector):
         if norm_msg in valid_short_words or (len(norm_msg) <= 3 and norm_msg.isalpha()):
             return GibberishResult(is_gibberish=False, score=0, reasons=["short_valid_word"])
             
+        # Ignore fully numeric messages (like budgets or quantities)
+        if re.match(r'^[\s₹$€£]*[0-9,]+(?:\.[0-9]+)?(?:k|K|m|M|b|B)?[\s]*$', raw_msg):
+            return GibberishResult(is_gibberish=False, score=0, reasons=["numeric_value"])
+            
         # If the user typed something, but the normalizer stripped it to empty (e.g. "!!!!!")
         if raw_msg and not norm_msg:
             score += 3

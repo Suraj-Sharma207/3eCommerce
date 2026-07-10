@@ -28,7 +28,6 @@ class ConversationMetadata(BaseModel):
     is_authenticated: bool = Field(False, description="Whether the user is authenticated (backend).")
     user_id: Optional[str] = Field(None, description="The user's ID (backend).")
     pendingState: Optional[PendingState] = None
-    pending_state: Optional[PendingState] = None
 
 class RequestContext(BaseModel):
     """Unified context passed through the Fast Path pipeline."""

@@ -27,50 +27,49 @@ export const ChatInput = ({ onSend, disabled }) => {
   const isSubmitDisabled = disabled || !message.trim();
 
   return (
-    <div className="shrink-0 p-4 bg-transparent mt-auto relative z-10 w-full">
+    <div className="absolute bottom-4 left-4 right-4 z-20 animate-fade-in" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-end w-full glass-panel rounded-[24px] p-1.5 focus-within:ring-2 focus-within:ring-indigo-500/50 focus-within:border-indigo-400/30 transition-all duration-300 shadow-lg"
+        className="flex items-center w-full h-[72px] bg-white rounded-[20px] px-[18px] py-[16px] gap-[12px] border border-[#E5E7EB] shadow-[0_12px_40px_rgba(15,23,42,0.12)] hover:shadow-[0_16px_48px_rgba(15,23,42,0.16)] focus-within:border-[#0F172A] focus-within:shadow-[0_12px_40px_rgba(15,23,42,0.18)] transition-all duration-200 ease-in-out"
       >
-        <div className="flex flex-col w-full">
-          <input
-            ref={inputRef}
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Ask me anything..."
-            autoComplete="off"
-            className="w-full min-h-[44px] px-3 pt-1 bg-transparent border-0 outline-none text-[14px] text-slate-100 placeholder-slate-500 disabled:text-slate-600 transition-colors tracking-wide font-light"
-            onKeyDown={handleKeyDown}
-          />
-          
-          <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-white/5 rounded-lg transition-colors cursor-not-allowed opacity-50"
-                title="Attach file (coming soon)"
-              >
-                <Paperclip size={16} strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-white/5 rounded-lg transition-colors cursor-not-allowed opacity-50"
-                title="Voice input (coming soon)"
-              >
-                <Mic size={16} strokeWidth={2} />
-              </button>
-            </div>
-            
-            <button
-              type="submit"
-              disabled={isSubmitDisabled}
-              className="flex items-center justify-center w-8 h-8 rounded-[12px] bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50 disabled:from-slate-800 disabled:to-slate-800 text-white cursor-pointer disabled:cursor-not-allowed transition-all shadow-md shadow-brand-900/30"
-            >
-              <Send size={14} strokeWidth={2.5} className="ml-0.5" />
-            </button>
-          </div>
+        {/* Left Icons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            className="text-[#9CA3AF] hover:text-[#374151] transition-colors cursor-not-allowed"
+            title="Attach file"
+          >
+            <Paperclip size={20} strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className="text-[#9CA3AF] hover:text-[#374151] transition-colors cursor-not-allowed"
+            title="Voice input"
+          >
+            <Mic size={20} strokeWidth={2} />
+          </button>
         </div>
+
+        {/* Input */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ask me anything..."
+          autoComplete="off"
+          className="flex-1 min-w-0 h-full bg-transparent border-0 outline-none text-[15px] text-[#0F172A] placeholder-[#9CA3AF] disabled:text-[#9CA3AF] tracking-wide"
+          onKeyDown={handleKeyDown}
+        />
+        
+        {/* Right Send Button */}
+        <button
+          type="submit"
+          disabled={isSubmitDisabled}
+          className="shrink-0 flex items-center justify-center w-[42px] h-[42px] rounded-full bg-[#0F172A] hover:bg-[#1E293B] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] text-white cursor-pointer disabled:cursor-not-allowed transition-colors duration-200"
+        >
+          <Send size={18} strokeWidth={2} className={!isSubmitDisabled ? 'ml-0.5' : ''} />
+        </button>
       </form>
     </div>
   );

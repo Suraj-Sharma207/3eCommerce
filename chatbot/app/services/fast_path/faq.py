@@ -33,11 +33,26 @@ class FAQDetector(BaseDetector):
         highest_score = 0.0
         
         # Stop words to ignore for aggregate scoring
-        stop_words = {"i", "want", "to", "my", "a", "the", "what", "are", "your", "how", "do", "can", "you", "me", "for", "is", "of", "in", "on", "with", "it", "this", "that", "please", "help", "have", "need", "about"}
+        stop_words = {
+            "i", "want", "to", "my", "a", "the", "what", "are", "your", "how", "do", "can", "you", "me", 
+            "for", "is", "of", "in", "on", "with", "it", "this", "that", "please", "help", "have", "need", 
+            "about", "their", "any", "there", "they", "them", "these", "those", "whats", "tell", "show", 
+            "give", "know", "info", "information", "an", "our", "us", "yours", "mine", "he", "she", "we"
+        }
+        
+        # Product-related nouns and category names to ignore so they don't dilute the score (e.g. "on tv", "on this sofa")
+        product_nouns = {
+            "tv", "television", "sofa", "sofas", "couch", "couches", "table", "tables", "chair", "chairs", 
+            "bed", "beds", "lamp", "lamps", "desk", "desks", "dresser", "dressers", "cabinet", "cabinets", 
+            "wardrobe", "wardrobes", "recliner", "recliners", "stool", "stools", "bench", "benches",
+            "bookcase", "bookcases", "shelf", "shelves", "furniture", "appliance", "appliances", 
+            "mirror", "mirrors", "vase", "vases", "living", "room", "bedroom", "dining", "office", 
+            "outdoor", "kitchen", "decor", "lighting", "item", "items", "product", "products", "one"
+        }
         
         # Split message into words for word-level matching
         raw_words = normalized_message.split()
-        meaningful_words = [w for w in raw_words if w not in stop_words]
+        meaningful_words = [w for w in raw_words if w not in stop_words and w not in product_nouns]
         
         # If the user only typed stop words, avoid div by zero
         if not meaningful_words:

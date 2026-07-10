@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, RotateCcw, Maximize2, Minimize2, Cat } from 'lucide-react';
+import { Maximize2, Minimize2, Minus, Plus } from 'lucide-react';
 
 export const ChatHeader = ({
   onMinimize,
@@ -9,50 +9,46 @@ export const ChatHeader = ({
   onToggleFullscreen,
 }) => {
   return (
-    <header className={`relative z-20 shrink-0 h-[72px] px-5 flex items-center justify-between select-none bg-slate-950 border-b border-brand-500/10 shadow-sm ${isFullscreen ? 'rounded-none' : 'rounded-none sm:rounded-t-[24px]'}`}>
+    <header className={`chat-header relative z-20 shrink-0 h-[72px] px-5 flex items-center justify-between select-none bg-white border-b border-[#ECECEC] ${isFullscreen ? 'rounded-none' : 'rounded-none sm:rounded-t-[28px]'}`}>
       <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 p-[1px] shadow-lg shadow-brand-900/30">
-          <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center text-white">
-            <Cat size={20} />
-          </div>
-          {/* Status Dot */}
-          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-[2px] border-slate-950"></span>
+        {/* Bot Avatar */}
+        <div className="relative w-11 h-11 rounded-full bg-white border-2 border-[#ECECEC] flex items-center justify-center shadow-sm overflow-hidden p-1.5">
+          <img src="/logo.jpg" alt="Priyal" className="w-full h-full object-contain" />
         </div>
-        
+
         <div className="flex flex-col justify-center">
-          <h2 className="text-[14px] font-semibold text-slate-100 tracking-wide">AI Assistant</h2>
-          <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-80"></span>
+          <h2 className="text-[15px] font-bold text-[#0F172A] tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Priyal</h2>
+          <p className="text-[11px] text-[#6B7280] font-medium flex items-center gap-1.5 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
             Online
           </p>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-0.5">
-        {/* Clear chat history */}
+        {/* New Chat */}
         <button
           onClick={onClear}
           disabled={!canClear}
-          className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
-          title="Reset conversation"
+          className="p-2.5 rounded-xl text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
+          title="New chat"
         >
-          <RotateCcw size={16} strokeWidth={2} />
+          <Plus size={18} strokeWidth={2} />
         </button>
 
         {/* Toggle Fullscreen */}
         <button
           onClick={onToggleFullscreen}
-          className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-all cursor-pointer hidden sm:block"
+          className="p-2.5 rounded-xl text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F3F4F6] transition-all cursor-pointer hidden sm:block"
           title={isFullscreen ? "Exit fullscreen" : "Make fullscreen"}
         >
           {isFullscreen ? <Minimize2 size={16} strokeWidth={2} /> : <Maximize2 size={16} strokeWidth={2} />}
         </button>
-        
-        {/* Minimize widget */}
+
+        {/* Minimize */}
         <button
           onClick={onMinimize}
-          className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-all cursor-pointer"
+          className="p-2.5 rounded-xl text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F3F4F6] transition-all cursor-pointer"
           title="Minimize chat"
         >
           <Minus size={18} strokeWidth={2.5} />

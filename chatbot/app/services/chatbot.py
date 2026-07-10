@@ -18,6 +18,7 @@ from app.services.handlers.thanks_handler import ThanksHandler
 from app.services.handlers.order_status_handler import OrderStatusHandler
 from app.services.handlers.product_search_handler import ProductSearchHandler
 from app.services.handlers.identity_handler import IdentityHandler
+from app.services.semantic.intent_matcher import SemanticIntentDetector
 
 class ChatbotService:
     """
@@ -41,6 +42,7 @@ class ChatbotService:
         gibberish_handler: GibberishHandler | None = None,
         faq_handler: FAQHandler | None = None,
         default_handler: DefaultHandler | None = None,
+        semantic_intent_detector: SemanticIntentDetector | None = None,
     ) -> None:
         self.greeting_detector = greeting_detector or GreetingDetector()
         self.thanks_detector = thanks_detector or ThanksDetector()
@@ -57,12 +59,13 @@ class ChatbotService:
         self.gibberish_handler = gibberish_handler or GibberishHandler()
         self.faq_handler = faq_handler or FAQHandler()
         self.default_handler = default_handler or DefaultHandler()
+        self.semantic_intent_detector = semantic_intent_detector or SemanticIntentDetector(faq_detector=self.faq_detector)
         self.normalizer = MessageNormalizer()
         
     def _create_context(self, request: ChatRequest) -> RequestContext:
         """Constructs the unified RequestContext from the incoming ChatRequest."""
         meta = request.metadata
-        return RequestContext(
+        ctx = RequestContext(
             raw_message=request.message,
             normalized_message=self.normalizer.normalize(request.message),
             conversation_id=str(uuid.uuid4()),  # To be passed from frontend later
@@ -82,8 +85,10 @@ class ChatbotService:
             timestamp=time.time(),
             is_authenticated=meta.is_authenticated if meta else False,
             user_id=meta.user_id if meta else None,
-            pending_state=(meta.pendingState or meta.pending_state) if meta else None
+            pending_state=meta.pendingState if meta else None
         )
+        logger.info(f"Created context with pending_state: {ctx.pending_state}")
+        return ctx
         
     def process_message(self, request: ChatRequest) -> ChatResponse:
         """
@@ -126,7 +131,10 @@ class ChatbotService:
                         max_price = val * 1000
                     else:
                         max_price = val
-                    
+                        
+            if max_price is not None and max_price > 10000000:
+                max_price = 10000000.0  # Cap extremely large numbers safely
+                
             context.product_search_result = ProductSearchResult(
                 is_product_search=True,
                 search_term=context.pending_state.search_term,
@@ -136,7 +144,8 @@ class ChatbotService:
             
             logger.info(f"Budget parsed: {max_price}. Routing straight to ProductSearchHandler.")
             res = self.product_search_handler.handle(context)
-            res.pending_state = None  # Clear pending state once handled
+            if res.type != "product_search_clarify":
+                res.pending_state = None  # Clear pending state once handled successfully
             return res
         
         # Step 2: Greeting Detection
@@ -207,6 +216,23 @@ class ChatbotService:
             context.faq_answer = getattr(faq_result, "answer", None)
             logger.info("Selected Handler: FAQHandler")
             return self.faq_handler.handle(context)
+            
+        # Step 3.6: Semantic Intent Matching (Fallback before DefaultHandler)
+        semantic_result = self.semantic_intent_detector.detect(context)
+        is_semantic_match = getattr(semantic_result, "is_match", False)
+        logger.info(f"Semantic Match: {is_semantic_match}")
+        
+        if is_semantic_match:
+            intent = getattr(semantic_result, "intent", None)
+            logger.info(f"Selected Handler based on semantic intent: {intent}")
+            if intent == "identity":
+                return self.identity_handler.handle(context)
+            elif intent == "order_status":
+                return self.order_status_handler.handle(context)
+            elif intent == "product_search":
+                return self.product_search_handler.handle(context)
+            elif intent and intent.startswith("faq_"):
+                return self.faq_handler.handle(context)
             
         # Step 4: Everything Else
         logger.info("Selected Handler: DefaultHandler")

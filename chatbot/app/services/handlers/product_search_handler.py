@@ -4,11 +4,44 @@ from app.config import get_settings
 from app.models.schema import ChatResponse, RequestContext, PendingState
 from app.services.interfaces import BaseHandler
 
+# Increased fetch limit to ensure we have enough items for post-filtering
+# (e.g., if Express API returns newest Bedroom items first for a 'bed' search, 
+# a limit of 5 might only return wardrobes and lamps, leaving 0 actual beds after filtering)
+PRODUCT_SEARCH_FETCH_LIMIT = 50
+
 class ProductSearchHandler(BaseHandler):
     """Handles product search queries by calling the Express products API, supporting clarification loops."""
 
     def __init__(self) -> None:
         self.settings = get_settings()
+
+    def _filter_category_substring_matches(self, products_raw: list, search_term: str) -> list:
+        """
+        Filters out products that only matched because the search_term is a substring 
+        of the category (e.g. searching 'bed' matching 'Bedroom' category), unless
+        the user was explicitly searching for a category name.
+        """
+        if not products_raw or not search_term:
+            return products_raw
+            
+        term = search_term.lower()
+        categories = ["living room", "bedroom", "dining room", "office", "outdoor", "kitchen", "decor", "lighting"]
+        term_clean = term.replace(" ", "")
+        is_category_search = any(term_clean == c.replace(" ", "") for c in categories)
+        
+        if is_category_search:
+            return products_raw
+            
+        import re
+        filtered = []
+        pattern = re.compile(r'\b' + re.escape(term) + r'\b')
+        for p in products_raw:
+            name = (p.get("name") or "").lower()
+            desc = (p.get("description") or "").lower()
+            brand = (p.get("brand") or "").lower()
+            if pattern.search(name) or pattern.search(desc) or pattern.search(brand):
+                filtered.append(p)
+        return filtered
 
     def handle(self, context: RequestContext) -> ChatResponse:
         result = context.product_search_result
@@ -36,7 +69,7 @@ class ProductSearchHandler(BaseHandler):
             )
 
         # 2. Budget is present, execute API call
-        params = {"limit": 5}
+        params = {"limit": PRODUCT_SEARCH_FETCH_LIMIT}
         if result.search_term:
             params["search"] = result.search_term
         if result.category:
@@ -70,11 +103,14 @@ class ProductSearchHandler(BaseHandler):
             data_payload = res_data.get("data") or {}
             products_raw = data_payload.get("products") or []
 
+            # Filter out category-only substring matches
+            products_raw = self._filter_category_substring_matches(products_raw, result.search_term)
+
             fallback_used = False
             category_fallback_used = False
             if not products_raw and result.max_price is not None:
                 logger.info("First search returned zero results. Retrying query without budget constraint.")
-                fallback_params = {"limit": 5}
+                fallback_params = {"limit": PRODUCT_SEARCH_FETCH_LIMIT}
                 if result.search_term:
                     fallback_params["search"] = result.search_term
                 if result.category:
@@ -88,6 +124,10 @@ class ProductSearchHandler(BaseHandler):
                         if fallback_data.get("success"):
                             fallback_payload = fallback_data.get("data") or {}
                             products_raw = fallback_payload.get("products") or []
+                            
+                            # Filter out category-only substring matches for the fallback as well
+                            products_raw = self._filter_category_substring_matches(products_raw, result.search_term)
+                            
                             if products_raw:
                                 fallback_used = True
                                 logger.info(f"Fallback search succeeded, found {len(products_raw)} products.")
@@ -97,7 +137,7 @@ class ProductSearchHandler(BaseHandler):
             # Category-only fallback if search_term + category returned no results
             if not products_raw and result.search_term and result.category:
                 logger.info(f"Search for '{result.search_term}' in '{result.category}' returned zero results. Retrying with category only.")
-                category_params = {"limit": 5, "category": result.category}
+                category_params = {"limit": 50, "category": result.category}
                 try:
                     with httpx.Client(timeout=5.0) as client:
                         category_res = client.get(url, params=category_params)
