@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import api from '../services/api';
+import { create } from "zustand";
+import api from "../services/api";
 
 const useOrderStore = create((set, get) => ({
   orders: [],
@@ -11,11 +11,14 @@ const useOrderStore = create((set, get) => ({
   checkout: async (checkoutData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/orders/checkout', checkoutData);
+      const response = await api.post("/orders/checkout", checkoutData);
       set({ currentOrder: response.data.data, isLoading: false });
       return response.data.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Checkout failed', isLoading: false });
+      set({
+        error: error.response?.data?.message || "Checkout failed",
+        isLoading: false,
+      });
       return null;
     }
   },
@@ -27,10 +30,14 @@ const useOrderStore = create((set, get) => ({
     }
 
     try {
-      const response = await api.get('/orders');
+      const response = await api.get("/orders");
       set({ orders: response.data.data, isLoading: false, hasFetched: true });
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch orders', isLoading: false, hasFetched: true });
+      set({
+        error: error.response?.data?.message || "Failed to fetch orders",
+        isLoading: false,
+        hasFetched: true,
+      });
     }
   },
 
@@ -41,10 +48,13 @@ const useOrderStore = create((set, get) => ({
       set({ currentOrder: response.data.data, isLoading: false });
       return response.data.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to fetch order', isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to fetch order",
+        isLoading: false,
+      });
       return null;
     }
-  }
+  },
 }));
 
 export default useOrderStore;

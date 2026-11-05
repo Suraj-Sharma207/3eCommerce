@@ -1,79 +1,96 @@
-import React, { useEffect, useState, useRef } from'react';
-import useAuthStore from'../store/authStore';
-import useSettingsStore from'../store/settingsStore';
-import Modal from'../components/ui/Modal';
-import Button from'../components/ui/Button';
+import React, { useEffect, useState, useRef } from "react";
+import useAuthStore from "../store/authStore";
+import useSettingsStore from "../store/settingsStore";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 
 const SessionTimeoutProvider = ({ children }) => {
- const { isAuthenticated, logout } = useAuthStore();
- const { publicConfig } = useSettingsStore();
- 
- const [showWarning, setShowWarning] = useState(false);
- const timeoutRef = useRef(null);
- const warningRef = useRef(null);
+  const { isAuthenticated, logout } = useAuthStore();
+  const { publicConfig } = useSettingsStore();
 
- useEffect(() => {
- if (!isAuthenticated) {
- clearTimeout(timeoutRef.current);
- clearTimeout(warningRef.current);
- return;
- }
+  const [showWarning, setShowWarning] = useState(false);
+  const timeoutRef = useRef(null);
+  const warningRef = useRef(null);
 
- // Default to 24h if not specified
- const sessionTimeoutStr = publicConfig?.sessionTimeout ||'24h';
- let timeoutMs = 24 * 60 * 60 * 1000;
- 
- if (sessionTimeoutStr.endsWith('m')) timeoutMs = parseInt(sessionTimeoutStr) * 60 * 1000;
- else if (sessionTimeoutStr.endsWith('h')) timeoutMs = parseInt(sessionTimeoutStr) * 60 * 60 * 1000;
- else if (sessionTimeoutStr.endsWith('d')) timeoutMs = parseInt(sessionTimeoutStr) * 24 * 60 * 60 * 1000;
+  useEffect(() => {
+    if (!isAuthenticated) {
+      clearTimeout(timeoutRef.current);
+      clearTimeout(warningRef.current);
+      return;
+    }
 
- const resetTimers = () => {
- clearTimeout(timeoutRef.current);
- clearTimeout(warningRef.current);
+    // Default to 24h if not specified
+    const sessionTimeoutStr = publicConfig?.sessionTimeout || "24h";
+    let timeoutMs = 24 * 60 * 60 * 1000;
 
- if (showWarning) setShowWarning(false);
+    if (sessionTimeoutStr.endsWith("m"))
+      timeoutMs = parseInt(sessionTimeoutStr) * 60 * 1000;
+    else if (sessionTimeoutStr.endsWith("h"))
+      timeoutMs = parseInt(sessionTimeoutStr) * 60 * 60 * 1000;
+    else if (sessionTimeoutStr.endsWith("d"))
+      timeoutMs = parseInt(sessionTimeoutStr) * 24 * 60 * 60 * 1000;
 
- // Show warning 1 minute before timeout (if timeout > 2m)
- const warningTime = timeoutMs > 120000 ? timeoutMs - 60000 : timeoutMs / 2;
+    const resetTimers = () => {
+      clearTimeout(timeoutRef.current);
+      clearTimeout(warningRef.current);
 
- warningRef.current = setTimeout(() => {
- setShowWarning(true);
- }, warningTime);
+      if (showWarning) setShowWarning(false);
 
- timeoutRef.current = setTimeout(() => {
- logout();
- setShowWarning(false);
- }, timeoutMs);
- };
+      // Show warning 1 minute before timeout (if timeout > 2m)
+      const warningTime =
+        timeoutMs > 120000 ? timeoutMs - 60000 : timeoutMs / 2;
 
- resetTimers();
+      warningRef.current = setTimeout(() => {
+        setShowWarning(true);
+      }, warningTime);
 
- const activityEvents = ['mousedown','keydown','scroll','touchstart'];
- const handleActivity = () => resetTimers();
+      timeoutRef.current = setTimeout(() => {
+        logout();
+        setShowWarning(false);
+      }, timeoutMs);
+    };
 
- activityEvents.forEach(e => window.addEventListener(e, handleActivity));
+    resetTimers();
 
- return () => {
- clearTimeout(timeoutRef.current);
- clearTimeout(warningRef.current);
- activityEvents.forEach(e => window.removeEventListener(e, handleActivity));
- };
- }, [isAuthenticated, publicConfig?.sessionTimeout, logout, showWarning]);
+    const activityEvents = ["mousedown", "keydown", "scroll", "touchstart"];
+    const handleActivity = () => resetTimers();
 
- return (
- <>
- {children}
- <Modal isOpen={showWarning} onClose={() => setShowWarning(false)} title="Session Expiring">
- <div className="p-4">
- <p className="text-text-primary mb-4">Your session will expire soon due to inactivity. Do you want to stay logged in?</p>
- <div className="flex justify-end gap-3">
- <Button variant="outline" onClick={() => logout()}>Log Out</Button>
- <Button onClick={() => setShowWarning(false)}>Stay Logged In</Button>
- </div>
- </div>
- </Modal>
- </>
- );
+    activityEvents.forEach((e) => window.addEventListener(e, handleActivity));
+
+    return () => {
+      clearTimeout(timeoutRef.current);
+      clearTimeout(warningRef.current);
+      activityEvents.forEach((e) =>
+        window.removeEventListener(e, handleActivity),
+      );
+    };
+  }, [isAuthenticated, publicConfig?.sessionTimeout, logout, showWarning]);
+
+  return (
+    <>
+      {children}
+      <Modal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+        title="Session Expiring"
+      >
+        <div className="p-4">
+          <p className="text-text-primary mb-4">
+            Your session will expire soon due to inactivity. Do you want to stay
+            logged in?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => logout()}>
+              Log Out
+            </Button>
+            <Button onClick={() => setShowWarning(false)}>
+              Stay Logged In
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
 };
 
 export default SessionTimeoutProvider;

@@ -2,7 +2,7 @@
  * Legacy Email Service Proxy
  * Delegating all operations to the new Domain-Driven Transactional Email Service.
  */
-import newEmailService from '../email/services/emailService.js';
+import newEmailService from "../email/services/emailService.js";
 
 class LegacyEmailServiceProxy {
   async sendOrderConfirmation(userEmail, order) {
@@ -27,7 +27,11 @@ class LegacyEmailServiceProxy {
   }
 
   async sendOrderShipped(userEmail, order, courierInfo) {
-    return await newEmailService.sendOrderShipped(userEmail, order, courierInfo);
+    return await newEmailService.sendOrderShipped(
+      userEmail,
+      order,
+      courierInfo,
+    );
   }
 
   async sendOrderDelivered(userEmail, order, date) {
@@ -43,7 +47,11 @@ class LegacyEmailServiceProxy {
   }
 
   async sendLowStockAlert(adminEmail, product, threshold) {
-    return await newEmailService.sendLowStockAlert(adminEmail, product, threshold);
+    return await newEmailService.sendLowStockAlert(
+      adminEmail,
+      product,
+      threshold,
+    );
   }
 }
 

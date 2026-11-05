@@ -1,6 +1,6 @@
 /**
  * Centralized Cookie Configuration
- * 
+ *
  * SECURITY: Cookie security flags are determined by the actual request
  * context (HTTPS detection), not just NODE_ENV. This correctly handles
  * reverse proxies (Nginx, Cloudflare, ALB) that terminate TLS.
@@ -13,21 +13,21 @@
  * @returns {boolean}
  */
 export const isSecureRequest = (req) => {
-  return req.secure || req.headers['x-forwarded-proto'] === 'https';
+  return req.secure || req.headers["x-forwarded-proto"] === "https";
 };
 
 export const getAuthCookieNames = (req) => {
   if (isSecureRequest(req)) {
     return {
-      access: '__Host-access',
-      refresh: '__Host-refresh',
-      csrf: '__Host-csrf',
+      access: "__Host-access",
+      refresh: "__Host-refresh",
+      csrf: "__Host-csrf",
     };
   }
   return {
-    access: 'accessToken',
-    refresh: 'refreshToken',
-    csrf: 'csrfToken',
+    access: "accessToken",
+    refresh: "refreshToken",
+    csrf: "csrfToken",
   };
 };
 
@@ -42,8 +42,8 @@ export const getAuthCookieOptions = (req, maxAge) => {
   return {
     httpOnly: true,
     secure,
-    sameSite: secure ? 'Strict' : 'Lax',
-    path: '/',
+    sameSite: secure ? "Strict" : "Lax",
+    path: "/",
     maxAge,
   };
 };
@@ -59,9 +59,9 @@ export const getCsrfCookieOptions = (req) => {
   return {
     httpOnly: true,
     secure,
-    sameSite: secure ? 'Strict' : 'Lax',
-    path: '/',
-    maxAge: 24 * 60 * 60 * 1000,  // 24 hours
+    sameSite: secure ? "Strict" : "Lax",
+    path: "/",
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
   };
 };
 
@@ -76,7 +76,7 @@ export const getClearCookieOptions = (req) => {
   return {
     httpOnly: true,
     secure,
-    sameSite: secure ? 'Strict' : 'Lax',
-    path: '/',
+    sameSite: secure ? "Strict" : "Lax",
+    path: "/",
   };
 };

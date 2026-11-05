@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import useChatStore from '../../store/chatStore';
-import ChatHeader from './ChatHeader';
-import ChatWindow from './ChatWindow';
-import ChatInput from './ChatInput';
-import ChatLauncher from './ChatLauncher';
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import useChatStore from "../../store/chatStore";
+import ChatHeader from "./ChatHeader";
+import ChatWindow from "./ChatWindow";
+import ChatInput from "./ChatInput";
+import ChatLauncher from "./ChatLauncher";
 
 /* Animation variants — panel grows out of the bottom-right corner (where the icon sits) */
 const panelVariants = {
@@ -42,7 +42,7 @@ export const ChatWidget = () => {
     sendMessage,
     clearMessages,
     toggleChat,
-    closeChat
+    closeChat,
   } = useChatStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
@@ -52,9 +52,16 @@ export const ChatWidget = () => {
   // Click outside to close chat
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isOpen && !isFullscreen && widgetRef.current && !widgetRef.current.contains(event.target)) {
+      if (
+        isOpen &&
+        !isFullscreen &&
+        widgetRef.current &&
+        !widgetRef.current.contains(event.target)
+      ) {
         // Prevent closing if we clicked the launcher button itself
-        const launcher = document.querySelector('[aria-label="Toggle chat assistant"]');
+        const launcher = document.querySelector(
+          '[aria-label="Toggle chat assistant"]',
+        );
         if (launcher && launcher.contains(event.target)) {
           return;
         }
@@ -62,22 +69,22 @@ export const ChatWidget = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, isFullscreen, closeChat]);
 
   // Lock body scroll when chat is open to prevent page scrolling in background
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
       setIsComposing(false);
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -111,7 +118,7 @@ export const ChatWidget = () => {
   };
 
   // Don't render chat widget in admin portal
-  if (location.pathname.startsWith('/admin')) {
+  if (location.pathname.startsWith("/admin")) {
     return null;
   }
 
@@ -126,11 +133,12 @@ export const ChatWidget = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            style={{ transformOrigin: 'bottom right' }}
-            className={`fixed z-[9999] chat-panel-premium flex flex-col ${isFullscreen
-                ? 'top-0 left-0 right-0 bottom-0 w-full h-full rounded-none'
-                : 'top-0 left-0 right-0 bottom-0 w-full h-full rounded-none sm:top-auto sm:left-auto chat-panel-desktop-size sm:max-w-[calc(100vw-32px)] sm:rounded-[28px]'
-              } overflow-hidden bg-white`}
+            style={{ transformOrigin: "bottom right" }}
+            className={`fixed z-[9999] chat-panel-premium flex flex-col ${
+              isFullscreen
+                ? "top-0 left-0 right-0 bottom-0 w-full h-full rounded-none"
+                : "top-0 left-0 right-0 bottom-0 w-full h-full rounded-none sm:top-auto sm:left-auto chat-panel-desktop-size sm:max-w-[calc(100vw-32px)] sm:rounded-[28px]"
+            } overflow-hidden bg-white`}
           >
             <ChatHeader
               onMinimize={handleMinimize}
@@ -154,19 +162,14 @@ export const ChatWidget = () => {
             />
 
             {(messages.length > 0 || isComposing) && (
-              <ChatInput
-                onSend={handleSendMessage}
-                disabled={isLoading}
-              />
+              <ChatInput onSend={handleSendMessage} disabled={isLoading} />
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Launcher button — always visible in its fixed position */}
-      {!isFullscreen && (
-        <ChatLauncher isOpen={isOpen} onClick={toggleChat} />
-      )}
+      {!isFullscreen && <ChatLauncher isOpen={isOpen} onClick={toggleChat} />}
     </>
   );
 };

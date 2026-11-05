@@ -1,5 +1,5 @@
-import prisma from '../lib/prisma.js';
-import { successResponse, errorResponse } from '../utils/response.js';
+import prisma from "../lib/prisma.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 class CookieController {
   async updateConsent(req, res, next) {
@@ -15,9 +15,9 @@ class CookieController {
           functional: Boolean(functional),
           marketing: Boolean(marketing),
           necessary: Boolean(necessary),
-          version: version || '1.0',
+          version: version || "1.0",
           ip: req.ip || req.socket?.remoteAddress,
-          browser: req.headers['user-agent']
+          browser: req.headers["user-agent"],
         },
         create: {
           userId,
@@ -25,13 +25,18 @@ class CookieController {
           functional: Boolean(functional),
           marketing: Boolean(marketing),
           necessary: Boolean(necessary),
-          version: version || '1.0',
+          version: version || "1.0",
           ip: req.ip || req.socket?.remoteAddress,
-          browser: req.headers['user-agent']
-        }
+          browser: req.headers["user-agent"],
+        },
       });
 
-      return successResponse(res, 'Cookie preferences updated successfully', { consent }, 200);
+      return successResponse(
+        res,
+        "Cookie preferences updated successfully",
+        { consent },
+        200,
+      );
     } catch (error) {
       next(error);
     }
@@ -41,14 +46,24 @@ class CookieController {
     try {
       const userId = req.user.id;
       const consent = await prisma.cookieConsent.findUnique({
-        where: { userId }
+        where: { userId },
       });
 
       if (!consent) {
-        return successResponse(res, 'No cookie preferences found', { consent: null }, 200);
+        return successResponse(
+          res,
+          "No cookie preferences found",
+          { consent: null },
+          200,
+        );
       }
 
-      return successResponse(res, 'Cookie preferences retrieved', { consent }, 200);
+      return successResponse(
+        res,
+        "Cookie preferences retrieved",
+        { consent },
+        200,
+      );
     } catch (error) {
       next(error);
     }

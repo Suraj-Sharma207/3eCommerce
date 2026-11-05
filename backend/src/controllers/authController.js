@@ -1,10 +1,18 @@
-import authService from '../services/authService.js';
-import { successResponse, errorResponse } from '../utils/response.js';
-import { getAuthCookieOptions, getClearCookieOptions, getAuthCookieNames } from '../utils/cookieConfig.js';
+import authService from "../services/authService.js";
+import { successResponse, errorResponse } from "../utils/response.js";
+import {
+  getAuthCookieOptions,
+  getClearCookieOptions,
+  getAuthCookieNames,
+} from "../utils/cookieConfig.js";
 // M-3 FIX: Removed dead setCsrfCookie import — it was a documented no-op
-import { verifyToken } from '../utils/jwt.js';
-import prisma from '../lib/prisma.js';
-import { cacheGet, cacheSet, cacheInvalidateByPattern } from '../services/cacheService.js';
+import { verifyToken } from "../utils/jwt.js";
+import prisma from "../lib/prisma.js";
+import {
+  cacheGet,
+  cacheSet,
+  cacheInvalidateByPattern,
+} from "../services/cacheService.js";
 
 class AuthController {
   async register(req, res, next) {
@@ -14,9 +22,9 @@ class AuthController {
       // H-1: Set auth cookies — never return token in JSON body
       // Registration currently does not create a session/refresh token,
       // so we only return user data. User must login separately.
-      return successResponse(res, 'User registered successfully', data, 201);
+      return successResponse(res, "User registered successfully", data, 201);
     } catch (error) {
-      if (error.message === 'User already exists') {
+      if (error.message === "User already exists") {
         return errorResponse(res, error.message, [], 400);
       }
       next(error);
@@ -27,24 +35,36 @@ class AuthController {
     try {
       const reqInfo = {
         ip: req.ip || req.socket?.remoteAddress,
-        userAgent: req.headers['user-agent']
+        userAgent: req.headers["user-agent"],
       };
 
-      const { user, accessToken, refreshToken, cookiesConfig } = await authService.login(req.body, reqInfo);
+      const { user, accessToken, refreshToken, cookiesConfig } =
+        await authService.login(req.body, reqInfo);
 
       // Use dynamic cookie names supporting Host prefix
       const cookieNames = getAuthCookieNames(req);
-      res.cookie(cookieNames.access, accessToken, getAuthCookieOptions(req, cookiesConfig.accessMaxAge));
-      res.cookie(cookieNames.refresh, refreshToken, getAuthCookieOptions(req, cookiesConfig.refreshMaxAge));
+      res.cookie(
+        cookieNames.access,
+        accessToken,
+        getAuthCookieOptions(req, cookiesConfig.accessMaxAge),
+      );
+      res.cookie(
+        cookieNames.refresh,
+        refreshToken,
+        getAuthCookieOptions(req, cookiesConfig.refreshMaxAge),
+      );
 
       // Never expose token in JSON response body — cookies handle auth
-      return successResponse(res, 'Login successful', { user }, 200);
+      return successResponse(res, "Login successful", { user }, 200);
     } catch (error) {
-      if (error.message === 'Invalid email or password.' || error.message.includes('Account locked')) {
+      if (
+        error.message === "Invalid email or password." ||
+        error.message.includes("Account locked")
+      ) {
         return errorResponse(res, error.message, [], 401);
       }
       // L-5 FIX: Handle email verification error
-      if (error.message.includes('verify your email')) {
+      if (error.message.includes("verify your email")) {
         return errorResponse(res, error.message, [], 403);
       }
       next(error);
@@ -54,7 +74,7 @@ class AuthController {
   async getMe(req, res, next) {
     try {
       const user = await authService.getMe(req.user.id);
-      return successResponse(res, 'User data retrieved', { user }, 200);
+      return successResponse(res, "User data retrieved", { user }, 200);
     } catch (error) {
       next(error);
     }
@@ -66,7 +86,8 @@ class AuthController {
       const clearOpts = getClearCookieOptions(req);
 
       // Always attempt session invalidation, even if cookie is missing.
-      const refreshToken = req.cookies?.[cookieNames.refresh] || req.cookies?.refreshToken;
+      const refreshToken =
+        req.cookies?.[cookieNames.refresh] || req.cookies?.refreshToken;
       if (refreshToken) {
         await authService.logout(refreshToken);
       }
@@ -81,19 +102,19 @@ class AuthController {
       res.clearCookie(cookieNames.refresh, clearOpts);
 
       // Clean up legacy cookies
-      res.clearCookie('accessToken', clearOpts);
-      res.clearCookie('refreshToken', clearOpts);
-      res.clearCookie('XSRF-TOKEN', { ...clearOpts, httpOnly: false });
+      res.clearCookie("accessToken", clearOpts);
+      res.clearCookie("refreshToken", clearOpts);
+      res.clearCookie("XSRF-TOKEN", { ...clearOpts, httpOnly: false });
 
-      return successResponse(res, 'Logged out successfully', {}, 200);
+      return successResponse(res, "Logged out successfully", {}, 200);
     } catch (error) {
       const cookieNames = getAuthCookieNames(req);
       const clearOpts = getClearCookieOptions(req);
       res.clearCookie(cookieNames.access, clearOpts);
       res.clearCookie(cookieNames.refresh, clearOpts);
-      res.clearCookie('accessToken', clearOpts);
-      res.clearCookie('refreshToken', clearOpts);
-      res.clearCookie('XSRF-TOKEN', { ...clearOpts, httpOnly: false });
+      res.clearCookie("accessToken", clearOpts);
+      res.clearCookie("refreshToken", clearOpts);
+      res.clearCookie("XSRF-TOKEN", { ...clearOpts, httpOnly: false });
       next(error);
     }
   }
@@ -101,12 +122,16 @@ class AuthController {
   async changePassword(req, res, next) {
     try {
       const { currentPassword, newPassword } = req.body;
-      await authService.changePassword(req.user.id, currentPassword, newPassword);
+      await authService.changePassword(
+        req.user.id,
+        currentPassword,
+        newPassword,
+      );
       // M-1 FIX: Invalidate session cache for the user on password change
       await cacheInvalidateByPattern(`user:session:${req.user.id}:*`);
-      return successResponse(res, 'Password changed successfully', {}, 200);
+      return successResponse(res, "Password changed successfully", {}, 200);
     } catch (error) {
-      if (error.message === 'Invalid current password') {
+      if (error.message === "Invalid current password") {
         return errorResponse(res, error.message, [], 400);
       }
       next(error);
@@ -117,7 +142,12 @@ class AuthController {
     try {
       const { email } = req.body;
       const result = await authService.forgotPassword(email);
-      return successResponse(res, 'If your email is registered, a password reset link has been sent.', result, 200);
+      return successResponse(
+        res,
+        "If your email is registered, a password reset link has been sent.",
+        result,
+        200,
+      );
     } catch (error) {
       next(error);
     }
@@ -128,9 +158,9 @@ class AuthController {
       const { token, password } = req.body;
       const result = await authService.resetPassword(token, password);
       // Let it fall through, the user will log in again anyways since tokenVersion changed
-      return successResponse(res, 'Password reset successfully', result, 200);
+      return successResponse(res, "Password reset successfully", result, 200);
     } catch (error) {
-      if (error.message === 'Invalid or expired password reset token') {
+      if (error.message === "Invalid or expired password reset token") {
         return errorResponse(res, error.message, [], 400);
       }
       next(error);
@@ -141,9 +171,9 @@ class AuthController {
     try {
       const { token } = req.body;
       const result = await authService.verifyEmail(token);
-      return successResponse(res, 'Email verified successfully', result, 200);
+      return successResponse(res, "Email verified successfully", result, 200);
     } catch (error) {
-      if (error.message === 'Invalid or expired email verification token') {
+      if (error.message === "Invalid or expired email verification token") {
         return errorResponse(res, error.message, [], 400);
       }
       next(error);
@@ -153,36 +183,51 @@ class AuthController {
   async refresh(req, res, next) {
     try {
       const cookieNames = getAuthCookieNames(req);
-      const refreshToken = req.cookies?.[cookieNames.refresh] || req.cookies?.refreshToken;
+      const refreshToken =
+        req.cookies?.[cookieNames.refresh] || req.cookies?.refreshToken;
       if (!refreshToken) {
-        return errorResponse(res, 'No refresh token provided', [], 401);
+        return errorResponse(res, "No refresh token provided", [], 401);
       }
 
       const reqInfo = {
         ip: req.ip || req.socket?.remoteAddress,
-        userAgent: req.headers['user-agent']
+        userAgent: req.headers["user-agent"],
       };
 
-      const { accessToken, newRefreshToken, cookiesConfig } = await authService.refresh(refreshToken, reqInfo);
+      const { accessToken, newRefreshToken, cookiesConfig } =
+        await authService.refresh(refreshToken, reqInfo);
 
-      res.cookie(cookieNames.access, accessToken, getAuthCookieOptions(req, cookiesConfig.accessMaxAge));
-      res.cookie(cookieNames.refresh, newRefreshToken, getAuthCookieOptions(req, cookiesConfig.refreshMaxAge));
+      res.cookie(
+        cookieNames.access,
+        accessToken,
+        getAuthCookieOptions(req, cookiesConfig.accessMaxAge),
+      );
+      res.cookie(
+        cookieNames.refresh,
+        newRefreshToken,
+        getAuthCookieOptions(req, cookiesConfig.refreshMaxAge),
+      );
 
       // Never expose token in JSON response body
-      return successResponse(res, 'Token refreshed successfully', {}, 200);
+      return successResponse(res, "Token refreshed successfully", {}, 200);
     } catch (error) {
       const cookieNames = getAuthCookieNames(req);
       const clearOpts = getClearCookieOptions(req);
       res.clearCookie(cookieNames.access, clearOpts);
       res.clearCookie(cookieNames.refresh, clearOpts);
-      res.clearCookie('accessToken', clearOpts);
-      res.clearCookie('refreshToken', clearOpts);
-      res.clearCookie('XSRF-TOKEN', { ...clearOpts, httpOnly: false });
+      res.clearCookie("accessToken", clearOpts);
+      res.clearCookie("refreshToken", clearOpts);
+      res.clearCookie("XSRF-TOKEN", { ...clearOpts, httpOnly: false });
       // M-2 FIX: Distinguish replay attack from normal token expiry
       if (error.isReplayAttack) {
-        return errorResponse(res, 'Session revoked due to security alert. Please login again.', [], 401);
+        return errorResponse(
+          res,
+          "Session revoked due to security alert. Please login again.",
+          [],
+          401,
+        );
       }
-      return errorResponse(res, 'Invalid or expired refresh token', [], 401);
+      return errorResponse(res, "Invalid or expired refresh token", [], 401);
     }
   }
 
@@ -207,7 +252,13 @@ class AuthController {
           } else {
             user = await prisma.user.findUnique({
               where: { id: decoded.id },
-              select: { id: true, name: true, email: true, role: true, tokenVersion: true }
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                tokenVersion: true,
+              },
             });
             // C-4 FIX: Verify tokenVersion matches — prevents stale sessions after password change or force-logout
             if (user && decoded.tokenVersion === user.tokenVersion) {
@@ -223,24 +274,31 @@ class AuthController {
 
       // Infer permissions from role (L-8: used for UI rendering hints only)
       const permissions = [];
-      if (user?.role === 'SUPER_ADMIN') {
-        permissions.push('all', 'admin', 'super_admin');
-      } else if (user?.role === 'ADMIN') {
-        permissions.push('admin');
-      } else if (user?.role === 'CUSTOMER') {
-        permissions.push('customer');
+      if (user?.role === "SUPER_ADMIN") {
+        permissions.push("all", "admin", "super_admin");
+      } else if (user?.role === "ADMIN") {
+        permissions.push("admin");
+      } else if (user?.role === "CUSTOMER") {
+        permissions.push("customer");
       }
 
-      return successResponse(res, 'Session status retrieved', {
-        authenticated,
-        user: user ? {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          permissions
-        } : null
-      }, 200);
+      return successResponse(
+        res,
+        "Session status retrieved",
+        {
+          authenticated,
+          user: user
+            ? {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                permissions,
+              }
+            : null,
+        },
+        200,
+      );
     } catch (error) {
       next(error);
     }

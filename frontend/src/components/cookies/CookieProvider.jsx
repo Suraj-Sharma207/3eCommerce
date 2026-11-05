@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import CookieContext from './CookieContext';
-import { getCookieConsent, setCookieConsent, clearCookieConsent, CONSENT_VERSION } from '../../utils/cookies';
-import useAuthStore from '../../store/authStore';
-import api from '../../services/api';
+import React, { useState, useEffect, useCallback } from "react";
+import CookieContext from "./CookieContext";
+import {
+  getCookieConsent,
+  setCookieConsent,
+  clearCookieConsent,
+  CONSENT_VERSION,
+} from "../../utils/cookies";
+import useAuthStore from "../../store/authStore";
+import api from "../../services/api";
 
 export const CookieProvider = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -15,10 +20,10 @@ export const CookieProvider = ({ children }) => {
   useEffect(() => {
     const initConsent = async () => {
       let localConsent = getCookieConsent();
-      
+
       if (isAuthenticated) {
         try {
-          const res = await api.get('/users/cookie-consent');
+          const res = await api.get("/users/cookie-consent");
           if (res.data?.data?.consent) {
             const serverConsent = res.data.data.consent;
             if (serverConsent.version === CONSENT_VERSION) {
@@ -26,12 +31,12 @@ export const CookieProvider = ({ children }) => {
                 analytics: serverConsent.analytics,
                 functional: serverConsent.functional,
                 marketing: serverConsent.marketing,
-                necessary: serverConsent.necessary
+                necessary: serverConsent.necessary,
               });
             }
           }
         } catch (error) {
-          console.error('Failed to fetch consent from server', error);
+          console.error("Failed to fetch consent from server", error);
         }
       }
 
@@ -43,30 +48,33 @@ export const CookieProvider = ({ children }) => {
     initConsent();
   }, [isAuthenticated]);
 
-  const saveConsent = useCallback(async (preferences) => {
-    const payload = setCookieConsent(preferences);
-    setConsentState(payload);
-    setShowBanner(false);
-    setShowPreferences(false);
+  const saveConsent = useCallback(
+    async (preferences) => {
+      const payload = setCookieConsent(preferences);
+      setConsentState(payload);
+      setShowBanner(false);
+      setShowPreferences(false);
 
-    if (isAuthenticated) {
-      try {
-        await api.post('/users/cookie-consent', {
-          ...payload,
-          version: CONSENT_VERSION
-        });
-      } catch (error) {
-        console.error('Failed to sync consent to server', error);
+      if (isAuthenticated) {
+        try {
+          await api.post("/users/cookie-consent", {
+            ...payload,
+            version: CONSENT_VERSION,
+          });
+        } catch (error) {
+          console.error("Failed to sync consent to server", error);
+        }
       }
-    }
-  }, [isAuthenticated]);
+    },
+    [isAuthenticated],
+  );
 
   const acceptAll = useCallback(() => {
     saveConsent({
       analytics: true,
       functional: true,
       marketing: true,
-      necessary: true
+      necessary: true,
     });
   }, [saveConsent]);
 
@@ -75,7 +83,7 @@ export const CookieProvider = ({ children }) => {
       analytics: false,
       functional: false,
       marketing: false,
-      necessary: true
+      necessary: true,
     });
   }, [saveConsent]);
 
@@ -96,12 +104,10 @@ export const CookieProvider = ({ children }) => {
     rejectNonEssential,
     saveConsent,
     openPreferences,
-    closePreferences
+    closePreferences,
   };
 
   return (
-    <CookieContext.Provider value={value}>
-      {children}
-    </CookieContext.Provider>
+    <CookieContext.Provider value={value}>{children}</CookieContext.Provider>
   );
 };

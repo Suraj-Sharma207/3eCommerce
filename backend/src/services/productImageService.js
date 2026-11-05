@@ -1,60 +1,92 @@
-import cloudinary from '../config/cloudinary.js';
-import prisma from '../lib/prisma.js';
-import productRepository from '../repositories/productRepository.js';
+import cloudinary from "../config/cloudinary.js";
+import prisma from "../lib/prisma.js";
+import productRepository from "../repositories/productRepository.js";
 
 /** Allowed MIME types */
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MIN_RESOLUTION = 800; // px
 
 /** Eager Cloudinary transforms for consistent variants */
 const EAGER_TRANSFORMS = [
-  { width: 150,  height: 150,  crop: 'fill', quality: 'auto', fetch_format: 'auto' },
-  { width: 400,  height: 400,  crop: 'fill', quality: 'auto', fetch_format: 'auto' },
-  { width: 800,  height: 800,  crop: 'fill', quality: 'auto', fetch_format: 'auto' },
-  { width: 1200, height: 1200, crop: 'fill', quality: 'auto', fetch_format: 'auto' },
+  {
+    width: 150,
+    height: 150,
+    crop: "fill",
+    quality: "auto",
+    fetch_format: "auto",
+  },
+  {
+    width: 400,
+    height: 400,
+    crop: "fill",
+    quality: "auto",
+    fetch_format: "auto",
+  },
+  {
+    width: 800,
+    height: 800,
+    crop: "fill",
+    quality: "auto",
+    fetch_format: "auto",
+  },
+  {
+    width: 1200,
+    height: 1200,
+    crop: "fill",
+    quality: "auto",
+    fetch_format: "auto",
+  },
 ];
 
 /**
  * Upload a single buffer to Cloudinary.
  * Returns Cloudinary response with secure_url, public_id, width, height, format, bytes.
  */
-const uploadToCloudinary = (buffer, mimetype, productId, filename = '') => {
+const uploadToCloudinary = (buffer, mimetype, productId, filename = "") => {
   return new Promise((resolve, reject) => {
-    const b64 = Buffer.from(buffer).toString('base64');
+    const b64 = Buffer.from(buffer).toString("base64");
     const dataUri = `data:${mimetype};base64,${b64}`;
 
-    cloudinary.uploader.upload(dataUri, {
-      folder: `products/${productId}`,
-      resource_type: 'image',
-      eager: EAGER_TRANSFORMS,
-      eager_async: false,
-      use_filename: true,
-      unique_filename: true,
-    }, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
-    });
+    cloudinary.uploader.upload(
+      dataUri,
+      {
+        folder: `products/${productId}`,
+        resource_type: "image",
+        eager: EAGER_TRANSFORMS,
+        eager_async: false,
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
   });
 };
 
 /**
  * Upload a single Unsplash URL to Cloudinary (used during seeding).
  */
-const uploadUrlToCloudinary = (url, productId, publicIdHint = '') => {
+const uploadUrlToCloudinary = (url, productId, publicIdHint = "") => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(url, {
-      folder: `products/${productId}`,
-      resource_type: 'image',
-      eager: EAGER_TRANSFORMS,
-      eager_async: false,
-      use_filename: false,
-      unique_filename: true,
-      public_id: publicIdHint || undefined,
-    }, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
-    });
+    cloudinary.uploader.upload(
+      url,
+      {
+        folder: `products/${productId}`,
+        resource_type: "image",
+        eager: EAGER_TRANSFORMS,
+        eager_async: false,
+        use_filename: false,
+        unique_filename: true,
+        public_id: publicIdHint || undefined,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
   });
 };
 
@@ -85,11 +117,11 @@ class ProductImageService {
    */
   async uploadImages(productId, files) {
     if (!files || files.length === 0) {
-      throw { statusCode: 400, message: 'No files provided' };
+      throw { statusCode: 400, message: "No files provided" };
     }
 
     // Validate all files first before any upload
-    files.forEach(f => this.validateFile(f));
+    files.forEach((f) => this.validateFile(f));
 
     const existingCount = await productRepository.countImages(productId);
     const createdImages = [];
@@ -97,7 +129,12 @@ class ProductImageService {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const result = await uploadToCloudinary(file.buffer, file.mimetype, productId, file.originalname);
+        const result = await uploadToCloudinary(
+          file.buffer,
+          file.mimetype,
+          productId,
+          file.originalname,
+        );
 
         // Enforce minimum resolution
         if (result.width < MIN_RESOLUTION || result.height < MIN_RESOLUTION) {
@@ -165,58 +202,81 @@ class ProductImageService {
    * Auto-promotes next image if primary is deleted.
    */
   async deleteImage(productId, imageId) {
-    console.log(`[ImageService.deleteImage] productId=${productId} imageId=${imageId}`);
+    console.log(
+      `[ImageService.deleteImage] productId=${productId} imageId=${imageId}`,
+    );
 
     // 1. Look up the image first — before counting — so we get proper 404 if it doesn't exist
     const image = await productRepository.getImageById(imageId);
     if (!image) {
-      console.warn(`[ImageService.deleteImage] Image ${imageId} not found in DB`);
+      console.warn(
+        `[ImageService.deleteImage] Image ${imageId} not found in DB`,
+      );
       throw { statusCode: 404, message: `Image not found: ${imageId}` };
     }
 
     // 2. Verify this image belongs to the specified product
     if (image.productId !== productId) {
-      console.warn(`[ImageService.deleteImage] Image ${imageId} belongs to product ${image.productId}, not ${productId}`);
-      throw { statusCode: 404, message: 'Image not found for this product' };
+      console.warn(
+        `[ImageService.deleteImage] Image ${imageId} belongs to product ${image.productId}, not ${productId}`,
+      );
+      throw { statusCode: 404, message: "Image not found for this product" };
     }
 
     // 3. Count remaining images for this product
     const count = await productRepository.countImages(productId);
-    console.log(`[ImageService.deleteImage] Product ${productId} has ${count} image(s)`);
+    console.log(
+      `[ImageService.deleteImage] Product ${productId} has ${count} image(s)`,
+    );
 
     if (count <= 1) {
-      console.warn(`[ImageService.deleteImage] Refusing delete — only ${count} image remaining`);
+      console.warn(
+        `[ImageService.deleteImage] Refusing delete — only ${count} image remaining`,
+      );
       throw {
         statusCode: 409,
-        message: 'Cannot delete the only remaining image. A product must have at least one image.',
+        message:
+          "Cannot delete the only remaining image. A product must have at least one image.",
       };
     }
 
     const wasPrimary = image.isPrimary;
-    console.log(`[ImageService.deleteImage] isPrimary=${wasPrimary} publicId=${image.publicId}`);
+    console.log(
+      `[ImageService.deleteImage] isPrimary=${wasPrimary} publicId=${image.publicId}`,
+    );
 
     // 4. Delete from database first
     await productRepository.deleteImage(imageId);
-    console.log(`[ImageService.deleteImage] DB record deleted for imageId=${imageId}`);
+    console.log(
+      `[ImageService.deleteImage] DB record deleted for imageId=${imageId}`,
+    );
 
     // 5. Delete from Cloudinary (non-blocking — DB is already consistent)
     if (image.publicId) {
       try {
         const cldResult = await cloudinary.uploader.destroy(image.publicId);
-        console.log(`[ImageService.deleteImage] Cloudinary destroy result: ${JSON.stringify(cldResult)} for ${image.publicId}`);
+        console.log(
+          `[ImageService.deleteImage] Cloudinary destroy result: ${JSON.stringify(cldResult)} for ${image.publicId}`,
+        );
       } catch (err) {
-        console.error(`[ImageService.deleteImage] Cloudinary delete failed for ${image.publicId}: ${err.message}`);
+        console.error(
+          `[ImageService.deleteImage] Cloudinary delete failed for ${image.publicId}: ${err.message}`,
+        );
         // Don't re-throw — DB is already consistent, Cloudinary can be cleaned up separately
       }
     } else {
-      console.log(`[ImageService.deleteImage] No publicId — skipping Cloudinary delete`);
+      console.log(
+        `[ImageService.deleteImage] No publicId — skipping Cloudinary delete`,
+      );
     }
 
     // 6. Auto-promote next image if we deleted the primary
     if (wasPrimary) {
       const remaining = await productRepository.getImagesByProductId(productId);
       if (remaining.length > 0) {
-        console.log(`[ImageService.deleteImage] Promoting ${remaining[0].id} as new primary`);
+        console.log(
+          `[ImageService.deleteImage] Promoting ${remaining[0].id} as new primary`,
+        );
         await productRepository.setPrimaryImage(productId, remaining[0].id);
       }
     }
@@ -231,7 +291,7 @@ class ProductImageService {
   async setPrimaryImage(productId, imageId) {
     const image = await productRepository.getImageById(imageId);
     if (!image || image.productId !== productId) {
-      throw { statusCode: 404, message: 'Image not found' };
+      throw { statusCode: 404, message: "Image not found" };
     }
 
     await productRepository.setPrimaryImage(productId, imageId);
@@ -243,7 +303,10 @@ class ProductImageService {
    */
   async reorderImages(productId, orderedIds) {
     if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-      throw { statusCode: 400, message: 'orderedIds must be a non-empty array' };
+      throw {
+        statusCode: 400,
+        message: "orderedIds must be a non-empty array",
+      };
     }
 
     await productRepository.reorderImages(productId, orderedIds);

@@ -1,4 +1,4 @@
-import { errorResponse } from '../utils/response.js';
+import { errorResponse } from "../utils/response.js";
 
 export const validate = (schema) => (req, res, next) => {
   try {
@@ -9,10 +9,10 @@ export const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (error) {
-    const errors = error.errors.map(err => ({
-      field: err.path.join('.'),
-      message: err.message
+    const errors = error.errors.map((err) => ({
+      field: err.path.join("."),
+      message: err.message,
     }));
-    return errorResponse(res, 'Validation failed', errors, 400);
+    return errorResponse(res, "Validation failed", errors, 400);
   }
 };

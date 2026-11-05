@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import settingsService from '../services/settingsService';
+import { create } from "zustand";
+import settingsService from "../services/settingsService";
 
 let fetchPublicConfigPromise = null;
 
@@ -23,7 +23,7 @@ const useSettingsStore = create((set, get) => ({
         const { data } = await settingsService.getPublicConfig();
         set({ publicConfig: data || {} });
       } catch (error) {
-        console.error('Failed to fetch public config');
+        console.error("Failed to fetch public config");
       } finally {
         fetchPublicConfigPromise = null;
       }
@@ -53,7 +53,8 @@ const useSettingsStore = create((set, get) => ({
           ...state.domains,
           [domain]: { ...state.domains[domain], isLoading: false },
         },
-        error: error.response?.data?.message || `Failed to fetch ${domain} settings`,
+        error:
+          error.response?.data?.message || `Failed to fetch ${domain} settings`,
       }));
     }
   },
@@ -67,7 +68,10 @@ const useSettingsStore = create((set, get) => ({
       error: null,
     }));
     try {
-      const { data } = await settingsService.updateDomainSettings(domain, newData);
+      const { data } = await settingsService.updateDomainSettings(
+        domain,
+        newData,
+      );
       set((state) => ({
         domains: {
           ...state.domains,
@@ -81,7 +85,9 @@ const useSettingsStore = create((set, get) => ({
           ...state.domains,
           [domain]: { ...state.domains[domain], isSaving: false },
         },
-        error: error.response?.data?.message || `Failed to update ${domain} settings`,
+        error:
+          error.response?.data?.message ||
+          `Failed to update ${domain} settings`,
       }));
       return false;
     }
@@ -95,9 +101,12 @@ const useSettingsStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       set({ isTestingSmtp: false });
-      return { success: false, message: error.response?.data?.message || 'SMTP Test failed' };
+      return {
+        success: false,
+        message: error.response?.data?.message || "SMTP Test failed",
+      };
     }
-  }
+  },
 }));
 
 export default useSettingsStore;

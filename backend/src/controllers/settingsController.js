@@ -1,26 +1,25 @@
-import settingsService from '../services/settingsService.js';
-import { logAudit } from '../services/auditLogger.js';
-import { getFrontendUrl } from '../utils/urlUtils.js';
-import { successResponse, errorResponse } from '../utils/response.js';
-import nodemailer from 'nodemailer';
-import { cacheGet, cacheSet, cacheDel } from '../services/cacheService.js';
+import settingsService from "../services/settingsService.js";
+import { logAudit } from "../services/auditLogger.js";
+import { getFrontendUrl } from "../utils/urlUtils.js";
+import { successResponse, errorResponse } from "../utils/response.js";
+import nodemailer from "nodemailer";
+import { cacheGet, cacheSet, cacheDel } from "../services/cacheService.js";
 
 class SettingsController {
-  
   // Internal helper
   async handleGet(req, res, domain) {
     try {
       const cacheKey = `settings:domain:${domain}`;
       const cached = await cacheGet(cacheKey);
       if (cached) {
-        return successResponse(res, 'Settings fetched successfully', cached);
+        return successResponse(res, "Settings fetched successfully", cached);
       }
 
       const data = await settingsService.getSettingsByKeys([domain]);
       let responseData = data[domain] || {};
-      
+
       // Never expose passwords or secrets to frontend
-      if (domain === 'smtp') {
+      if (domain === "smtp") {
         if (responseData.password) {
           responseData.passwordConfigured = true;
           delete responseData.password;
@@ -28,9 +27,13 @@ class SettingsController {
           responseData.passwordConfigured = false;
         }
       }
-      
+
       await cacheSet(cacheKey, responseData, 1800); // 30 mins
-      return successResponse(res, 'Settings fetched successfully', responseData);
+      return successResponse(
+        res,
+        "Settings fetched successfully",
+        responseData,
+      );
     } catch (error) {
       console.error(`Error fetching ${domain} settings:`, error);
       return errorResponse(res, `Failed to fetch ${domain} settings`);
@@ -50,7 +53,7 @@ class SettingsController {
 
       // Invalidate settings caches
       await cacheDel(`settings:domain:${domain}`);
-      await cacheDel('settings:public');
+      await cacheDel("settings:public");
 
       // L-9 FIX: Scrub sensitive fields before writing to audit log
       const sanitizedBody = { ...req.body };
@@ -65,11 +68,11 @@ class SettingsController {
         section: domain,
         oldValue: oldData,
         newValue: sanitizedBody,
-        ipAddress: req.ip || req.socket?.remoteAddress
+        ipAddress: req.ip || req.socket?.remoteAddress,
       });
 
       let responseData = newData[domain] || {};
-      if (domain === 'smtp') {
+      if (domain === "smtp") {
         if (responseData.password) {
           responseData.passwordConfigured = true;
           delete responseData.password;
@@ -78,7 +81,11 @@ class SettingsController {
         }
       }
 
-      return successResponse(res, 'Settings updated successfully', responseData);
+      return successResponse(
+        res,
+        "Settings updated successfully",
+        responseData,
+      );
     } catch (error) {
       console.error(`Error updating ${domain} settings:`, error);
       return errorResponse(res, `Failed to update ${domain} settings`);
@@ -86,23 +93,24 @@ class SettingsController {
   }
 
   // Domain specific getters/setters
-  getStore = (req, res) => this.handleGet(req, res, 'store');
-  updateStore = (req, res) => this.handleUpdate(req, res, 'store');
+  getStore = (req, res) => this.handleGet(req, res, "store");
+  updateStore = (req, res) => this.handleUpdate(req, res, "store");
 
-  getShipping = (req, res) => this.handleGet(req, res, 'shipping');
-  updateShipping = (req, res) => this.handleUpdate(req, res, 'shipping');
+  getShipping = (req, res) => this.handleGet(req, res, "shipping");
+  updateShipping = (req, res) => this.handleUpdate(req, res, "shipping");
 
-  getPayment = (req, res) => this.handleGet(req, res, 'payment');
-  updatePayment = (req, res) => this.handleUpdate(req, res, 'payment');
+  getPayment = (req, res) => this.handleGet(req, res, "payment");
+  updatePayment = (req, res) => this.handleUpdate(req, res, "payment");
 
-  getSmtp = (req, res) => this.handleGet(req, res, 'smtp');
-  updateSmtp = (req, res) => this.handleUpdate(req, res, 'smtp');
+  getSmtp = (req, res) => this.handleGet(req, res, "smtp");
+  updateSmtp = (req, res) => this.handleUpdate(req, res, "smtp");
 
-  getSecurity = (req, res) => this.handleGet(req, res, 'security');
-  updateSecurity = (req, res) => this.handleUpdate(req, res, 'security');
+  getSecurity = (req, res) => this.handleGet(req, res, "security");
+  updateSecurity = (req, res) => this.handleUpdate(req, res, "security");
 
-  getNotifications = (req, res) => this.handleGet(req, res, 'notifications');
-  updateNotifications = (req, res) => this.handleUpdate(req, res, 'notifications');
+  getNotifications = (req, res) => this.handleGet(req, res, "notifications");
+  updateNotifications = (req, res) =>
+    this.handleUpdate(req, res, "notifications");
 
   // Test SMTP connection
   async testSmtp(req, res) {
@@ -110,46 +118,83 @@ class SettingsController {
     const toEmail = req.user?.email;
 
     // Use DB password if it's omitted
-    if (!password || password.trim() === '') {
-      const dbSettings = await settingsService.getSettingsByKeys(['smtp']);
+    if (!password || password.trim() === "") {
+      const dbSettings = await settingsService.getSettingsByKeys(["smtp"]);
       if (dbSettings.smtp?.password) {
         password = dbSettings.smtp.password;
       }
     }
 
     // Validation
-    if (!host) return errorResponse(res, 'SMTP configuration incomplete: missing host', [], 400);
-    if (!port) return errorResponse(res, 'SMTP configuration incomplete: missing port', [], 400);
-    if (!user) return errorResponse(res, 'SMTP configuration incomplete: missing username', [], 400);
-    if (!password) return res.status(400).json({ success: false, message: 'SMTP password has not been configured.' });
-    if (!fromEmail) return errorResponse(res, 'SMTP configuration incomplete: missing sender email', [], 400);
-    if (!toEmail) return errorResponse(res, 'Recipient email missing', [], 400);
+    if (!host)
+      return errorResponse(
+        res,
+        "SMTP configuration incomplete: missing host",
+        [],
+        400,
+      );
+    if (!port)
+      return errorResponse(
+        res,
+        "SMTP configuration incomplete: missing port",
+        [],
+        400,
+      );
+    if (!user)
+      return errorResponse(
+        res,
+        "SMTP configuration incomplete: missing username",
+        [],
+        400,
+      );
+    if (!password)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "SMTP password has not been configured.",
+        });
+    if (!fromEmail)
+      return errorResponse(
+        res,
+        "SMTP configuration incomplete: missing sender email",
+        [],
+        400,
+      );
+    if (!toEmail) return errorResponse(res, "Recipient email missing", [], 400);
 
     let transporter;
     try {
       transporter = nodemailer.createTransport({
         host,
         port: parseInt(port),
-        secure: secure === 'true' || secure === true,
-        auth: { user, pass: password }
+        secure: secure === "true" || secure === true,
+        auth: { user, pass: password },
       });
     } catch (err) {
-      console.error('[SMTP TEST] Failed to create transporter:', err);
-      return errorResponse(res, 'Failed to create SMTP transporter', [], 400);
+      console.error("[SMTP TEST] Failed to create transporter:", err);
+      return errorResponse(res, "Failed to create SMTP transporter", [], 400);
     }
 
     try {
       await transporter.verify();
     } catch (verifyError) {
-      console.error(`[SMTP TEST] Verification failed. Host: ${host}:${port}, Secure: ${secure}, User: ${user}, PassLength: ${password?.length || 0}`);
-      
+      console.error(
+        `[SMTP TEST] Verification failed. Host: ${host}:${port}, Secure: ${secure}, User: ${user}, PassLength: ${password?.length || 0}`,
+      );
+
       let reason = verifyError.message;
-      if (verifyError.responseCode === 535 || reason.includes('535') || reason.includes('Username and Password not accepted')) {
-        reason = 'Invalid Gmail App Password or Username and Password not accepted';
-      } else if (verifyError.code === 'ETIMEDOUT') {
-        reason = 'Connection timeout';
+      if (
+        verifyError.responseCode === 535 ||
+        reason.includes("535") ||
+        reason.includes("Username and Password not accepted")
+      ) {
+        reason =
+          "Invalid Gmail App Password or Username and Password not accepted";
+      } else if (verifyError.code === "ETIMEDOUT") {
+        reason = "Connection timeout";
       }
-      
+
       return errorResponse(res, reason, [], 400);
     }
 
@@ -157,34 +202,49 @@ class SettingsController {
       await transporter.sendMail({
         from: `"${fromEmail}" <${user}>`,
         to: toEmail,
-        subject: 'SMTP Test Successful',
-        text: 'Your SMTP configuration is working correctly.'
+        subject: "SMTP Test Successful",
+        text: "Your SMTP configuration is working correctly.",
       });
-      return successResponse(res, 'SMTP connection verified successfully', null);
+      return successResponse(
+        res,
+        "SMTP connection verified successfully",
+        null,
+      );
     } catch (sendError) {
       // M-7 FIX: Don't leak raw SMTP error details to client
-      console.error(`[SMTP TEST] Send failed. Host: ${host}:${port}, User: ${user}, PassLength: ${password?.length || 0}`, sendError);
-      return errorResponse(res, 'Failed to send test email. Check server logs for details.', [], 400);
+      console.error(
+        `[SMTP TEST] Send failed. Host: ${host}:${port}, User: ${user}, PassLength: ${password?.length || 0}`,
+        sendError,
+      );
+      return errorResponse(
+        res,
+        "Failed to send test email. Check server logs for details.",
+        [],
+        400,
+      );
     }
   }
 
   // Diagnostic Endpoint
   async diagnosticSmtp(req, res) {
     try {
-      const { default: smtpProvider } = await import('../email/providers/smtpProvider.js');
-      
+      const { default: smtpProvider } =
+        await import("../email/providers/smtpProvider.js");
+
       const config = await smtpProvider.getLatestSmtpConfig();
-      const isFallback = config.source === 'env';
-      
+      const isFallback = config.source === "env";
+
       const diagnostics = {
         configurationLoaded: true,
-        configurationSource: isFallback ? 'Environment Variables (.env)' : 'Database (SystemSettings)',
+        configurationSource: isFallback
+          ? "Environment Variables (.env)"
+          : "Database (SystemSettings)",
         passwordExists: !!config.password,
         passwordDecryptsSuccessfully: !!config.password && !isFallback, // Decrypted successfully if it exists in DB
         transporterCreation: false,
         smtpConnection: false,
         gmailAuthentication: false,
-        testEmailDelivery: false
+        testEmailDelivery: false,
       };
 
       try {
@@ -192,7 +252,7 @@ class SettingsController {
           host: config.host,
           port: config.port,
           secure: config.secure,
-          auth: { user: config.user, pass: config.password }
+          auth: { user: config.user, pass: config.password },
         });
         diagnostics.transporterCreation = true;
 
@@ -201,44 +261,70 @@ class SettingsController {
         diagnostics.gmailAuthentication = true;
 
         // H-6 FIX: Corrected import path (was ../../services/ which doesn't exist)
-      const { default: brandingService } = await import('../services/brandingService.js');
+        const { default: brandingService } =
+          await import("../services/brandingService.js");
         const branding = await brandingService.getBranding();
 
-        const toEmail = req.user?.email || `admin@${branding.platformName.toLowerCase().replace(/\s+/g, '')}.com`;
+        const toEmail =
+          req.user?.email ||
+          `admin@${branding.platformName.toLowerCase().replace(/\s+/g, "")}.com`;
         await transporter.sendMail({
           from: `"${config.fromEmail}" <${config.user}>`,
           to: toEmail,
           subject: `${branding.platformName} SMTP Diagnostics Test`,
-          text: `This is a diagnostic email from the ${branding.platformName} SMTP test suite.`
+          text: `This is a diagnostic email from the ${branding.platformName} SMTP test suite.`,
         });
         diagnostics.testEmailDelivery = true;
-        
-        return successResponse(res, 'SMTP Diagnostics completed successfully', diagnostics);
+
+        return successResponse(
+          res,
+          "SMTP Diagnostics completed successfully",
+          diagnostics,
+        );
       } catch (err) {
         let reason = err.message;
-        if (err.responseCode === 535 || reason.includes('535') || reason.includes('Username and Password not accepted')) {
-          reason = 'Invalid Gmail App Password or Username and Password not accepted';
+        if (
+          err.responseCode === 535 ||
+          reason.includes("535") ||
+          reason.includes("Username and Password not accepted")
+        ) {
+          reason =
+            "Invalid Gmail App Password or Username and Password not accepted";
           diagnostics.gmailAuthentication = false;
         }
-        return errorResponse(res, `SMTP Diagnostics failed: ${reason}`, diagnostics, 400);
+        return errorResponse(
+          res,
+          `SMTP Diagnostics failed: ${reason}`,
+          diagnostics,
+          400,
+        );
       }
     } catch (error) {
-      console.error('[Diagnostics] System error:', error);
-      return errorResponse(res, 'Diagnostics system error. Check server logs for details.', null, 500);
+      console.error("[Diagnostics] System error:", error);
+      return errorResponse(
+        res,
+        "Diagnostics system error. Check server logs for details.",
+        null,
+        500,
+      );
     }
   }
 
   // Public endpoint for storefront config
   async getPublicConfig(req, res) {
     try {
-      const cacheKey = 'settings:public';
+      const cacheKey = "settings:public";
       const cached = await cacheGet(cacheKey);
       if (cached) {
-        return successResponse(res, 'Public config fetched', cached);
+        return successResponse(res, "Public config fetched", cached);
       }
 
-      const data = await settingsService.getSettingsByKeys(['store', 'payment', 'shipping']);
-      
+      const data = await settingsService.getSettingsByKeys([
+        "store",
+        "payment",
+        "shipping",
+      ]);
+
       const storeConfig = data.store || {};
       const paymentConfig = data.payment || {};
       const shippingConfig = data.shipping || {};
@@ -254,132 +340,156 @@ class SettingsController {
       };
 
       await cacheSet(cacheKey, publicConfig, 1800); // 30 mins
-      return successResponse(res, 'Public config fetched', publicConfig);
+      return successResponse(res, "Public config fetched", publicConfig);
     } catch (error) {
-      return errorResponse(res, 'Failed to fetch public config');
+      return errorResponse(res, "Failed to fetch public config");
     }
   }
 
   // Get email preview (HTML) for development and inspection
   async getEmailPreview(req, res) {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({ message: 'Email preview is disabled in production.' });
+    if (process.env.NODE_ENV === "production") {
+      return res
+        .status(403)
+        .json({ message: "Email preview is disabled in production." });
     }
 
     try {
       const { template } = req.query;
       if (!template) {
-        return res.status(400).json({ message: 'Template name is required.' });
+        return res.status(400).json({ message: "Template name is required." });
       }
 
       const mockData = getMockDataMap()[template];
       if (!mockData) {
-        return res.status(400).json({ 
-          message: `Mock data for template "${template}" is not defined. Available templates: ${Object.keys(getMockDataMap()).join(', ')}` 
+        return res.status(400).json({
+          message: `Mock data for template "${template}" is not defined. Available templates: ${Object.keys(getMockDataMap()).join(", ")}`,
         });
       }
 
-      const { renderTemplate } = await import('../email/utils/templateCompiler.js');
+      const { renderTemplate } =
+        await import("../email/utils/templateCompiler.js");
       const rendered = renderTemplate(template, mockData);
 
-      res.setHeader('Content-Type', 'text/html');
+      res.setHeader("Content-Type", "text/html");
       return res.status(200).send(rendered.html);
     } catch (error) {
-      console.error('Email preview failed:', error);
-      return res.status(500).json({ success: false, message: 'Email preview failed. Check server logs for details.' });
+      console.error("Email preview failed:", error);
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Email preview failed. Check server logs for details.",
+        });
     }
   }
 }
 
 const getMockDataMap = () => ({
-  welcome: { name: 'John Doe', shopUrl: `${getFrontendUrl()}/products` },
-  'verify-email': { name: 'John Doe', verificationUrl: `${getFrontendUrl()}/verify-email?token=testtoken` },
-  'password-reset': { name: 'John Doe', resetUrl: `${getFrontendUrl()}/reset-password?token=testtoken` },
-  'order-confirmation': {
-    name: 'John Doe',
-    orderNumber: 'LH-123456-IN',
-    orderDate: 'June 26, 2026',
-    paymentMethod: 'Credit Card',
+  welcome: { name: "John Doe", shopUrl: `${getFrontendUrl()}/products` },
+  "verify-email": {
+    name: "John Doe",
+    verificationUrl: `${getFrontendUrl()}/verify-email?token=testtoken`,
+  },
+  "password-reset": {
+    name: "John Doe",
+    resetUrl: `${getFrontendUrl()}/reset-password?token=testtoken`,
+  },
+  "order-confirmation": {
+    name: "John Doe",
+    orderNumber: "LH-123456-IN",
+    orderDate: "June 26, 2026",
+    paymentMethod: "Credit Card",
     shippingAddress: {
-      recipientName: 'John Doe',
-      street: '123 Luxury Lane',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      zipCode: '400001',
-      country: 'India',
-      phoneNumber: '+91 9876543210'
+      recipientName: "John Doe",
+      street: "123 Luxury Lane",
+      city: "Mumbai",
+      state: "Maharashtra",
+      zipCode: "400001",
+      country: "India",
+      phoneNumber: "+91 9876543210",
     },
     items: [
       {
-        product: { name: 'Modern Fabric Sofa', sku: 'FURN-LIV-1001', thumbnail: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=1000' },
+        product: {
+          name: "Modern Fabric Sofa",
+          sku: "FURN-LIV-1001",
+          thumbnail:
+            "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=1000",
+        },
         quantity: 1,
-        formattedPrice: '₹45,999.00',
-        formattedTotal: '₹45,999.00'
+        formattedPrice: "₹45,999.00",
+        formattedTotal: "₹45,999.00",
       },
       {
-        product: { name: 'Minimalist Coffee Table', sku: 'FURN-LIV-1002', thumbnail: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=1000' },
+        product: {
+          name: "Minimalist Coffee Table",
+          sku: "FURN-LIV-1002",
+          thumbnail:
+            "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=1000",
+        },
         quantity: 2,
-        formattedPrice: '₹12,999.00',
-        formattedTotal: '₹25,998.00'
-      }
+        formattedPrice: "₹12,999.00",
+        formattedTotal: "₹25,998.00",
+      },
     ],
-    formattedSubtotal: '₹71,997.00',
-    formattedDiscount: '₹5,000.00',
-    formattedShipping: '₹99.00',
-    formattedTax: '₹12,059.46',
-    formattedTotal: '₹79,155.46',
+    formattedSubtotal: "₹71,997.00",
+    formattedDiscount: "₹5,000.00",
+    formattedShipping: "₹99.00",
+    formattedTax: "₹12,059.46",
+    formattedTotal: "₹79,155.46",
     trackUrl: `${getFrontendUrl()}/orders`,
     shopUrl: `${getFrontendUrl()}/products`,
-    invoiceUrl: `${getFrontendUrl()}/orders`
+    invoiceUrl: `${getFrontendUrl()}/orders`,
   },
-  'order-shipped': {
-    name: 'John Doe',
-    orderNumber: 'LH-123456-IN',
-    courier: 'DHL Express',
-    trackingNumber: 'LH-987654-IN',
-    estimatedDelivery: 'Tuesday, June 30, 2026',
-    trackingUrl: 'https://track.luxehome.com?num=LH-987654-IN'
+  "order-shipped": {
+    name: "John Doe",
+    orderNumber: "LH-123456-IN",
+    courier: "DHL Express",
+    trackingNumber: "LH-987654-IN",
+    estimatedDelivery: "Tuesday, June 30, 2026",
+    trackingUrl: "https://track.luxehome.com?num=LH-987654-IN",
   },
-  'order-delivered': {
-    name: 'John Doe',
-    orderNumber: 'LH-123456-IN',
-    deliveredDate: 'Friday, June 26, 2026',
+  "order-delivered": {
+    name: "John Doe",
+    orderNumber: "LH-123456-IN",
+    deliveredDate: "Friday, June 26, 2026",
     items: [
-      { productName: 'Modern Fabric Sofa', quantity: 1 },
-      { productName: 'Minimalist Coffee Table', quantity: 2 }
+      { productName: "Modern Fabric Sofa", quantity: 1 },
+      { productName: "Minimalist Coffee Table", quantity: 2 },
     ],
     rateProductUrl: `${getFrontendUrl()}/orders`,
-    shopUrl: `${getFrontendUrl()}/products`
+    shopUrl: `${getFrontendUrl()}/products`,
   },
-  'order-cancelled': {
-    name: 'John Doe',
-    orderNumber: 'LH-123456-IN',
-    cancellationReason: 'Out of stock items could not be fulfilled',
-    shopUrl: `${getFrontendUrl()}/products`
+  "order-cancelled": {
+    name: "John Doe",
+    orderNumber: "LH-123456-IN",
+    cancellationReason: "Out of stock items could not be fulfilled",
+    shopUrl: `${getFrontendUrl()}/products`,
   },
   refund: {
-    name: 'John Doe',
-    orderNumber: 'LH-123456-IN',
-    refundAmount: '₹79,155.46',
-    paymentMethod: 'Credit Card',
-    processedDate: 'June 26, 2026',
-    shopUrl: `${getFrontendUrl()}`
+    name: "John Doe",
+    orderNumber: "LH-123456-IN",
+    refundAmount: "₹79,155.46",
+    paymentMethod: "Credit Card",
+    processedDate: "June 26, 2026",
+    shopUrl: `${getFrontendUrl()}`,
   },
-  'low-stock': {
-    productName: 'Modern Fabric Sofa',
-    sku: 'FURN-LIV-1001',
+  "low-stock": {
+    productName: "Modern Fabric Sofa",
+    sku: "FURN-LIV-1001",
     currentStock: 2,
     threshold: 5,
-    restockUrl: `${getFrontendUrl()}/admin/products`
+    restockUrl: `${getFrontendUrl()}/admin/products`,
   },
-  'admin-order': {
-    orderNumber: 'LH-123456-IN',
-    customerName: 'John Doe',
-    customerEmail: 'johndoe@example.com',
-    grandTotal: '₹79,155.46',
-    paymentMethod: 'Credit/Debit Card',
-    viewOrderUrl: `${getFrontendUrl()}/admin/orders`
-  }
+  "admin-order": {
+    orderNumber: "LH-123456-IN",
+    customerName: "John Doe",
+    customerEmail: "johndoe@example.com",
+    grandTotal: "₹79,155.46",
+    paymentMethod: "Credit/Debit Card",
+    viewOrderUrl: `${getFrontendUrl()}/admin/orders`,
+  },
 });
 
 export default new SettingsController();

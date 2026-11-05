@@ -1,12 +1,16 @@
-import homepageService from '../services/homepageService.js';
-import { cacheGet, cacheSet, cacheInvalidateByPattern } from '../services/cacheService.js';
+import homepageService from "../services/homepageService.js";
+import {
+  cacheGet,
+  cacheSet,
+  cacheInvalidateByPattern,
+} from "../services/cacheService.js";
 
 // Cache TTL config for home elements
 const HOME_CACHE_TTL = 300; // 5 minutes
 
 export const getAllHomeSections = async (req, res, next) => {
   try {
-    const cacheKey = 'home:all';
+    const cacheKey = "home:all";
     const cached = await cacheGet(cacheKey);
     if (cached) return res.json({ success: true, data: cached });
 
@@ -97,11 +101,11 @@ export const updateFeaturedOrder = async (req, res, next) => {
   try {
     const { products } = req.body;
     await homepageService.updateFeaturedOrder(products);
-    
+
     // Invalidate all home cache keys on reordering
-    await cacheInvalidateByPattern('home:*');
-    
-    res.json({ success: true, message: 'Order updated successfully' });
+    await cacheInvalidateByPattern("home:*");
+
+    res.json({ success: true, message: "Order updated successfully" });
   } catch (error) {
     next(error);
   }

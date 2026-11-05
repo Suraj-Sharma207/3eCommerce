@@ -1,15 +1,20 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 
 /**
  * Custom hook for lightweight virtualization/windowing of lists/table rows.
  * Only triggers virtualization if the dataset is sufficiently large (>= 50 rows).
- * 
+ *
  * @param {Array} items - List of items to render
  * @param {number} rowHeight - Estimated height of each row in pixels
  * @param {React.RefObject} containerRef - Scrollable viewport container element ref
  * @param {number} overscan - Number of rows to render outside visible bounds
  */
-export function useVirtual({ items = [], rowHeight = 72, containerRef, overscan = 5 }) {
+export function useVirtual({
+  items = [],
+  rowHeight = 72,
+  containerRef,
+  overscan = 5,
+}) {
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -32,14 +37,14 @@ export function useVirtual({ items = [], rowHeight = 72, containerRef, overscan 
     });
 
     resizeObserver.observe(container);
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
     // Initial calculation
     setScrollTop(container.scrollTop);
     setContainerHeight(container.clientHeight || 500);
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener("scroll", handleScroll);
       resizeObserver.disconnect();
     };
   }, [containerRef, shouldVirtualize]);
@@ -50,15 +55,22 @@ export function useVirtual({ items = [], rowHeight = 72, containerRef, overscan 
     // If list is small, do not virtualize. Render all items natively.
     if (!shouldVirtualize) {
       return {
-        virtualItems: items.map((item, index) => ({ item, index, offsetTop: index * rowHeight })),
-        startOffset: 0
+        virtualItems: items.map((item, index) => ({
+          item,
+          index,
+          offsetTop: index * rowHeight,
+        })),
+        startOffset: 0,
       };
     }
 
-    const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+    const startIndex = Math.max(
+      0,
+      Math.floor(scrollTop / rowHeight) - overscan,
+    );
     const endIndex = Math.min(
       items.length - 1,
-      Math.floor((scrollTop + containerHeight) / rowHeight) + overscan
+      Math.floor((scrollTop + containerHeight) / rowHeight) + overscan,
     );
 
     const virtualItems = [];
@@ -73,13 +85,20 @@ export function useVirtual({ items = [], rowHeight = 72, containerRef, overscan 
     const startOffset = startIndex * rowHeight;
 
     return { virtualItems, startOffset };
-  }, [items, rowHeight, scrollTop, containerHeight, overscan, shouldVirtualize]);
+  }, [
+    items,
+    rowHeight,
+    scrollTop,
+    containerHeight,
+    overscan,
+    shouldVirtualize,
+  ]);
 
   return {
     virtualItems,
     totalHeight,
     startOffset,
-    shouldVirtualize
+    shouldVirtualize,
   };
 }
 export default useVirtual;

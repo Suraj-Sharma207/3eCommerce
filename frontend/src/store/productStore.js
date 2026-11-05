@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import productService from '../services/productService';
-import axios from 'axios';
+import { create } from "zustand";
+import productService from "../services/productService";
+import axios from "axios";
 
 let productsAbortController = null;
 let adminProductsAbortController = null;
@@ -12,27 +12,27 @@ const useProductStore = create((set, get) => ({
   // Per-product loading: Set of product IDs currently being updated/deleted
   updatingProductIds: new Set(),
   error: null,
-  searchQuery: '',
+  searchQuery: "",
   homeProducts: {
     featured: [],
     trending: [],
     newArrivals: [],
     bestSellers: [],
-    sale: []
+    sale: [],
   },
   hasFetchedHome: false,
   recommendedProducts: [],
   hasFetchedRecommended: false,
   filters: {
-    category: 'All',
-    brand: 'All',
-    minRating: '',
-    minPrice: '',
-    maxPrice: '',
+    category: "All",
+    brand: "All",
+    minRating: "",
+    minPrice: "",
+    maxPrice: "",
     inStock: false,
     sale: false,
-    sort: 'newest',
-    inventoryTab: 'all'
+    sort: "newest",
+    inventoryTab: "all",
   },
   inventoryCounts: { all: 0, active: 0, outOfStock: 0 },
   pagination: {
@@ -52,18 +52,18 @@ const useProductStore = create((set, get) => ({
     try {
       const response = await productService.getProductsHome();
       const data = response?.data || {};
-      set({ 
+      set({
         homeProducts: {
           featured: data.featuredCollection || data.featured || [],
           trending: data.trending || [],
           newArrivals: data.newArrivals || [],
           bestSellers: data.bestSellers || [],
-          sale: data.specialOffers || data.sale || []
+          sale: data.specialOffers || data.sale || [],
         },
-        hasFetchedHome: true
+        hasFetchedHome: true,
       });
     } catch (error) {
-      console.error('Failed to fetch home products:', error);
+      console.error("Failed to fetch home products:", error);
     }
   },
 
@@ -72,12 +72,12 @@ const useProductStore = create((set, get) => ({
     try {
       const response = await productService.getRecommendedProducts();
       const data = response?.data || response || {};
-      set({ 
+      set({
         recommendedProducts: data?.products || [],
-        hasFetchedRecommended: true
+        hasFetchedRecommended: true,
       });
     } catch (error) {
-      console.error('Failed to fetch recommended products:', error);
+      console.error("Failed to fetch recommended products:", error);
     }
   },
 
@@ -88,32 +88,32 @@ const useProductStore = create((set, get) => ({
   // itemsPerPage is now driven by URL ?limit param — kept for backward compat
   setItemsPerPage: (limit) => {
     set((state) => ({
-      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 },
     }));
   },
 
   setFilters: (newFilters) => {
-    set((state) => ({ 
+    set((state) => ({
       filters: { ...state.filters, ...newFilters },
-      pagination: { ...state.pagination, currentPage: 1 } 
+      pagination: { ...state.pagination, currentPage: 1 },
     }));
   },
 
   clearFilters: () => {
     set((state) => ({
-      searchQuery: '',
+      searchQuery: "",
       filters: {
-        category: 'All',
-        brand: 'All',
-        minRating: '',
-        minPrice: '',
-        maxPrice: '',
+        category: "All",
+        brand: "All",
+        minRating: "",
+        minPrice: "",
+        maxPrice: "",
         inStock: false,
         sale: false,
-        sort: 'newest',
-        inventoryTab: state.filters.inventoryTab // Preserve the tab during generic clear
+        sort: "newest",
+        inventoryTab: state.filters.inventoryTab, // Preserve the tab during generic clear
       },
-      pagination: { ...state.pagination, currentPage: 1 }
+      pagination: { ...state.pagination, currentPage: 1 },
     }));
     get().fetchProducts(1);
   },
@@ -126,40 +126,48 @@ const useProductStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     const { searchQuery, filters, pagination } = get();
-    
+
     try {
       // Map frontend 'inventoryTab' to backend 'stockStatus'
       let stockStatus;
-      if (filters.inventoryTab === 'active') stockStatus = 'active';
-      else if (filters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+      if (filters.inventoryTab === "active") stockStatus = "active";
+      else if (filters.inventoryTab === "outOfStock")
+        stockStatus = "outOfStock";
 
-      const { data } = await productService.getProducts({
-        page,
-        limit: pagination.itemsPerPage,
-        search: searchQuery,
-        stockStatus,
-        ...filters,
-        includeInventoryCounts: false
-      }, {
-        signal: productsAbortController.signal
-      });
-      
+      const { data } = await productService.getProducts(
+        {
+          page,
+          limit: pagination.itemsPerPage,
+          search: searchQuery,
+          stockStatus,
+          ...filters,
+          includeInventoryCounts: false,
+        },
+        {
+          signal: productsAbortController.signal,
+        },
+      );
+
       set({
         products: data.products,
         pagination: data.pagination,
-        inventoryCounts: data.pagination?.inventoryCounts || get().inventoryCounts,
+        inventoryCounts:
+          data.pagination?.inventoryCounts || get().inventoryCounts,
         isLoading: false,
       });
     } catch (error) {
       if (axios.isCancel(error)) return;
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch products', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to fetch products",
+        isLoading: false,
       });
     }
   },
 
-  fetchAdminProducts: async (page = get().pagination.currentPage, overrideParams = {}) => {
+  fetchAdminProducts: async (
+    page = get().pagination.currentPage,
+    overrideParams = {},
+  ) => {
     if (adminProductsAbortController) {
       adminProductsAbortController.abort();
     }
@@ -170,39 +178,51 @@ const useProductStore = create((set, get) => ({
 
     // Prefer limit from override (URL-driven), fall back to store state
     const limit = overrideParams.limit ?? pagination.itemsPerPage;
-    
+
     try {
       // Combine store filters with overrides
-      const effectiveFilters = { ...filters, ...(overrideParams.filters || {}) };
-      const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
-      
-      let stockStatus;
-      if (effectiveFilters.inventoryTab === 'active') stockStatus = 'active';
-      else if (effectiveFilters.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+      const effectiveFilters = {
+        ...filters,
+        ...(overrideParams.filters || {}),
+      };
+      const effectiveSearch =
+        overrideParams.search !== undefined
+          ? overrideParams.search
+          : searchQuery;
 
-      const { data } = await productService.getAdminProducts({
-        page,
-        limit,
-        search: effectiveSearch,
-        stockStatus,
-        ...effectiveFilters,
-        includeInventoryCounts: true
-      }, {
-        signal: adminProductsAbortController.signal
-      });
-      
+      let stockStatus;
+      if (effectiveFilters.inventoryTab === "active") stockStatus = "active";
+      else if (effectiveFilters.inventoryTab === "outOfStock")
+        stockStatus = "outOfStock";
+
+      const { data } = await productService.getAdminProducts(
+        {
+          page,
+          limit,
+          search: effectiveSearch,
+          stockStatus,
+          ...effectiveFilters,
+          includeInventoryCounts: true,
+        },
+        {
+          signal: adminProductsAbortController.signal,
+        },
+      );
+
       set({
         // Always replace — never append
         products: data.products,
         pagination: data.pagination,
-        inventoryCounts: data.pagination?.inventoryCounts || get().inventoryCounts,
+        inventoryCounts:
+          data.pagination?.inventoryCounts || get().inventoryCounts,
         isLoading: false,
       });
     } catch (error) {
       if (axios.isCancel(error)) return;
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch admin products', 
-        isLoading: false 
+      set({
+        error:
+          error.response?.data?.message || "Failed to fetch admin products",
+        isLoading: false,
       });
     }
   },
@@ -213,9 +233,10 @@ const useProductStore = create((set, get) => ({
       const { data } = await productService.getProductById(id);
       set({ product: data.product, isLoading: false });
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch product details', 
-        isLoading: false 
+      set({
+        error:
+          error.response?.data?.message || "Failed to fetch product details",
+        isLoading: false,
       });
     }
   },
@@ -230,9 +251,9 @@ const useProductStore = create((set, get) => ({
       fetchAdminProducts(pagination.currentPage);
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to create product', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to create product",
+        isLoading: false,
       });
       return false;
     }
@@ -245,34 +266,43 @@ const useProductStore = create((set, get) => ({
     set((state) => ({
       updatingProductIds: new Set([...state.updatingProductIds, id]),
       error: null,
-      products: state.products.map((p) => (p.id === id ? { ...p, ...productData } : p)),
+      products: state.products.map((p) =>
+        p.id === id ? { ...p, ...productData } : p,
+      ),
     }));
 
     try {
       const { data } = await productService.updateProduct(id, productData);
-      const updatedProduct = data?.product || data?.data || { ...productData, id };
-      
+      const updatedProduct = data?.product ||
+        data?.data || { ...productData, id };
+
       // Patch with the final server-calculated product (e.g., dynamic finalPrice)
       set((state) => {
         const next = new Set(state.updatingProductIds);
         next.delete(id);
-        
+
         // Check if stock changed from > 0 to 0 or vice versa
-        const oldProduct = state.products.find(p => p.id === id);
-        let productsList = state.products.map((p) => (p.id === id ? { ...p, ...updatedProduct } : p));
+        const oldProduct = state.products.find((p) => p.id === id);
+        let productsList = state.products.map((p) =>
+          p.id === id ? { ...p, ...updatedProduct } : p,
+        );
         let activeDelta = 0;
         let outOfStockDelta = 0;
-        
+
         if (oldProduct) {
           const oldStock = oldProduct.stock;
           const newStock = updatedProduct.stock;
-          
+
           if (oldStock > 0 && newStock === 0) {
-             activeDelta = -1; outOfStockDelta = 1;
-             if (state.filters.inventoryTab === 'active') productsList = productsList.filter(p => p.id !== id);
+            activeDelta = -1;
+            outOfStockDelta = 1;
+            if (state.filters.inventoryTab === "active")
+              productsList = productsList.filter((p) => p.id !== id);
           } else if (oldStock === 0 && newStock > 0) {
-             activeDelta = 1; outOfStockDelta = -1;
-             if (state.filters.inventoryTab === 'outOfStock') productsList = productsList.filter(p => p.id !== id);
+            activeDelta = 1;
+            outOfStockDelta = -1;
+            if (state.filters.inventoryTab === "outOfStock")
+              productsList = productsList.filter((p) => p.id !== id);
           }
         }
 
@@ -282,8 +312,8 @@ const useProductStore = create((set, get) => ({
           inventoryCounts: {
             ...state.inventoryCounts,
             active: state.inventoryCounts.active + activeDelta,
-            outOfStock: state.inventoryCounts.outOfStock + outOfStockDelta
-          }
+            outOfStock: state.inventoryCounts.outOfStock + outOfStockDelta,
+          },
         };
       });
       return true;
@@ -295,7 +325,7 @@ const useProductStore = create((set, get) => ({
         return {
           updatingProductIds: next,
           products: prevProducts,
-          error: error.response?.data?.message || 'Failed to update product',
+          error: error.response?.data?.message || "Failed to update product",
         };
       });
       return false;
@@ -305,7 +335,7 @@ const useProductStore = create((set, get) => ({
   deleteProduct: async (id) => {
     const prevProducts = get().products;
     const prevInventoryCounts = get().inventoryCounts;
-    const deletedProduct = prevProducts.find(p => p.id === id);
+    const deletedProduct = prevProducts.find((p) => p.id === id);
 
     // Optimistically remove from local view and mark as updating
     set((state) => {
@@ -316,9 +346,13 @@ const useProductStore = create((set, get) => ({
         updatingProductIds: new Set([...state.updatingProductIds, id]),
         inventoryCounts: {
           all: Math.max(0, state.inventoryCounts.all - 1),
-          active: wasActive ? Math.max(0, state.inventoryCounts.active - 1) : state.inventoryCounts.active,
-          outOfStock: wasOutOfStock ? Math.max(0, state.inventoryCounts.outOfStock - 1) : state.inventoryCounts.outOfStock
-        }
+          active: wasActive
+            ? Math.max(0, state.inventoryCounts.active - 1)
+            : state.inventoryCounts.active,
+          outOfStock: wasOutOfStock
+            ? Math.max(0, state.inventoryCounts.outOfStock - 1)
+            : state.inventoryCounts.outOfStock,
+        },
       };
     });
 
@@ -342,7 +376,7 @@ const useProductStore = create((set, get) => ({
           updatingProductIds: next,
           products: prevProducts,
           inventoryCounts: prevInventoryCounts,
-          error: error.response?.data?.message || 'Failed to delete product',
+          error: error.response?.data?.message || "Failed to delete product",
         };
       });
       return false;
@@ -391,7 +425,9 @@ const useProductStore = create((set, get) => ({
     const ids = [...get().selectedProductIds];
     if (ids.length === 0) return { success: false, deleted: 0 };
     if (ids.length > 100) {
-      set({ error: 'Bulk delete is limited to a maximum of 100 products at a time' });
+      set({
+        error: "Bulk delete is limited to a maximum of 100 products at a time",
+      });
       return { success: false, deleted: 0 };
     }
 
@@ -405,8 +441,14 @@ const useProductStore = create((set, get) => ({
 
       // Refetch current page — adjust page if it no longer exists
       const { pagination, fetchAdminProducts, filters } = get();
-      const newFilteredItems = Math.max(0, (pagination.filteredItems || pagination.totalItems) - deleted);
-      const newTotalPages = Math.max(1, Math.ceil(newFilteredItems / (pagination.itemsPerPage || 10)));
+      const newFilteredItems = Math.max(
+        0,
+        (pagination.filteredItems || pagination.totalItems) - deleted,
+      );
+      const newTotalPages = Math.max(
+        1,
+        Math.ceil(newFilteredItems / (pagination.itemsPerPage || 10)),
+      );
       const safePage = Math.min(pagination.currentPage, newTotalPages);
       fetchAdminProducts(safePage);
 
@@ -414,7 +456,7 @@ const useProductStore = create((set, get) => ({
     } catch (error) {
       set({
         isBulkDeleting: false,
-        error: error.response?.data?.message || 'Bulk delete failed',
+        error: error.response?.data?.message || "Bulk delete failed",
       });
       return { success: false, deleted: 0 };
     }
@@ -427,8 +469,9 @@ const useProductStore = create((set, get) => ({
   fetchFilteredProductIds: async (queryParams = {}) => {
     try {
       let stockStatus;
-      if (queryParams.inventoryTab === 'active') stockStatus = 'active';
-      else if (queryParams.inventoryTab === 'outOfStock') stockStatus = 'outOfStock';
+      if (queryParams.inventoryTab === "active") stockStatus = "active";
+      else if (queryParams.inventoryTab === "outOfStock")
+        stockStatus = "outOfStock";
 
       const result = await productService.getAdminFilteredProductIds({
         ...queryParams,
@@ -436,7 +479,7 @@ const useProductStore = create((set, get) => ({
       });
       return result?.data?.ids || [];
     } catch (error) {
-      console.error('Failed to fetch filtered product IDs:', error);
+      console.error("Failed to fetch filtered product IDs:", error);
       return [];
     }
   },
@@ -451,7 +494,11 @@ const useProductStore = create((set, get) => ({
    */
   uploadProductImages: async (productId, files, onProgress) => {
     try {
-      const { data } = await productService.uploadProductImages(productId, files, onProgress);
+      const { data } = await productService.uploadProductImages(
+        productId,
+        files,
+        onProgress,
+      );
       const newImages = data?.images || [];
 
       // Patch the product in local state with new images
@@ -459,31 +506,39 @@ const useProductStore = create((set, get) => ({
         products: state.products.map((p) => {
           if (p.id !== productId) return p;
           const merged = [...(p.images || []), ...newImages];
-          const primaryImg = merged.find(i => i.isPrimary) ?? merged[0] ?? null;
+          const primaryImg =
+            merged.find((i) => i.isPrimary) ?? merged[0] ?? null;
           return {
             ...p,
             images: merged,
             thumbnail: primaryImg?.url ?? p.thumbnail,
-            galleryImages: merged.filter(i => !i.isPrimary).map(i => i.url),
+            galleryImages: merged.filter((i) => !i.isPrimary).map((i) => i.url),
           };
         }),
         // Also patch single product view
-        product: state.product?.id === productId
-          ? (() => {
-              const merged = [...(state.product.images || []), ...newImages];
-              const primaryImg = merged.find(i => i.isPrimary) ?? merged[0] ?? null;
-              return {
-                ...state.product,
-                images: merged,
-                thumbnail: primaryImg?.url ?? state.product.thumbnail,
-                galleryImages: merged.filter(i => !i.isPrimary).map(i => i.url),
-              };
-            })()
-          : state.product,
+        product:
+          state.product?.id === productId
+            ? (() => {
+                const merged = [...(state.product.images || []), ...newImages];
+                const primaryImg =
+                  merged.find((i) => i.isPrimary) ?? merged[0] ?? null;
+                return {
+                  ...state.product,
+                  images: merged,
+                  thumbnail: primaryImg?.url ?? state.product.thumbnail,
+                  galleryImages: merged
+                    .filter((i) => !i.isPrimary)
+                    .map((i) => i.url),
+                };
+              })()
+            : state.product,
       }));
       return { success: true, images: newImages };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Upload failed' };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Upload failed",
+      };
     }
   },
 
@@ -496,9 +551,9 @@ const useProductStore = create((set, get) => ({
 
       set((state) => {
         const patchImages = (imgs) => {
-          const updated = (imgs || []).filter(i => i.id !== imageId);
+          const updated = (imgs || []).filter((i) => i.id !== imageId);
           // If deleted image was primary, mark next as primary
-          if (updated.length > 0 && !updated.some(i => i.isPrimary)) {
+          if (updated.length > 0 && !updated.some((i) => i.isPrimary)) {
             updated[0] = { ...updated[0], isPrimary: true };
           }
           return updated;
@@ -508,31 +563,38 @@ const useProductStore = create((set, get) => ({
           products: state.products.map((p) => {
             if (p.id !== productId) return p;
             const imgs = patchImages(p.images);
-            const primaryImg = imgs.find(i => i.isPrimary) ?? imgs[0] ?? null;
+            const primaryImg = imgs.find((i) => i.isPrimary) ?? imgs[0] ?? null;
             return {
               ...p,
               images: imgs,
               thumbnail: primaryImg?.url ?? null,
-              galleryImages: imgs.filter(i => !i.isPrimary).map(i => i.url),
+              galleryImages: imgs.filter((i) => !i.isPrimary).map((i) => i.url),
             };
           }),
-          product: state.product?.id === productId
-            ? (() => {
-                const imgs = patchImages(state.product.images);
-                const primaryImg = imgs.find(i => i.isPrimary) ?? imgs[0] ?? null;
-                return {
-                  ...state.product,
-                  images: imgs,
-                  thumbnail: primaryImg?.url ?? null,
-                  galleryImages: imgs.filter(i => !i.isPrimary).map(i => i.url),
-                };
-              })()
-            : state.product,
+          product:
+            state.product?.id === productId
+              ? (() => {
+                  const imgs = patchImages(state.product.images);
+                  const primaryImg =
+                    imgs.find((i) => i.isPrimary) ?? imgs[0] ?? null;
+                  return {
+                    ...state.product,
+                    images: imgs,
+                    thumbnail: primaryImg?.url ?? null,
+                    galleryImages: imgs
+                      .filter((i) => !i.isPrimary)
+                      .map((i) => i.url),
+                  };
+                })()
+              : state.product,
         };
       });
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Delete failed' };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Delete failed",
+      };
     }
   },
 
@@ -545,37 +607,43 @@ const useProductStore = create((set, get) => ({
 
       set((state) => {
         const patchImages = (imgs) =>
-          (imgs || []).map(i => ({ ...i, isPrimary: i.id === imageId }));
+          (imgs || []).map((i) => ({ ...i, isPrimary: i.id === imageId }));
 
         return {
           products: state.products.map((p) => {
             if (p.id !== productId) return p;
             const imgs = patchImages(p.images);
-            const primary = imgs.find(i => i.isPrimary);
+            const primary = imgs.find((i) => i.isPrimary);
             return {
               ...p,
               images: imgs,
               thumbnail: primary?.url ?? p.thumbnail,
-              galleryImages: imgs.filter(i => !i.isPrimary).map(i => i.url),
+              galleryImages: imgs.filter((i) => !i.isPrimary).map((i) => i.url),
             };
           }),
-          product: state.product?.id === productId
-            ? (() => {
-                const imgs = patchImages(state.product.images);
-                const primary = imgs.find(i => i.isPrimary);
-                return {
-                  ...state.product,
-                  images: imgs,
-                  thumbnail: primary?.url ?? state.product.thumbnail,
-                  galleryImages: imgs.filter(i => !i.isPrimary).map(i => i.url),
-                };
-              })()
-            : state.product,
+          product:
+            state.product?.id === productId
+              ? (() => {
+                  const imgs = patchImages(state.product.images);
+                  const primary = imgs.find((i) => i.isPrimary);
+                  return {
+                    ...state.product,
+                    images: imgs,
+                    thumbnail: primary?.url ?? state.product.thumbnail,
+                    galleryImages: imgs
+                      .filter((i) => !i.isPrimary)
+                      .map((i) => i.url),
+                  };
+                })()
+              : state.product,
         };
       });
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Failed to set primary' };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to set primary",
+      };
     }
   },
 
@@ -590,9 +658,9 @@ const useProductStore = create((set, get) => ({
 
       set((state) => {
         const patchImages = (imgs) => {
-          const map = Object.fromEntries((imgs || []).map(i => [i.id, i]));
+          const map = Object.fromEntries((imgs || []).map((i) => [i.id, i]));
           return orderedIds
-            .filter(id => map[id])
+            .filter((id) => map[id])
             .map((id, index) => ({ ...map[id], displayOrder: index }));
         };
 
@@ -602,14 +670,18 @@ const useProductStore = create((set, get) => ({
             const imgs = patchImages(p.images);
             return { ...p, images: imgs };
           }),
-          product: state.product?.id === productId
-            ? { ...state.product, images: patchImages(state.product.images) }
-            : state.product,
+          product:
+            state.product?.id === productId
+              ? { ...state.product, images: patchImages(state.product.images) }
+              : state.product,
         };
       });
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Reorder failed' };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Reorder failed",
+      };
     }
   },
 }));

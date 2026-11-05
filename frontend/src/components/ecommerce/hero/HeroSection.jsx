@@ -1,7 +1,7 @@
-import React, { useState } from'react';
-import HeroCarousel from'./HeroCarousel';
-import HeroCategoryCards from'./HeroCategoryCards';
-import OfferCards from'./OfferCards';
+import React, { useState } from "react";
+import HeroCarousel from "./HeroCarousel";
+import HeroCategoryCards from "./HeroCategoryCards";
+import OfferCards from "./OfferCards";
 
 /**
  * HeroSection — composes all hero sub-components.
@@ -9,26 +9,26 @@ import OfferCards from'./OfferCards';
  * so category cards and the carousel can communicate.
  */
 const HeroSection = () => {
- const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
- return (
- <div className="flex flex-col gap-4 sm:gap-5">
- {/* Main promotional carousel */}
- <HeroCarousel
- onSlideChange={setActiveSlideIndex}
- activeIndex={activeSlideIndex}
- />
+  return (
+    <div className="flex flex-col gap-4 sm:gap-5">
+      {/* Main promotional carousel */}
+      <HeroCarousel
+        onSlideChange={setActiveSlideIndex}
+        activeIndex={activeSlideIndex}
+      />
 
- {/* Category cards — clicking switches carousel slide */}
- <HeroCategoryCards
- activeIndex={activeSlideIndex}
- onCardClick={setActiveSlideIndex}
- />
+      {/* Category cards — clicking switches carousel slide */}
+      <HeroCategoryCards
+        activeIndex={activeSlideIndex}
+        onCardClick={setActiveSlideIndex}
+      />
 
- {/* Benefits/offers row */}
- <OfferCards />
- </div>
- );
+      {/* Benefits/offers row */}
+      <OfferCards />
+    </div>
+  );
 };
 
 export default HeroSection;

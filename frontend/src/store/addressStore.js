@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import api from '../services/api';
+import { create } from "zustand";
+import api from "../services/api";
 
 const useAddressStore = create((set) => ({
   addresses: [],
@@ -9,13 +9,13 @@ const useAddressStore = create((set) => ({
   fetchAddresses: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get('/addresses');
+      const response = await api.get("/addresses");
       set({ addresses: response.data.data.addresses, isLoading: false });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch addresses', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to fetch addresses",
+        isLoading: false,
       });
       return false;
     }
@@ -24,25 +24,25 @@ const useAddressStore = create((set) => ({
   addAddress: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/addresses', data);
+      const response = await api.post("/addresses", data);
       set((state) => {
         const newAddresses = [...state.addresses];
         if (data.isDefaultShipping) {
-          newAddresses.forEach(a => a.isDefaultShipping = false);
+          newAddresses.forEach((a) => (a.isDefaultShipping = false));
         }
         if (data.isDefaultBilling) {
-          newAddresses.forEach(a => a.isDefaultBilling = false);
+          newAddresses.forEach((a) => (a.isDefaultBilling = false));
         }
         return {
           addresses: [...newAddresses, response.data.data.address],
-          isLoading: false
+          isLoading: false,
         };
       });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to add address', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to add address",
+        isLoading: false,
       });
       return false;
     }
@@ -54,17 +54,17 @@ const useAddressStore = create((set) => ({
       const response = await api.put(`/addresses/${id}`, data);
       set((state) => {
         const updatedAddress = response.data.data.address;
-        const newAddresses = state.addresses.map(a => 
-          a.id === id ? updatedAddress : a
+        const newAddresses = state.addresses.map((a) =>
+          a.id === id ? updatedAddress : a,
         );
-        
+
         if (data.isDefaultShipping) {
-          newAddresses.forEach(a => {
+          newAddresses.forEach((a) => {
             if (a.id !== id) a.isDefaultShipping = false;
           });
         }
         if (data.isDefaultBilling) {
-          newAddresses.forEach(a => {
+          newAddresses.forEach((a) => {
             if (a.id !== id) a.isDefaultBilling = false;
           });
         }
@@ -72,9 +72,9 @@ const useAddressStore = create((set) => ({
       });
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to update address', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to update address",
+        isLoading: false,
       });
       return false;
     }
@@ -85,22 +85,22 @@ const useAddressStore = create((set) => ({
     try {
       await api.delete(`/addresses/${id}`);
       set((state) => ({
-        addresses: state.addresses.filter(a => a.id !== id),
-        isLoading: false
+        addresses: state.addresses.filter((a) => a.id !== id),
+        isLoading: false,
       }));
       return true;
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to delete address', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to delete address",
+        isLoading: false,
       });
       return false;
     }
   },
-  
+
   clearAddresses: () => {
     set({ addresses: [], error: null });
-  }
+  },
 }));
 
 export default useAddressStore;

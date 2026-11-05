@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import api from '../services/api';
-import { parseError } from '../utils/errorParser';
+import { create } from "zustand";
+import api from "../services/api";
+import { parseError } from "../utils/errorParser";
 
 let checkAuthPromise = null;
 
@@ -8,18 +8,18 @@ let checkAuthPromise = null;
 // This ensures that old JWTs left behind before we removed the persist middleware
 // are securely deleted from localStorage/sessionStorage.
 try {
-  localStorage.removeItem('auth-storage');
-  sessionStorage.removeItem('auth-storage');
+  localStorage.removeItem("auth-storage");
+  sessionStorage.removeItem("auth-storage");
 } catch (e) {
   // Ignore errors in environments where storage isn't available
 }
 
 /**
  * Authentication Store
- * 
+ *
  * H-2: Authentication state is stored ONLY in memory (no localStorage/sessionStorage).
  * Zustand persist middleware has been removed entirely.
- * 
+ *
  * Auth flow:
  * - Login/Register: Server sets HttpOnly cookies, store holds user object in memory
  * - Page refresh: checkAuth() calls GET /auth/me (cookie sent automatically by browser)
@@ -34,17 +34,16 @@ const useAuthStore = create((set, get) => ({
   hasCheckedAuth: false,
 
   login: async (email, password) => {
-
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post("/auth/login", { email, password });
       // H-1: Server no longer returns token in body — only user data
       const { user } = response.data.data;
-      
+
       set({ user, isAuthenticated: true });
       return true;
     } catch (error) {
-      set({ error: parseError(error, 'Login failed') });
+      set({ error: parseError(error, "Login failed") });
       return false;
     } finally {
       set({ isLoading: false });
@@ -54,14 +53,24 @@ const useAuthStore = create((set, get) => ({
   register: async (name, email, password, phone) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/register', { name, email, password, phone });
+      const response = await api.post("/auth/register", {
+        name,
+        email,
+        password,
+        phone,
+      });
       // H-1: Server no longer returns token in body — only user data
       const { user } = response.data.data;
-      
+
       set({ user, isAuthenticated: true });
       return true;
     } catch (error) {
-      set({ error: parseError(error, 'Unable to create your account. Please try again later.') });
+      set({
+        error: parseError(
+          error,
+          "Unable to create your account. Please try again later.",
+        ),
+      });
       return false;
     } finally {
       set({ isLoading: false });
@@ -70,19 +79,25 @@ const useAuthStore = create((set, get) => ({
 
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch (error) {
       // Logout should always succeed client-side even if server call fails
-      console.error('Logout API call failed:', error?.message);
+      console.error("Logout API call failed:", error?.message);
     }
     // H-2: Clear only in-memory state — no localStorage/sessionStorage to clean up.
     // Server has already cleared the HttpOnly cookies.
     set({ user: null, isAuthenticated: false, hasCheckedAuth: false });
-    
+
     // Clear all other stores using dynamic imports to avoid circular deps
-    import('./userStore').then(module => module.default.getState().clearProfile());
-    import('./cartStore').then(module => module.default.getState().resetCart());
-    import('./wishlistStore').then(module => module.default.getState().clearWishlist());
+    import("./userStore").then((module) =>
+      module.default.getState().clearProfile(),
+    );
+    import("./cartStore").then((module) =>
+      module.default.getState().resetCart(),
+    );
+    import("./wishlistStore").then((module) =>
+      module.default.getState().clearWishlist(),
+    );
   },
 
   /**
@@ -93,10 +108,10 @@ const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     if (get().hasCheckedAuth) return get().isAuthenticated;
     if (checkAuthPromise) return checkAuthPromise;
-    
+
     checkAuthPromise = (async () => {
       try {
-        const response = await api.get('/auth/session');
+        const response = await api.get("/auth/session");
         const { authenticated, user } = response.data.data;
         if (authenticated && user) {
           set({ user, isAuthenticated: true, hasCheckedAuth: true });
@@ -112,7 +127,7 @@ const useAuthStore = create((set, get) => ({
         checkAuthPromise = null;
       }
     })();
-    
+
     return checkAuthPromise;
   },
 
@@ -121,10 +136,13 @@ const useAuthStore = create((set, get) => ({
   forgotPassword: async (email) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/forgot-password', { email });
-      return response.data?.message || 'If your email is registered, a password reset link has been sent.';
+      const response = await api.post("/auth/forgot-password", { email });
+      return (
+        response.data?.message ||
+        "If your email is registered, a password reset link has been sent."
+      );
     } catch (error) {
-      set({ error: parseError(error, 'Password reset request failed') });
+      set({ error: parseError(error, "Password reset request failed") });
       throw error;
     } finally {
       set({ isLoading: false });
@@ -134,10 +152,15 @@ const useAuthStore = create((set, get) => ({
   resetPassword: async (token, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/reset-password', { token, password });
-      return response.data?.message || 'Your password has been successfully reset.';
+      const response = await api.post("/auth/reset-password", {
+        token,
+        password,
+      });
+      return (
+        response.data?.message || "Your password has been successfully reset."
+      );
     } catch (error) {
-      set({ error: parseError(error, 'Password reset failed') });
+      set({ error: parseError(error, "Password reset failed") });
       throw error;
     } finally {
       set({ isLoading: false });

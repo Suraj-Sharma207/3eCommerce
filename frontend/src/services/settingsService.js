@@ -1,8 +1,8 @@
-import api from './api';
+import api from "./api";
 
 class SettingsService {
   async getPublicConfig() {
-    const response = await api.get('/settings/public');
+    const response = await api.get("/settings/public");
     return response.data;
   }
 
@@ -17,7 +17,7 @@ class SettingsService {
   }
 
   async testSmtp(data) {
-    const response = await api.post('/settings/smtp/test', data);
+    const response = await api.post("/settings/smtp/test", data);
     return response.data;
   }
 }

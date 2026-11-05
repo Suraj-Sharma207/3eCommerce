@@ -13,14 +13,18 @@ export class EmailProvider {
    * @returns {Promise<{messageId: string}>} Result containing message ID
    */
   async send(options) {
-    throw new Error("Method 'send()' must be implemented by the provider subclass.");
+    throw new Error(
+      "Method 'send()' must be implemented by the provider subclass.",
+    );
   }
-  
+
   /**
    * Verify provider connection
    * @returns {Promise<boolean>}
    */
   async verify() {
-    throw new Error("Method 'verify()' must be implemented by the provider subclass.");
+    throw new Error(
+      "Method 'verify()' must be implemented by the provider subclass.",
+    );
   }
 }

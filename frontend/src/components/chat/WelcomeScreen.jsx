@@ -1,5 +1,14 @@
-import React from 'react';
-import { Search, Package, MessageCircle, Compass, ArrowRight, RotateCcw, Lock, HeadphonesIcon } from 'lucide-react';
+import React from "react";
+import {
+  Search,
+  Package,
+  MessageCircle,
+  Compass,
+  ArrowRight,
+  RotateCcw,
+  Lock,
+  HeadphonesIcon,
+} from "lucide-react";
 
 export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
   const handleSearchClick = (message) => {
@@ -7,7 +16,9 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
       onStartComposing(message);
     }
     setTimeout(() => {
-      const input = document.querySelector('input[placeholder="Ask me anything..."]');
+      const input = document.querySelector(
+        'input[placeholder="Ask me anything..."]',
+      );
       if (input) {
         input.focus();
       }
@@ -17,39 +28,42 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
   const quickActions = [
     {
       icon: Search,
-      title: 'Search Products',
-      subtitle: 'Find furniture by style, category, or specific needs.',
+      title: "Search Products",
+      subtitle: "Find furniture by style, category, or specific needs.",
       accent: true,
-      onClick: () => handleSearchClick("Please type your product name below (e.g., 'I want a wooden table')."),
+      onClick: () =>
+        handleSearchClick(
+          "Please type your product name below (e.g., 'I want a wooden table').",
+        ),
     },
     {
       icon: Package,
-      title: 'Order Status',
-      subtitle: 'Track your order or check shipping details.',
+      title: "Order Status",
+      subtitle: "Track your order or check shipping details.",
       accent: false,
-      onClick: () => onActionClick('show my orders'),
+      onClick: () => onActionClick("show my orders"),
     },
     {
       icon: MessageCircle,
-      title: 'Ask Anything',
-      subtitle: 'Get help with returns, delivery, or product info.',
+      title: "Ask Anything",
+      subtitle: "Get help with returns, delivery, or product info.",
       accent: false,
-      onClick: () => handleSearchClick("What would you like to know about our store or products?"),
+      onClick: () =>
+        handleSearchClick(
+          "What would you like to know about our store or products?",
+        ),
     },
     {
       icon: Compass,
-      title: 'Just Say Hello',
-      subtitle: 'Start a conversation with our assistant.',
+      title: "Just Say Hello",
+      subtitle: "Start a conversation with our assistant.",
       accent: false,
-      onClick: () => onActionClick('hello'),
+      onClick: () => onActionClick("hello"),
     },
   ];
 
   return (
-    <div
-      className="chat-welcome flex flex-col h-full overflow-y-auto hide-scrollbar"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-    >
+    <div className="chat-welcome flex flex-col h-full overflow-y-auto hide-scrollbar">
       {/* 
         Full-bleed hero background — the image covers the top portion of the 
         entire welcome screen and fades into the cream/off-white tone (#FDF8F3)
@@ -68,7 +82,8 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to bottom, transparent 0%, transparent 40%, #FDF8F3 92%, #FDF8F3 100%)",
+            background:
+              "linear-gradient(to bottom, transparent 0%, transparent 40%, #FDF8F3 92%, #FDF8F3 100%)",
           }}
         />
 
@@ -81,14 +96,14 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
             I'm your shopping assistant
           </h1>
           <p className="text-[13px] text-[#6B7280] font-medium leading-relaxed">
-            I can help you find the perfect furniture, check orders, explore collections, and answer any questions you have.
+            I can help you find the perfect furniture, check orders, explore
+            collections, and answer any questions you have.
           </p>
         </div>
       </div>
 
       {/* Content area — sits on cream background, no hard edge from above */}
       <div className="flex-1 flex flex-col" style={{ background: "#FDF8F3" }}>
-
         {/* Quick Actions */}
         <div className="px-7 pb-5 flex flex-col gap-3">
           <h3 className="text-[13px] font-bold text-[#0F172A] mb-1 tracking-tight">
@@ -106,31 +121,35 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
                   onClick={action.onClick}
                   className={`group w-full flex items-center gap-4 rounded-[18px] text-left transition-all duration-300 cursor-pointer border ${
                     isSearch
-                      ? 'p-[18px] bg-white border-[#C97C4D]/25 shadow-[0_4px_20px_rgba(201,124,77,0.08)] hover:border-[#C97C4D]/45 hover:shadow-[0_6px_24px_rgba(201,124,77,0.14)]'
-                      : 'p-4 bg-white border-[#ECECEC] shadow-[0_1px_4px_rgba(0,0,0,0.03)] hover:border-[#D5D5D5] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+                      ? "p-[18px] bg-white border-[#C97C4D]/25 shadow-[0_4px_20px_rgba(201,124,77,0.08)] hover:border-[#C97C4D]/45 hover:shadow-[0_6px_24px_rgba(201,124,77,0.14)]"
+                      : "p-4 bg-white border-[#ECECEC] shadow-[0_1px_4px_rgba(0,0,0,0.03)] hover:border-[#D5D5D5] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]"
                   } hover:-translate-y-[1px]`}
                   style={{
-                    animation: `slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${0.08 + index * 0.06}s both`
+                    animation: `slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${0.08 + index * 0.06}s both`,
                   }}
                 >
                   {/* Icon Circle */}
-                  <div className={`shrink-0 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${
-                    isSearch
-                      ? 'w-11 h-11 bg-[#C97C4D]/10'
-                      : 'w-10 h-10 bg-[#F3F4F6]'
-                  }`}>
+                  <div
+                    className={`shrink-0 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${
+                      isSearch
+                        ? "w-11 h-11 bg-[#C97C4D]/10"
+                        : "w-10 h-10 bg-[#F3F4F6]"
+                    }`}
+                  >
                     <Icon
                       size={isSearch ? 20 : 18}
-                      className={isSearch ? 'text-[#C97C4D]' : 'text-[#0F172A]'}
+                      className={isSearch ? "text-[#C97C4D]" : "text-[#0F172A]"}
                       strokeWidth={1.8}
                     />
                   </div>
 
                   {/* Text */}
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <span className={`block text-[13.5px] font-bold tracking-tight ${
-                      isSearch ? 'text-[#C97C4D]' : 'text-[#0F172A]'
-                    }`}>
+                    <span
+                      className={`block text-[13.5px] font-bold tracking-tight ${
+                        isSearch ? "text-[#C97C4D]" : "text-[#0F172A]"
+                      }`}
+                    >
                       {action.title}
                     </span>
                     <span className="block text-[11.5px] text-[#6B7280] mt-0.5 leading-snug font-medium">
@@ -139,9 +158,13 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
                   </div>
 
                   {/* Arrow */}
-                  <ArrowRight size={16} className={`shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${
-                    isSearch ? 'text-[#C97C4D]' : 'text-[#9CA3AF]'
-                  }`} strokeWidth={2} />
+                  <ArrowRight
+                    size={16}
+                    className={`shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${
+                      isSearch ? "text-[#C97C4D]" : "text-[#9CA3AF]"
+                    }`}
+                    strokeWidth={2}
+                  />
                 </button>
               );
             })}
@@ -163,18 +186,44 @@ export const WelcomeScreen = ({ onActionClick, onStartComposing }) => {
         <div className="px-7 pb-4">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: RotateCcw, label: '30-Day Returns', sub: 'Hassle-free returns', color: '#C97C4D' },
-              { icon: Lock, label: 'Secure Shopping', sub: 'Your data is safe', color: '#C97C4D' },
-              { icon: HeadphonesIcon, label: '24/7 Support', sub: "We're here to help", color: '#C97C4D' },
+              {
+                icon: RotateCcw,
+                label: "30-Day Returns",
+                sub: "Hassle-free returns",
+                color: "#C97C4D",
+              },
+              {
+                icon: Lock,
+                label: "Secure Shopping",
+                sub: "Your data is safe",
+                color: "#C97C4D",
+              },
+              {
+                icon: HeadphonesIcon,
+                label: "24/7 Support",
+                sub: "We're here to help",
+                color: "#C97C4D",
+              },
             ].map((badge, i) => {
               const BadgeIcon = badge.icon;
               return (
-                <div key={i} className="flex flex-col items-center text-center gap-1.5">
+                <div
+                  key={i}
+                  className="flex flex-col items-center text-center gap-1.5"
+                >
                   <div className="w-9 h-9 rounded-full bg-[#FDF5EF] flex items-center justify-center">
-                    <BadgeIcon size={14} className="text-[#C97C4D]" strokeWidth={2} />
+                    <BadgeIcon
+                      size={14}
+                      className="text-[#C97C4D]"
+                      strokeWidth={2}
+                    />
                   </div>
-                  <span className="text-[10px] font-bold text-[#0F172A] leading-tight">{badge.label}</span>
-                  <span className="text-[9.5px] text-[#9CA3AF] font-medium leading-tight">{badge.sub}</span>
+                  <span className="text-[10px] font-bold text-[#0F172A] leading-tight">
+                    {badge.label}
+                  </span>
+                  <span className="text-[9.5px] text-[#9CA3AF] font-medium leading-tight">
+                    {badge.sub}
+                  </span>
                 </div>
               );
             })}

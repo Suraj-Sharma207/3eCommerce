@@ -1,10 +1,10 @@
-import prisma from '../lib/prisma.js';
-import promotionService from '../services/promotionService.js';
-import settingsService from '../services/settingsService.js';
-import { mapProduct } from '../utils/productMapper.js';
+import prisma from "../lib/prisma.js";
+import promotionService from "../services/promotionService.js";
+import settingsService from "../services/settingsService.js";
+import { mapProduct } from "../utils/productMapper.js";
 
 const PRODUCT_WITH_IMAGES = {
-  include: { images: { orderBy: { displayOrder: 'asc' } } }
+  include: { images: { orderBy: { displayOrder: "asc" } } },
 };
 
 const mapOrderItem = (item) => ({
@@ -21,34 +21,45 @@ const mapOrder = (order) => {
 };
 
 class OrderRepository {
-  async executeCheckoutTransaction(userId, shippingAddressId, billingAddressId, paymentMethod, paymentMetadata, deliveryMethod = 'standard') {
+  async executeCheckoutTransaction(
+    userId,
+    shippingAddressId,
+    billingAddressId,
+    paymentMethod,
+    paymentMetadata,
+    deliveryMethod = "standard",
+  ) {
     // 1. Non-database pre-work / Validations outside the transaction
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw { status: 401, message: 'Unauthorized user' };
+    if (!user) throw { status: 401, message: "Unauthorized user" };
 
     // C-5 FIX: Verify address ownership — prevent IDOR
-    const shippingAddress = await prisma.address.findFirst({ where: { id: shippingAddressId, userId } });
-    const billingAddress = billingAddressId 
-      ? await prisma.address.findFirst({ where: { id: billingAddressId, userId } }) 
+    const shippingAddress = await prisma.address.findFirst({
+      where: { id: shippingAddressId, userId },
+    });
+    const billingAddress = billingAddressId
+      ? await prisma.address.findFirst({
+          where: { id: billingAddressId, userId },
+        })
       : shippingAddress;
-    
+
     if (!shippingAddress || !billingAddress) {
-      throw { status: 400, message: 'Invalid shipping or billing address' };
+      throw { status: 400, message: "Invalid shipping or billing address" };
     }
 
     // Load cart outside the transaction to know which products we need
     const cart = await prisma.cart.findUnique({
       where: { userId },
-      include: { items: true }
+      include: { items: true },
     });
 
     if (!cart || cart.items.length === 0) {
-      throw { status: 400, message: 'Cart is empty' };
+      throw { status: 400, message: "Cart is empty" };
     }
 
     // Generate Order Number outside transaction
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomPart = Math.floor(100000 + Math.random() * 900000); 
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const randomPart = Math.floor(100000 + Math.random() * 900000);
     const orderNumber = `ORD-${datePart}-${randomPart}`;
 
     const startTime = Date.now();
@@ -58,11 +69,11 @@ class OrderRepository {
     const activePromotions = await promotionService.getActivePromotions();
 
     // Fetch all products outside the transaction
-    const productIds = cart.items.map(item => item.productId);
+    const productIds = cart.items.map((item) => item.productId);
     const products = await prisma.product.findMany({
-      where: { id: { in: productIds } }
+      where: { id: { in: productIds } },
     });
-    const productMap = new Map(products.map(p => [p.id, p]));
+    const productMap = new Map(products.map((p) => [p.id, p]));
 
     // Validate stock and compute prices before entering the transaction
     let preComputedTotal = 0;
@@ -72,31 +83,41 @@ class OrderRepository {
       const product = productMap.get(item.productId);
 
       if (!product || !product.active) {
-        throw { status: 409, message: `Product ${product?.name || item.productId} is no longer available` };
+        throw {
+          status: 409,
+          message: `Product ${product?.name || item.productId} is no longer available`,
+        };
       }
 
       if (product.stock < item.quantity) {
-        throw { status: 409, message: `Insufficient stock for ${product.name}. Available: ${product.stock}` };
+        throw {
+          status: 409,
+          message: `Insufficient stock for ${product.name}. Available: ${product.stock}`,
+        };
       }
 
-      const { finalPrice } = await promotionService.calculateProductPrice(product, activePromotions);
+      const { finalPrice } = await promotionService.calculateProductPrice(
+        product,
+        activePromotions,
+      );
       preComputedTotal += finalPrice * item.quantity;
       orderItemsData.push({
         productId: product.id,
         quantity: item.quantity,
-        price: finalPrice
+        price: finalPrice,
       });
     }
 
     // Fetch shipping settings from DB
-    const { shipping } = await settingsService.getSettingsByKeys(['shipping']);
+    const { shipping } = await settingsService.getSettingsByKeys(["shipping"]);
     const freeShippingThreshold = shipping?.freeShippingThreshold ?? Infinity;
     const standardDeliveryCharge = shipping?.standardDeliveryCharge ?? 499;
 
-    let shippingCost = preComputedTotal >= freeShippingThreshold ? 0 : standardDeliveryCharge;
+    let shippingCost =
+      preComputedTotal >= freeShippingThreshold ? 0 : standardDeliveryCharge;
     let estimatedDelivery = "3-5 Business Days";
 
-    if (deliveryMethod === 'express') {
+    if (deliveryMethod === "express") {
       shippingCost = 149;
       estimatedDelivery = "1-2 Business Days";
     }
@@ -104,69 +125,76 @@ class OrderRepository {
     const grandTotal = preComputedTotal + shippingCost;
 
     // 3. Atomic Transaction — only pure DB writes, no external calls
-    const order = await prisma.$transaction(async (tx) => {
-      // Reduce inventory sequentially using pre-computed productMap
-      for (const item of cart.items) {
-        const product = productMap.get(item.productId);
-        const newStock = product.stock - item.quantity;
-        // C-2 FIX: Use pre-computed price from orderItemsData instead of undefined product.finalPrice
-        const preComputedItem = orderItemsData.find(oi => oi.productId === product.id);
+    const order = await prisma.$transaction(
+      async (tx) => {
+        // Reduce inventory sequentially using pre-computed productMap
+        for (const item of cart.items) {
+          const product = productMap.get(item.productId);
+          const newStock = product.stock - item.quantity;
+          // C-2 FIX: Use pre-computed price from orderItemsData instead of undefined product.finalPrice
+          const preComputedItem = orderItemsData.find(
+            (oi) => oi.productId === product.id,
+          );
 
-        await tx.product.update({
-          where: { id: product.id },
-          data: {
-            stock: Math.max(0, newStock),
-            // C-1 FIX: Only decrement stock at checkout — totalSold/totalRevenue are updated on DELIVERED
-            lastPurchasedAt: new Date()
-          }
-        });
-      }
-
-      // Create Order and Items using pre-computed totals
-      const createdOrder = await tx.order.create({
-        data: {
-          orderNumber,
-          userId,
-          totalAmount: grandTotal,
-          subtotal: preComputedTotal,
-          discountAmount: 0,
-          taxAmount: 0,
-          shippingCharge: shippingCost,
-          deliveryMethod,
-          estimatedDelivery,
-          shippingAddress: shippingAddress,
-          billingAddress: billingAddress,
-          paymentMethod,
-          paymentStatus: 'PAID', // Assessment mode
-          orderStatus: 'CONFIRMED', // Assessment mode
-          transactionRef: paymentMetadata.transactionRef || `TXN-${Date.now()}`,
-          cardBrand: paymentMetadata.cardBrand,
-          last4Digits: paymentMetadata.last4Digits,
-          maskedUPI: paymentMetadata.maskedUPI,
-          items: {
-            create: orderItemsData
-          }
-        },
-        include: {
-          items: {
-            include: {
-              product: PRODUCT_WITH_IMAGES,
-            }
-          }
+          await tx.product.update({
+            where: { id: product.id },
+            data: {
+              stock: Math.max(0, newStock),
+              // C-1 FIX: Only decrement stock at checkout — totalSold/totalRevenue are updated on DELIVERED
+              lastPurchasedAt: new Date(),
+            },
+          });
         }
-      });
 
-      // Clear cart
-      await tx.cartItem.deleteMany({
-        where: { cartId: cart.id }
-      });
+        // Create Order and Items using pre-computed totals
+        const createdOrder = await tx.order.create({
+          data: {
+            orderNumber,
+            userId,
+            totalAmount: grandTotal,
+            subtotal: preComputedTotal,
+            discountAmount: 0,
+            taxAmount: 0,
+            shippingCharge: shippingCost,
+            deliveryMethod,
+            estimatedDelivery,
+            shippingAddress: shippingAddress,
+            billingAddress: billingAddress,
+            paymentMethod,
+            paymentStatus: "PAID", // Assessment mode
+            orderStatus: "CONFIRMED", // Assessment mode
+            transactionRef:
+              paymentMetadata.transactionRef || `TXN-${Date.now()}`,
+            cardBrand: paymentMetadata.cardBrand,
+            last4Digits: paymentMetadata.last4Digits,
+            maskedUPI: paymentMetadata.maskedUPI,
+            items: {
+              create: orderItemsData,
+            },
+          },
+          include: {
+            items: {
+              include: {
+                product: PRODUCT_WITH_IMAGES,
+              },
+            },
+          },
+        });
 
-      return createdOrder;
-    }, { timeout: 15000 });
+        // Clear cart
+        await tx.cartItem.deleteMany({
+          where: { cartId: cart.id },
+        });
 
+        return createdOrder;
+      },
+      { timeout: 15000 },
+    );
 
     const duration = Date.now() - startTime;
-    console.log(`[CHECKOUT] Transaction committed for ${orderNumber} in ${duration}ms`);
+    console.log(
+      `[CHECKOUT] Transaction committed for ${orderNumber} in ${duration}ms`,
+    );
 
     // Attach user to order for downstream email service
     order.user = user;
@@ -181,10 +209,10 @@ class OrderRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
     return orders.map(mapOrder);
   }
@@ -199,60 +227,63 @@ class OrderRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     return mapOrder(order);
   }
 
   async updateOrderStatus(orderId, status) {
-    const updatedOrder = await prisma.$transaction(async (tx) => {
-      const existing = await tx.order.findUnique({
-        where: { id: orderId },
-        include: { items: true }
-      });
-      if (!existing) throw new Error('Order not found');
+    const updatedOrder = await prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.order.findUnique({
+          where: { id: orderId },
+          include: { items: true },
+        });
+        if (!existing) throw new Error("Order not found");
 
-      const previousStatus = existing.orderStatus;
-      
-      const order = await tx.order.update({
-        where: { id: orderId },
-        data: { orderStatus: status },
-        include: {
-          user: true,
-          items: {
-            include: {
-              product: PRODUCT_WITH_IMAGES,
-            }
+        const previousStatus = existing.orderStatus;
+
+        const order = await tx.order.update({
+          where: { id: orderId },
+          data: { orderStatus: status },
+          include: {
+            user: true,
+            items: {
+              include: {
+                product: PRODUCT_WITH_IMAGES,
+              },
+            },
+          },
+        });
+
+        // C-1 FIX: totalSold/totalRevenue are ONLY incremented here on DELIVERED (not at checkout)
+        if (previousStatus !== "DELIVERED" && status === "DELIVERED") {
+          const updatePromises = order.items
+            .filter((item) => item.product)
+            .map((item) =>
+              tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  totalSold: { increment: item.quantity },
+                  totalRevenue: { increment: item.price * item.quantity },
+                  lastPurchasedAt: new Date(),
+                },
+              }),
+            );
+
+          if (updatePromises.length > 0) {
+            await Promise.all(updatePromises);
           }
         }
-      });
-
-      // C-1 FIX: totalSold/totalRevenue are ONLY incremented here on DELIVERED (not at checkout)
-      if (previousStatus !== 'DELIVERED' && status === 'DELIVERED') {
-        const updatePromises = order.items
-          .filter(item => item.product)
-          .map(item => 
-            tx.product.update({
-              where: { id: item.productId },
-              data: {
-                totalSold: { increment: item.quantity },
-                totalRevenue: { increment: item.price * item.quantity },
-                lastPurchasedAt: new Date()
-              }
-            })
-          );
-        
-        if (updatePromises.length > 0) {
-          await Promise.all(updatePromises);
-        }
-      }
-      return order;
-    }, {
-      maxWait: 10000, // default is 2000
-      timeout: 30000, // default is 5000
-    });
+        return order;
+      },
+      {
+        maxWait: 10000, // default is 2000
+        timeout: 30000, // default is 5000
+      },
+    );
 
     return mapOrder(updatedOrder);
   }
@@ -260,44 +291,60 @@ class OrderRepository {
   async updatePaymentStatus(orderId, status) {
     return await prisma.order.update({
       where: { id: orderId },
-      data: { paymentStatus: status }
+      data: { paymentStatus: status },
     });
   }
 
-  async getAllOrders({ skip, take, search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount, sort }) {
+  async getAllOrders({
+    skip,
+    take,
+    search,
+    status,
+    paymentStatus,
+    minDate,
+    maxDate,
+    minAmount,
+    maxAmount,
+    sort,
+  }) {
     const where = {};
     if (search) {
       where.OR = [
-        { id: { contains: search, mode: 'insensitive' } },
-        { orderNumber: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
+        { id: { contains: search, mode: "insensitive" } },
+        { orderNumber: { contains: search, mode: "insensitive" } },
+        { user: { name: { contains: search, mode: "insensitive" } } },
+        { user: { email: { contains: search, mode: "insensitive" } } },
       ];
     }
-    if (status && status !== 'All') where.orderStatus = status;
-    if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
-    
+    if (status && status !== "All") where.orderStatus = status;
+    if (paymentStatus && paymentStatus !== "All")
+      where.paymentStatus = paymentStatus;
+
     const isValidDate = (d) => d && !isNaN(Date.parse(d));
-    if ((minDate && isValidDate(minDate)) || (maxDate && isValidDate(maxDate))) {
+    if (
+      (minDate && isValidDate(minDate)) ||
+      (maxDate && isValidDate(maxDate))
+    ) {
       where.createdAt = {};
-      if (minDate && isValidDate(minDate)) where.createdAt.gte = new Date(minDate);
+      if (minDate && isValidDate(minDate))
+        where.createdAt.gte = new Date(minDate);
       if (maxDate && isValidDate(maxDate)) {
         const endDate = new Date(maxDate);
         endDate.setHours(23, 59, 59, 999);
         where.createdAt.lte = endDate;
       }
     }
-    
+
     if (minAmount || maxAmount) {
       where.totalAmount = {};
       if (minAmount) where.totalAmount.gte = parseFloat(minAmount);
       if (maxAmount) where.totalAmount.lte = parseFloat(maxAmount);
     }
 
-    let orderBy = { createdAt: 'desc' };
-    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
-    if (sort === 'amount_desc') orderBy = { totalAmount: 'desc' };
-    if (sort === 'amount_asc') orderBy = { totalAmount: 'asc' };
+    let orderBy = { createdAt: "desc" };
+    if (sort === "oldest") orderBy = { createdAt: "asc" };
+    if (sort === "amount_desc") orderBy = { totalAmount: "desc" };
+    if (sort === "amount_asc") orderBy = { totalAmount: "asc" };
 
     return await prisma.order.findMany({
       where,
@@ -312,37 +359,50 @@ class OrderRepository {
         orderStatus: true,
         userId: true,
         user: {
-          select: { id: true, name: true, email: true }
-        }
+          select: { id: true, name: true, email: true },
+        },
       },
-      orderBy
+      orderBy,
     });
   }
 
-  async countAllOrders({ search, status, paymentStatus, minDate, maxDate, minAmount, maxAmount } = {}) {
+  async countAllOrders({
+    search,
+    status,
+    paymentStatus,
+    minDate,
+    maxDate,
+    minAmount,
+    maxAmount,
+  } = {}) {
     const where = {};
     if (search) {
       where.OR = [
-        { id: { contains: search, mode: 'insensitive' } },
-        { orderNumber: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
+        { id: { contains: search, mode: "insensitive" } },
+        { orderNumber: { contains: search, mode: "insensitive" } },
+        { user: { name: { contains: search, mode: "insensitive" } } },
+        { user: { email: { contains: search, mode: "insensitive" } } },
       ];
     }
-    if (status && status !== 'All') where.orderStatus = status;
-    if (paymentStatus && paymentStatus !== 'All') where.paymentStatus = paymentStatus;
-    
+    if (status && status !== "All") where.orderStatus = status;
+    if (paymentStatus && paymentStatus !== "All")
+      where.paymentStatus = paymentStatus;
+
     const isValidDate = (d) => d && !isNaN(Date.parse(d));
-    if ((minDate && isValidDate(minDate)) || (maxDate && isValidDate(maxDate))) {
+    if (
+      (minDate && isValidDate(minDate)) ||
+      (maxDate && isValidDate(maxDate))
+    ) {
       where.createdAt = {};
-      if (minDate && isValidDate(minDate)) where.createdAt.gte = new Date(minDate);
+      if (minDate && isValidDate(minDate))
+        where.createdAt.gte = new Date(minDate);
       if (maxDate && isValidDate(maxDate)) {
         const endDate = new Date(maxDate);
         endDate.setHours(23, 59, 59, 999);
         where.createdAt.lte = endDate;
       }
     }
-    
+
     if (minAmount || maxAmount) {
       where.totalAmount = {};
       if (minAmount) where.totalAmount.gte = parseFloat(minAmount);

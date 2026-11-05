@@ -1,14 +1,24 @@
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart, BookOpen, MessageSquare, Terminal, Settings } from 'lucide-react';
+import React from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import {
+  BarChart,
+  BookOpen,
+  MessageSquare,
+  Terminal,
+  Settings,
+} from "lucide-react";
 
 const AdminAILayout = () => {
   const navItems = [
-    { name: 'Overview', path: '/admin/ai/dashboard', icon: BarChart },
-    { name: 'Knowledge Base', path: '/admin/ai/knowledge', icon: BookOpen },
-    { name: 'Conversations', path: '/admin/ai/conversations', icon: MessageSquare },
-    { name: 'Playground', path: '/admin/ai/playground', icon: Terminal },
-    { name: 'Settings', path: '/admin/ai/settings', icon: Settings },
+    { name: "Overview", path: "/admin/ai/dashboard", icon: BarChart },
+    { name: "Knowledge Base", path: "/admin/ai/knowledge", icon: BookOpen },
+    {
+      name: "Conversations",
+      path: "/admin/ai/conversations",
+      icon: MessageSquare,
+    },
+    { name: "Playground", path: "/admin/ai/playground", icon: Terminal },
+    { name: "Settings", path: "/admin/ai/settings", icon: Settings },
   ];
 
   return (
@@ -23,9 +33,11 @@ const AdminAILayout = () => {
               to={item.path}
               className={({ isActive }) => `
                 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap
-                ${isActive 
-                  ? 'bg-brand-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-200'}
+                ${
+                  isActive
+                    ? "bg-brand-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-200"
+                }
               `}
             >
               <Icon className="w-4 h-4" />

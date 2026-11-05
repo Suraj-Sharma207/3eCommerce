@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import api from '../services/api';
+import { create } from "zustand";
+import api from "../services/api";
 
 let fetchWishlistPromise = null;
 
@@ -11,18 +11,26 @@ const useWishlistStore = create((set, get) => ({
 
   fetchWishlist: async () => {
     if (fetchWishlistPromise) return fetchWishlistPromise;
-    
+
     const { hasFetched } = get();
     if (!hasFetched) {
       set({ isLoading: true, error: null });
     }
-    
+
     fetchWishlistPromise = (async () => {
       try {
-        const response = await api.get('/wishlist');
-        set({ wishlist: response.data.data, isLoading: false, hasFetched: true });
+        const response = await api.get("/wishlist");
+        set({
+          wishlist: response.data.data,
+          isLoading: false,
+          hasFetched: true,
+        });
       } catch (error) {
-        set({ error: error.response?.data?.message || 'Failed to fetch wishlist', isLoading: false, hasFetched: true });
+        set({
+          error: error.response?.data?.message || "Failed to fetch wishlist",
+          isLoading: false,
+          hasFetched: true,
+        });
       } finally {
         fetchWishlistPromise = null;
       }
@@ -34,7 +42,8 @@ const useWishlistStore = create((set, get) => ({
   isWishlistOpen: false,
   openWishlist: () => set({ isWishlistOpen: true }),
   closeWishlist: () => set({ isWishlistOpen: false }),
-  toggleWishlistDrawer: () => set((state) => ({ isWishlistOpen: !state.isWishlistOpen })),
+  toggleWishlistDrawer: () =>
+    set((state) => ({ isWishlistOpen: !state.isWishlistOpen })),
 
   // Request Locks
   pendingProducts: {},
@@ -45,25 +54,34 @@ const useWishlistStore = create((set, get) => ({
     if (state.pendingProducts[productId]) return;
 
     // Lock this product
-    set((s) => ({ pendingProducts: { ...s.pendingProducts, [productId]: true } }));
+    set((s) => ({
+      pendingProducts: { ...s.pendingProducts, [productId]: true },
+    }));
 
     const { wishlist } = get();
     // Save previous state for rollback
-    const previousWishlist = wishlist ? JSON.parse(JSON.stringify(wishlist)) : null;
+    const previousWishlist = wishlist
+      ? JSON.parse(JSON.stringify(wishlist))
+      : null;
 
     // Optimistically update UI
-    const isCurrentlyInWishlist = wishlist?.items?.some(item => item.productId === productId);
+    const isCurrentlyInWishlist = wishlist?.items?.some(
+      (item) => item.productId === productId,
+    );
     let newWishlist;
 
     if (isCurrentlyInWishlist) {
       newWishlist = {
         ...wishlist,
-        items: wishlist.items.filter(item => item.productId !== productId)
+        items: wishlist.items.filter((item) => item.productId !== productId),
       };
     } else {
       newWishlist = {
         ...(wishlist || { items: [] }),
-        items: [...(wishlist?.items || []), { productId, isOptimistic: true, product: { id: productId } }]
+        items: [
+          ...(wishlist?.items || []),
+          { productId, isOptimistic: true, product: { id: productId } },
+        ],
       };
     }
 
@@ -71,20 +89,20 @@ const useWishlistStore = create((set, get) => ({
     set({ wishlist: newWishlist, error: null });
 
     try {
-      const response = await api.post('/wishlist/toggle', { productId });
-      
+      const response = await api.post("/wishlist/toggle", { productId });
+
       // Update with the actual verified data from the server, and release lock
-      set((s) => ({ 
+      set((s) => ({
         wishlist: response.data.data,
-        pendingProducts: { ...s.pendingProducts, [productId]: false }
+        pendingProducts: { ...s.pendingProducts, [productId]: false },
       }));
       return true;
     } catch (error) {
       // Rollback on failure and release lock
-      set((s) => ({ 
-        wishlist: previousWishlist, 
-        error: error.response?.data?.message || 'Failed to update wishlist',
-        pendingProducts: { ...s.pendingProducts, [productId]: false }
+      set((s) => ({
+        wishlist: previousWishlist,
+        error: error.response?.data?.message || "Failed to update wishlist",
+        pendingProducts: { ...s.pendingProducts, [productId]: false },
       }));
       throw error;
     }
@@ -93,9 +111,9 @@ const useWishlistStore = create((set, get) => ({
   isInWishlist: (productId) => {
     const { wishlist } = get();
     if (!wishlist || !wishlist.items) return false;
-    return wishlist.items.some(item => item.productId === productId);
+    return wishlist.items.some((item) => item.productId === productId);
   },
-  
-  clearWishlist: () => set({ wishlist: null, hasFetched: false, error: null })
+
+  clearWishlist: () => set({ wishlist: null, hasFetched: false, error: null }),
 }));
 export default useWishlistStore;

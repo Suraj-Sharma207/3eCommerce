@@ -1,10 +1,10 @@
-import prisma from '../lib/prisma.js';
-import { mapProduct } from '../utils/productMapper.js';
+import prisma from "../lib/prisma.js";
+import { mapProduct } from "../utils/productMapper.js";
 
 const PRODUCT_WITH_IMAGES = {
   include: {
-    images: { orderBy: { displayOrder: 'asc' } }
-  }
+    images: { orderBy: { displayOrder: "asc" } },
+  },
 };
 
 const mapOrderItem = (item) => ({
@@ -28,14 +28,14 @@ class WishlistRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     if (!wishlist) return null;
     return {
       ...wishlist,
-      items: wishlist.items.map(item => ({
+      items: wishlist.items.map((item) => ({
         ...item,
         product: mapProduct(item.product),
       })),
@@ -49,13 +49,13 @@ class WishlistRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     return {
       ...wishlist,
-      items: wishlist.items.map(item => ({
+      items: wishlist.items.map((item) => ({
         ...item,
         product: mapProduct(item.product),
       })),
@@ -67,9 +67,9 @@ class WishlistRepository {
       where: {
         wishlistId_productId: {
           wishlistId,
-          productId
-        }
-      }
+          productId,
+        },
+      },
     });
   }
 
@@ -77,14 +77,14 @@ class WishlistRepository {
     return await prisma.wishlistItem.create({
       data: {
         wishlistId,
-        productId
-      }
+        productId,
+      },
     });
   }
 
   async removeWishlistItem(wishlistItemId) {
     return await prisma.wishlistItem.delete({
-      where: { id: wishlistItemId }
+      where: { id: wishlistItemId },
     });
   }
 }

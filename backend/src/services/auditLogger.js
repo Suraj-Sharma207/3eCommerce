@@ -1,6 +1,12 @@
-import prisma from '../lib/prisma.js';
+import prisma from "../lib/prisma.js";
 
-export const logAudit = async ({ adminName, section, oldValue, newValue, ipAddress }) => {
+export const logAudit = async ({
+  adminName,
+  section,
+  oldValue,
+  newValue,
+  ipAddress,
+}) => {
   try {
     await prisma.auditLog.create({
       data: {
@@ -8,10 +14,10 @@ export const logAudit = async ({ adminName, section, oldValue, newValue, ipAddre
         section,
         oldValue: oldValue || {},
         newValue: newValue || {},
-        ipAddress: ipAddress || 'Unknown',
-      }
+        ipAddress: ipAddress || "Unknown",
+      },
     });
   } catch (error) {
-    console.error('Failed to write audit log:', error);
+    console.error("Failed to write audit log:", error);
   }
 };

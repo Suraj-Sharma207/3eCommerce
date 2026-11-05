@@ -1,4 +1,4 @@
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 /**
  * Centralized Form Validators and Input Sanitizers.
@@ -6,38 +6,42 @@ import { isValidPhoneNumber } from 'react-phone-number-input';
  */
 
 export const validateEmail = (email) => {
-  if (!email) return 'Email is required.';
+  if (!email) return "Email is required.";
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) return 'Enter a valid email address.';
-  return '';
+  if (!emailRegex.test(email)) return "Enter a valid email address.";
+  return "";
 };
 
 export const validatePassword = (password) => {
-  if (!password) return 'Password is required.';
-  if (password.length < 8) return 'Password must be at least 8 characters.';
-  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
-  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
-  if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
-  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must contain at least one special character.';
-  return '';
+  if (!password) return "Password is required.";
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(password))
+    return "Password must contain at least one uppercase letter.";
+  if (!/[a-z]/.test(password))
+    return "Password must contain at least one lowercase letter.";
+  if (!/[0-9]/.test(password))
+    return "Password must contain at least one number.";
+  if (!/[^A-Za-z0-9]/.test(password))
+    return "Password must contain at least one special character.";
+  return "";
 };
 
 export const validateConfirmPassword = (password, confirmPassword) => {
-  if (!confirmPassword) return 'Confirm password is required.';
-  if (password !== confirmPassword) return 'Passwords do not match.';
-  return '';
+  if (!confirmPassword) return "Confirm password is required.";
+  if (password !== confirmPassword) return "Passwords do not match.";
+  return "";
 };
 
 export const validatePhone = (phone) => {
-  if (!phone) return 'Phone number is required.';
+  if (!phone) return "Phone number is required.";
   // The phone string will be in E.164 format from PhoneInput (e.g. +1234567890)
   if (!isValidPhoneNumber(String(phone))) {
-    return 'Please enter a valid mobile number.';
+    return "Please enter a valid mobile number.";
   }
-  return '';
+  return "";
 };
 
-export const validateName = (name, label = 'Name') => {
+export const validateName = (name, label = "Name") => {
   if (!name || !name.trim()) return `${label} is required.`;
   const nameStr = name.trim();
   if (nameStr.length < 2 || nameStr.length > 80) {
@@ -46,34 +50,35 @@ export const validateName = (name, label = 'Name') => {
   if (!/^[A-Za-z\s'-]+$/.test(nameStr)) {
     return `${label} must contain only letters.`;
   }
-  return '';
+  return "";
 };
 
 export const validatePrice = (price) => {
   const val = parseFloat(price);
-  if (isNaN(val) || val <= 0) return 'Price must be greater than 0.';
-  return '';
+  if (isNaN(val) || val <= 0) return "Price must be greater than 0.";
+  return "";
 };
 
 export const validateDiscount = (discount) => {
-  if (discount === undefined || discount === '') return '';
+  if (discount === undefined || discount === "") return "";
   const val = parseInt(discount, 10);
-  if (isNaN(val) || val < 0 || val > 90) return 'Discount must be between 0% and 90%.';
-  return '';
+  if (isNaN(val) || val < 0 || val > 90)
+    return "Discount must be between 0% and 90%.";
+  return "";
 };
 
 export const validateStock = (stock) => {
-  if (stock === undefined || stock === '') return 'Stock quantity is required.';
+  if (stock === undefined || stock === "") return "Stock quantity is required.";
   const val = Number(stock);
-  if (!Number.isInteger(val) || val < 0) return 'Enter a valid stock quantity.';
-  return '';
+  if (!Number.isInteger(val) || val < 0) return "Enter a valid stock quantity.";
+  return "";
 };
 
-export const validateRequired = (value, label = 'Field') => {
-  if (value === undefined || value === null || String(value).trim() === '') {
+export const validateRequired = (value, label = "Field") => {
+  if (value === undefined || value === null || String(value).trim() === "") {
     return `${label} is required.`;
   }
-  return '';
+  return "";
 };
 
 /**
@@ -81,7 +86,7 @@ export const validateRequired = (value, label = 'Field') => {
  * Useful for Phone, Age, OTP, and Quantity.
  */
 export const sanitizeNumeric = (val) => {
-  return String(val).replace(/\D/g, '');
+  return String(val).replace(/\D/g, "");
 };
 
 /**
@@ -89,11 +94,13 @@ export const sanitizeNumeric = (val) => {
  * Useful for Price.
  */
 export const sanitizeDecimal = (val) => {
-  let cleaned = String(val).replace(/[^0-9.]/g, '');
+  let cleaned = String(val).replace(/[^0-9.]/g, "");
   // Prevent multiple decimal points
-  const dotIndex = cleaned.indexOf('.');
+  const dotIndex = cleaned.indexOf(".");
   if (dotIndex !== -1) {
-    cleaned = cleaned.substring(0, dotIndex + 1) + cleaned.substring(dotIndex + 1).replace(/\./g, '');
+    cleaned =
+      cleaned.substring(0, dotIndex + 1) +
+      cleaned.substring(dotIndex + 1).replace(/\./g, "");
   }
   return cleaned;
 };
@@ -105,8 +112,10 @@ export const sanitizeDecimal = (val) => {
  * @returns {boolean} True if the form is valid, false otherwise.
  */
 export const isFormValid = (errors, requiredFields) => {
-  const hasErrors = Object.values(errors).some((error) => error !== '');
-  const hasEmptyRequiredFields = Object.values(requiredFields).some((value) => value === undefined || value === null || String(value).trim() === '');
+  const hasErrors = Object.values(errors).some((error) => error !== "");
+  const hasEmptyRequiredFields = Object.values(requiredFields).some(
+    (value) =>
+      value === undefined || value === null || String(value).trim() === "",
+  );
   return !hasErrors && !hasEmptyRequiredFields;
 };
-

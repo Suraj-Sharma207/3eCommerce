@@ -1,68 +1,75 @@
-import { PRODUCT_CATEGORIES } from '../constants/productCategories';
+import { PRODUCT_CATEGORIES } from "../constants/productCategories";
 
 export const validateProductInput = (data) => {
   const errors = {};
 
   // 1. Product Name
   if (!data.name) {
-    errors.name = 'Please enter a valid product name.';
+    errors.name = "Please enter a valid product name.";
   } else {
     const nameStr = String(data.name).trim();
     if (nameStr.length < 2 || nameStr.length > 100) {
-      errors.name = 'Product name must be between 2 and 100 characters.';
+      errors.name = "Product name must be between 2 and 100 characters.";
     } else if (!/^[A-Za-z0-9\s&'-]+$/.test(nameStr)) {
-      errors.name = 'Please enter a valid product name.';
+      errors.name = "Please enter a valid product name.";
     }
   }
 
   // 2. Category
-  if (!data.category || !PRODUCT_CATEGORIES.includes(String(data.category).trim())) {
-    errors.category = 'Please select a valid category from the list.';
+  if (
+    !data.category ||
+    !PRODUCT_CATEGORIES.includes(String(data.category).trim())
+  ) {
+    errors.category = "Please select a valid category from the list.";
   }
 
   // 3. Brand
   if (!data.brand) {
-    errors.brand = 'Please enter a valid brand name.';
+    errors.brand = "Please enter a valid brand name.";
   } else {
     const brandStr = String(data.brand).trim();
     if (brandStr.length < 2 || brandStr.length > 50) {
-      errors.brand = 'Brand must be between 2 and 50 characters.';
+      errors.brand = "Brand must be between 2 and 50 characters.";
     } else if (!/^[A-Za-z0-9\s&'.,-]+$/.test(brandStr)) {
-      errors.brand = 'Please enter a valid brand name (letters, numbers, spaces, and & . , - \' allowed).';
+      errors.brand =
+        "Please enter a valid brand name (letters, numbers, spaces, and & . , - ' allowed).";
     }
   }
 
   // 4. Price
   const price = parseFloat(data.price);
   if (isNaN(price) || price <= 0 || price > 999999) {
-    errors.price = 'Price must be greater than 0.';
+    errors.price = "Price must be greater than 0.";
   }
 
   // 5. Discount
-  if (data.discountPercentage !== undefined && data.discountPercentage !== '') {
+  if (data.discountPercentage !== undefined && data.discountPercentage !== "") {
     const discount = parseInt(data.discountPercentage, 10);
     if (isNaN(discount) || discount < 0 || discount > 90) {
-      errors.discountPercentage = 'Discount cannot exceed 90%.';
+      errors.discountPercentage = "Discount cannot exceed 90%.";
     }
   }
 
   // 6. Stock Quantity
-  if (data.stock === undefined || data.stock === '') {
-    errors.stock = 'Please enter a valid stock quantity.';
+  if (data.stock === undefined || data.stock === "") {
+    errors.stock = "Please enter a valid stock quantity.";
   } else {
     const stock = Number(data.stock);
     if (!Number.isInteger(stock) || stock < 0 || stock > 999999) {
-      errors.stock = 'Please enter a valid stock quantity.';
+      errors.stock = "Please enter a valid stock quantity.";
     }
   }
 
   // 7. Description
   if (!data.description) {
-    errors.description = 'Description must be between 20 and 1000 characters.';
+    errors.description = "Description must be between 20 and 1000 characters.";
   } else {
-    const descStr = String(data.description).trim().replace(/<[^>]*>?/gm, ''); // remove html tags
+    const descStr = String(data.description)
+      .trim()
+      .replace(/<[^>]*>?/gm, ""); // remove html tags
     if (descStr.length < 20 || descStr.length > 1000) {
-      errors.description = 'Description must be between 20 and 1000 characters.';
+      errors.description =
+        "Description must be between 20 and 1000 characters.";
     }
   }
 
@@ -70,6 +77,6 @@ export const validateProductInput = (data) => {
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 };

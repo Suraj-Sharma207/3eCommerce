@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import customerService from '../services/customerService';
-import axios from 'axios';
+import { create } from "zustand";
+import customerService from "../services/customerService";
+import axios from "axios";
 
 let customersAbortController = null;
 
@@ -12,7 +12,7 @@ const useCustomerStore = create((set, get) => ({
   // Per-customer loading: Set of customer IDs currently being updated
   updatingCustomerIds: new Set(),
   error: null,
-  searchQuery: '',
+  searchQuery: "",
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -26,11 +26,14 @@ const useCustomerStore = create((set, get) => ({
 
   setItemsPerPage: (limit) => {
     set((state) => ({
-      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 },
     }));
   },
 
-  fetchCustomers: async (page = get().pagination.currentPage, overrideParams = {}) => {
+  fetchCustomers: async (
+    page = get().pagination.currentPage,
+    overrideParams = {},
+  ) => {
     if (customersAbortController) {
       customersAbortController.abort();
     }
@@ -38,71 +41,78 @@ const useCustomerStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     const { searchQuery, pagination } = get();
-    
-    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+
+    const effectiveSearch =
+      overrideParams.search !== undefined ? overrideParams.search : searchQuery;
     const filters = overrideParams.filters || {};
-    
+
     // Add custom date ranges
     let minDate, maxDate;
-    if (filters.dateRange && filters.dateRange !== 'All') {
+    if (filters.dateRange && filters.dateRange !== "All") {
       const date = new Date();
-      if (filters.dateRange === 'today') {
-        date.setHours(0,0,0,0);
+      if (filters.dateRange === "today") {
+        date.setHours(0, 0, 0, 0);
         minDate = date.toISOString();
-      } else if (filters.dateRange === 'yesterday') {
+      } else if (filters.dateRange === "yesterday") {
         const yest = new Date(date);
         yest.setDate(yest.getDate() - 1);
-        yest.setHours(0,0,0,0);
+        yest.setHours(0, 0, 0, 0);
         const yestEnd = new Date(date);
         yestEnd.setDate(yestEnd.getDate() - 1);
-        yestEnd.setHours(23,59,59,999);
+        yestEnd.setHours(23, 59, 59, 999);
         minDate = yest.toISOString();
         maxDate = yestEnd.toISOString();
-      } else if (filters.dateRange === 'last7') {
+      } else if (filters.dateRange === "last7") {
         const last7 = new Date(date);
         last7.setDate(last7.getDate() - 7);
         minDate = last7.toISOString();
-      } else if (filters.dateRange === 'last30') {
+      } else if (filters.dateRange === "last30") {
         const last30 = new Date(date);
         last30.setDate(last30.getDate() - 30);
         minDate = last30.toISOString();
-      } else if (filters.dateRange === 'thisMonth') {
+      } else if (filters.dateRange === "thisMonth") {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         minDate = firstDay.toISOString();
-      } else if (filters.dateRange === 'lastMonth') {
+      } else if (filters.dateRange === "lastMonth") {
         const firstDay = new Date(date.getFullYear(), date.getMonth() - 1, 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth(), 0);
-        lastDay.setHours(23,59,59,999);
+        lastDay.setHours(23, 59, 59, 999);
         minDate = firstDay.toISOString();
         maxDate = lastDay.toISOString();
       }
     }
 
     try {
-      const { data } = await customerService.getCustomers({
-        page,
-        limit: overrideParams.limit ?? pagination.itemsPerPage,
-        search: effectiveSearch,
-        status: filters.status && filters.status !== 'All' ? filters.status : undefined,
-        minDate,
-        maxDate,
-        sort: filters.sort
-      }, {
-        signal: customersAbortController.signal
-      });
-      
-      set({ 
-        customers: data.customers || [], 
+      const { data } = await customerService.getCustomers(
+        {
+          page,
+          limit: overrideParams.limit ?? pagination.itemsPerPage,
+          search: effectiveSearch,
+          status:
+            filters.status && filters.status !== "All"
+              ? filters.status
+              : undefined,
+          minDate,
+          maxDate,
+          sort: filters.sort,
+        },
+        {
+          signal: customersAbortController.signal,
+        },
+      );
+
+      set({
+        customers: data.customers || [],
         pagination: data.pagination,
-        isLoading: false 
+        isLoading: false,
       });
     } catch (error) {
       if (axios.isCancel(error)) {
         return;
       }
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch customers', 
-        isLoading: false 
+      set({
+        error: error.response?.data?.message || "Failed to fetch customers",
+        isLoading: false,
       });
     }
   },
@@ -113,9 +123,10 @@ const useCustomerStore = create((set, get) => ({
       const { data } = await customerService.getCustomerById(id);
       set({ selectedCustomer: data, isDetailsLoading: false });
     } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Failed to fetch customer details', 
-        isDetailsLoading: false 
+      set({
+        error:
+          error.response?.data?.message || "Failed to fetch customer details",
+        isDetailsLoading: false,
       });
     }
   },
@@ -127,7 +138,9 @@ const useCustomerStore = create((set, get) => ({
     // Optimistic update — patch only the matching customer row, no global loading
     set((state) => ({
       updatingCustomerIds: new Set([...state.updatingCustomerIds, id]),
-      customers: state.customers.map((c) => (c.id === id ? { ...c, active } : c)),
+      customers: state.customers.map((c) =>
+        c.id === id ? { ...c, active } : c,
+      ),
       selectedCustomer:
         state.selectedCustomer?.id === id
           ? { ...state.selectedCustomer, active }
@@ -153,7 +166,8 @@ const useCustomerStore = create((set, get) => ({
           updatingCustomerIds: next,
           customers: prevCustomers,
           selectedCustomer: prevSelected,
-          error: error.response?.data?.message || 'Failed to update customer status',
+          error:
+            error.response?.data?.message || "Failed to update customer status",
         };
       });
       return false;

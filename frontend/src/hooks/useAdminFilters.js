@@ -1,16 +1,18 @@
-import { useSearchParams } from 'react-router-dom';
-import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from "react-router-dom";
+import { useCallback, useState, useEffect, useMemo } from "react";
 
 const useAdminFilters = (defaultFilters = {}) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [localSearch, setLocalSearch] = useState(searchParams.get('search') || '');
+  const [localSearch, setLocalSearch] = useState(
+    searchParams.get("search") || "",
+  );
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize URL with default filters if they don't exist
   useEffect(() => {
     let changed = false;
     const currentParams = Object.fromEntries(searchParams.entries());
-    Object.keys(defaultFilters).forEach(key => {
+    Object.keys(defaultFilters).forEach((key) => {
       if (currentParams[key] === undefined) {
         currentParams[key] = defaultFilters[key];
         changed = true;
@@ -29,13 +31,13 @@ const useAdminFilters = (defaultFilters = {}) => {
       if (localSearch) {
         if (current.search !== localSearch) {
           current.search = localSearch;
-          current.page = '1';
+          current.page = "1";
           setSearchParams(current);
         }
       } else {
         if (current.search !== undefined) {
           delete current.search;
-          current.page = '1';
+          current.page = "1";
           setSearchParams(current);
         }
       }
@@ -43,67 +45,89 @@ const useAdminFilters = (defaultFilters = {}) => {
     return () => clearTimeout(handler);
   }, [localSearch, searchParams, setSearchParams]);
 
-  const updateFilter = useCallback((key, value) => {
-    const currentParams = Object.fromEntries(searchParams.entries());
-    if (value === null || value === undefined || value === '' || value === 'All') {
-      delete currentParams[key];
-    } else {
-      currentParams[key] = value;
-    }
-    currentParams.page = '1';
-    setSearchParams(currentParams);
-  }, [searchParams, setSearchParams]);
+  const updateFilter = useCallback(
+    (key, value) => {
+      const currentParams = Object.fromEntries(searchParams.entries());
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        value === "All"
+      ) {
+        delete currentParams[key];
+      } else {
+        currentParams[key] = value;
+      }
+      currentParams.page = "1";
+      setSearchParams(currentParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  const updateFilters = useCallback((updates) => {
-    const currentParams = Object.fromEntries(searchParams.entries());
-    let hasChanges = false;
-    Object.entries(updates).forEach(([key, value]) => {
-        if (value === null || value === undefined || value === '' || value === 'All') {
-            if(currentParams[key] !== undefined) {
-                delete currentParams[key];
-                hasChanges = true;
-            }
+  const updateFilters = useCallback(
+    (updates) => {
+      const currentParams = Object.fromEntries(searchParams.entries());
+      let hasChanges = false;
+      Object.entries(updates).forEach(([key, value]) => {
+        if (
+          value === null ||
+          value === undefined ||
+          value === "" ||
+          value === "All"
+        ) {
+          if (currentParams[key] !== undefined) {
+            delete currentParams[key];
+            hasChanges = true;
+          }
         } else {
-            if(currentParams[key] !== String(value)) {
-                currentParams[key] = value;
-                hasChanges = true;
-            }
+          if (currentParams[key] !== String(value)) {
+            currentParams[key] = value;
+            hasChanges = true;
+          }
         }
-    });
-    if(hasChanges){
-        currentParams.page = '1';
+      });
+      if (hasChanges) {
+        currentParams.page = "1";
         setSearchParams(currentParams);
-    }
-  }, [searchParams, setSearchParams]);
+      }
+    },
+    [searchParams, setSearchParams],
+  );
 
   const resetFilters = useCallback(() => {
-    setLocalSearch('');
+    setLocalSearch("");
     const params = new URLSearchParams();
-    Object.keys(defaultFilters).forEach(key => {
+    Object.keys(defaultFilters).forEach((key) => {
       if (defaultFilters[key]) params.set(key, defaultFilters[key]);
     });
     setSearchParams(params);
   }, [defaultFilters, setSearchParams]);
 
   /** Navigate to a specific page without resetting filters */
-  const setPage = useCallback((page) => {
-    const currentParams = Object.fromEntries(searchParams.entries());
-    currentParams.page = String(page);
-    setSearchParams(currentParams);
-  }, [searchParams, setSearchParams]);
+  const setPage = useCallback(
+    (page) => {
+      const currentParams = Object.fromEntries(searchParams.entries());
+      currentParams.page = String(page);
+      setSearchParams(currentParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
   /** Change items per page and reset to page 1 */
-  const setLimit = useCallback((limit) => {
-    const currentParams = Object.fromEntries(searchParams.entries());
-    currentParams.limit = String(limit);
-    currentParams.page = '1';
-    setSearchParams(currentParams);
-  }, [searchParams, setSearchParams]);
+  const setLimit = useCallback(
+    (limit) => {
+      const currentParams = Object.fromEntries(searchParams.entries());
+      currentParams.limit = String(limit);
+      currentParams.page = "1";
+      setSearchParams(currentParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
   const activeFilters = useMemo(() => {
     return Object.fromEntries(searchParams.entries());
   }, [searchParams]);
-  
+
   return {
     search: localSearch,
     setSearch: setLocalSearch,
@@ -113,7 +137,7 @@ const useAdminFilters = (defaultFilters = {}) => {
     resetFilters,
     setPage,
     setLimit,
-    isInitialized
+    isInitialized,
   };
 };
 

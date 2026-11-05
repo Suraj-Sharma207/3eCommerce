@@ -1,5 +1,5 @@
-import productImageService from '../services/productImageService.js';
-import { successResponse, errorResponse } from '../utils/response.js';
+import productImageService from "../services/productImageService.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 class ProductImageController {
   /**
@@ -11,16 +11,24 @@ class ProductImageController {
       const { id: productId } = req.params;
 
       if (!req.files || req.files.length === 0) {
-        return errorResponse(res, 'No image files provided', [], 400);
+        return errorResponse(res, "No image files provided", [], 400);
       }
 
-      const images = await productImageService.uploadImages(productId, req.files);
-      return successResponse(res, 'Images uploaded successfully', { images }, 201);
+      const images = await productImageService.uploadImages(
+        productId,
+        req.files,
+      );
+      return successResponse(
+        res,
+        "Images uploaded successfully",
+        { images },
+        201,
+      );
     } catch (error) {
       if (error.statusCode) {
         return errorResponse(res, error.message, [], error.statusCode);
       }
-      console.error('[ProductImageController.uploadImages]', error);
+      console.error("[ProductImageController.uploadImages]", error);
       next(error);
     }
   }
@@ -32,20 +40,27 @@ class ProductImageController {
   async deleteImage(req, res, next) {
     try {
       const { id: productId, imageId } = req.params;
-      console.log(`[ImageController.deleteImage] DELETE productId=${productId} imageId=${imageId}`);
+      console.log(
+        `[ImageController.deleteImage] DELETE productId=${productId} imageId=${imageId}`,
+      );
 
       if (!productId || !imageId) {
-        return errorResponse(res, 'productId and imageId are required', [], 400);
+        return errorResponse(
+          res,
+          "productId and imageId are required",
+          [],
+          400,
+        );
       }
 
       const result = await productImageService.deleteImage(productId, imageId);
-      return successResponse(res, 'Image deleted successfully', result, 200);
+      return successResponse(res, "Image deleted successfully", result, 200);
     } catch (error) {
       const code = error.statusCode;
       if (code === 404) return errorResponse(res, error.message, [], 404);
       if (code === 409) return errorResponse(res, error.message, [], 409);
       if (code === 400) return errorResponse(res, error.message, [], 400);
-      console.error('[ImageController.deleteImage] Unexpected error:', error);
+      console.error("[ImageController.deleteImage] Unexpected error:", error);
       next(error);
     }
   }
@@ -57,8 +72,11 @@ class ProductImageController {
   async setPrimaryImage(req, res, next) {
     try {
       const { id: productId, imageId } = req.params;
-      const images = await productImageService.setPrimaryImage(productId, imageId);
-      return successResponse(res, 'Primary image updated', { images }, 200);
+      const images = await productImageService.setPrimaryImage(
+        productId,
+        imageId,
+      );
+      return successResponse(res, "Primary image updated", { images }, 200);
     } catch (error) {
       if (error.statusCode) {
         return errorResponse(res, error.message, [], error.statusCode);
@@ -77,11 +95,24 @@ class ProductImageController {
       const { orderedIds } = req.body;
 
       if (!Array.isArray(orderedIds)) {
-        return errorResponse(res, 'orderedIds must be an array of image IDs', [], 400);
+        return errorResponse(
+          res,
+          "orderedIds must be an array of image IDs",
+          [],
+          400,
+        );
       }
 
-      const images = await productImageService.reorderImages(productId, orderedIds);
-      return successResponse(res, 'Images reordered successfully', { images }, 200);
+      const images = await productImageService.reorderImages(
+        productId,
+        orderedIds,
+      );
+      return successResponse(
+        res,
+        "Images reordered successfully",
+        { images },
+        200,
+      );
     } catch (error) {
       if (error.statusCode) {
         return errorResponse(res, error.message, [], error.statusCode);
@@ -98,7 +129,12 @@ class ProductImageController {
     try {
       const { id: productId } = req.params;
       const images = await productImageService.getImages(productId);
-      return successResponse(res, 'Images retrieved successfully', { images }, 200);
+      return successResponse(
+        res,
+        "Images retrieved successfully",
+        { images },
+        200,
+      );
     } catch (error) {
       next(error);
     }

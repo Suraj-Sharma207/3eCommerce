@@ -1,18 +1,18 @@
-import express from 'express';
-import productController from '../controllers/productController.js';
-import productImageController from '../controllers/productImageController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { authorize } from '../middleware/roleMiddleware.js';
-import { validate } from '../middleware/validationMiddleware.js';
-import { productSchema } from '../validations/productValidation.js';
-import uploadProduct from '../middleware/uploadProduct.js';
-import multer from 'multer';
+import express from "express";
+import productController from "../controllers/productController.js";
+import productImageController from "../controllers/productImageController.js";
+import { protect } from "../middleware/authMiddleware.js";
+import { authorize } from "../middleware/roleMiddleware.js";
+import { validate } from "../middleware/validationMiddleware.js";
+import { productSchema } from "../validations/productValidation.js";
+import uploadProduct from "../middleware/uploadProduct.js";
+import multer from "multer";
 
 // M-4 FIX: Added MIME-type filter — only allow CSV and XLSX files
 const ALLOWED_DOC_TYPES = [
-  'text/csv',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
+  "text/csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
 ];
 
 const uploadDoc = multer({
@@ -22,7 +22,9 @@ const uploadDoc = multer({
     if (ALLOWED_DOC_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      const err = new Error(`Invalid file type: ${file.mimetype}. Allowed: CSV, XLSX`);
+      const err = new Error(
+        `Invalid file type: ${file.mimetype}. Allowed: CSV, XLSX`,
+      );
       err.statusCode = 400;
       cb(err, false);
     }
@@ -32,56 +34,94 @@ const uploadDoc = multer({
 const router = express.Router();
 
 // ── Public routes ───────────────────────────────────────────────────────────
-router.get('/', productController.getProducts);
-router.get('/search/suggestions', productController.getSearchSuggestions);
-router.get('/featured', productController.getFeaturedProducts);
-router.get('/trending', productController.getTrendingProducts);
-router.get('/new', productController.getNewProducts);
-router.get('/best-sellers', productController.getBestSellers);
-router.get('/recommended', productController.getRecommendedProductsEndpoint);
-router.get('/categories', productController.getCategories);
-router.get('/:id/related', productController.getRelatedProducts);
-router.post('/:id/notify', productController.notifyStock);
-router.get('/:id/notify/status', protect, productController.getNotifyStatus);
-router.get('/:id/images', productImageController.getImages);
-router.get('/:id', productController.getProductById);
+router.get("/", productController.getProducts);
+router.get("/search/suggestions", productController.getSearchSuggestions);
+router.get("/featured", productController.getFeaturedProducts);
+router.get("/trending", productController.getTrendingProducts);
+router.get("/new", productController.getNewProducts);
+router.get("/best-sellers", productController.getBestSellers);
+router.get("/recommended", productController.getRecommendedProductsEndpoint);
+router.get("/categories", productController.getCategories);
+router.get("/:id/related", productController.getRelatedProducts);
+router.post("/:id/notify", productController.notifyStock);
+router.get("/:id/notify/status", protect, productController.getNotifyStatus);
+router.get("/:id/images", productImageController.getImages);
+router.get("/:id", productController.getProductById);
 
 // ── Admin routes ────────────────────────────────────────────────────────────
-router.post('/', protect, authorize('ADMIN'), validate(productSchema), productController.createProduct);
-router.put('/:id', protect, authorize('ADMIN'), validate(productSchema), productController.updateProduct);
-router.delete('/:id', protect, authorize('ADMIN'), productController.deleteProduct);
+router.post(
+  "/",
+  protect,
+  authorize("ADMIN"),
+  validate(productSchema),
+  productController.createProduct,
+);
+router.put(
+  "/:id",
+  protect,
+  authorize("ADMIN"),
+  validate(productSchema),
+  productController.updateProduct,
+);
+router.delete(
+  "/:id",
+  protect,
+  authorize("ADMIN"),
+  productController.deleteProduct,
+);
 
 // Bulk Import routes
-router.get('/import-template/csv', protect, authorize('ADMIN'), productController.downloadCsvTemplate);
-router.get('/import-template/xlsx', protect, authorize('ADMIN'), productController.downloadExcelTemplate);
-router.post('/import-preview', protect, authorize('ADMIN'), uploadDoc.single('file'), productController.importPreview);
-router.post('/import-row', protect, authorize('ADMIN'), productController.importRow);
+router.get(
+  "/import-template/csv",
+  protect,
+  authorize("ADMIN"),
+  productController.downloadCsvTemplate,
+);
+router.get(
+  "/import-template/xlsx",
+  protect,
+  authorize("ADMIN"),
+  productController.downloadExcelTemplate,
+);
+router.post(
+  "/import-preview",
+  protect,
+  authorize("ADMIN"),
+  uploadDoc.single("file"),
+  productController.importPreview,
+);
+router.post(
+  "/import-row",
+  protect,
+  authorize("ADMIN"),
+  productController.importRow,
+);
 
 // ── Admin image management routes ───────────────────────────────────────────
 router.post(
-  '/:id/images',
+  "/:id/images",
   protect,
-  authorize('ADMIN'),
-  uploadProduct.array('images', 10),
-  productImageController.uploadImages
+  authorize("ADMIN"),
+  uploadProduct.array("images", 10),
+  productImageController.uploadImages,
 );
 router.delete(
-  '/:id/images/:imageId',
+  "/:id/images/:imageId",
   protect,
-  authorize('ADMIN'),
-  productImageController.deleteImage
+  authorize("ADMIN"),
+  productImageController.deleteImage,
 );
 router.put(
-  '/:id/images/reorder',
+  "/:id/images/reorder",
   protect,
-  authorize('ADMIN'),
-  productImageController.reorderImages
+  authorize("ADMIN"),
+  productImageController.reorderImages,
 );
 router.put(
-  '/:id/images/:imageId/primary',
+  "/:id/images/:imageId/primary",
   protect,
-  authorize('ADMIN'),
-  productImageController.setPrimaryImage
+  authorize("ADMIN"),
+  productImageController.setPrimaryImage,
 );
 
 export default router;

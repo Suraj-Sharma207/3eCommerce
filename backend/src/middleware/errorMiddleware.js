@@ -1,9 +1,9 @@
-import { errorResponse } from '../utils/response.js';
-import { Prisma } from '@prisma/client';
+import { errorResponse } from "../utils/response.js";
+import { Prisma } from "@prisma/client";
 
 export const errorHandler = (err, req, res, next) => {
   // Check if it is an official Prisma database error
-  const isPrismaError = 
+  const isPrismaError =
     err instanceof Prisma.PrismaClientKnownRequestError ||
     err instanceof Prisma.PrismaClientValidationError ||
     err instanceof Prisma.PrismaClientInitializationError ||
@@ -11,9 +11,9 @@ export const errorHandler = (err, req, res, next) => {
 
   const timestamp = new Date().toISOString();
   const route = `${req.method} ${req.originalUrl}`;
-  const userId = req.user ? req.user.id : 'Anonymous';
+  const userId = req.user ? req.user.id : "Anonymous";
   const ipAddress = req.ip || req.socket?.remoteAddress;
-  const requestId = req.id || 'N/A';
+  const requestId = req.id || "N/A";
 
   // Log complete diagnostic information on the server
   console.error(`\n=== DIAGNOSTIC EXCEPTION LOG ===`);
@@ -24,15 +24,17 @@ export const errorHandler = (err, req, res, next) => {
   console.error(`Request ID: ${requestId}`);
 
   if (isPrismaError) {
-    console.error(`Error Type: Prisma Database Error (${err.constructor.name})`);
-    console.error(`Error Code: ${err.code || 'N/A'}`);
+    console.error(
+      `Error Type: Prisma Database Error (${err.constructor.name})`,
+    );
+    console.error(`Error Code: ${err.code || "N/A"}`);
     console.error(err.stack || err);
     console.error(`=================================\n`);
 
     // Never expose Prisma or database internals to the client
     return res.status(500).json({
       success: false,
-      message: 'Unable to complete your request. Please try again later.'
+      message: "Unable to complete your request. Please try again later.",
     });
   }
 
@@ -42,14 +44,18 @@ export const errorHandler = (err, req, res, next) => {
   console.error(`=================================\n`);
 
   const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const message = err.message || "Internal Server Error";
 
   // Phase 9: Never expose raw error messages for 500 errors.
   // 4xx errors use controlled messages (e.g. 'Product not found') which are safe.
-  if (statusCode >= 500 || message.toLowerCase().includes('prisma') || message.toLowerCase().includes('database')) {
+  if (
+    statusCode >= 500 ||
+    message.toLowerCase().includes("prisma") ||
+    message.toLowerCase().includes("database")
+  ) {
     return res.status(500).json({
       success: false,
-      message: 'Unable to complete your request. Please try again later.'
+      message: "Unable to complete your request. Please try again later.",
     });
   }
 
@@ -57,5 +63,5 @@ export const errorHandler = (err, req, res, next) => {
 };
 
 export const notFoundHandler = (req, res, next) => {
-  return errorResponse(res, 'Route not found', [], 404);
+  return errorResponse(res, "Route not found", [], 404);
 };

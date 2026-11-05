@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma.js';
+import prisma from "../lib/prisma.js";
 
 class UserRepository {
   async findByEmail(email) {
@@ -23,8 +23,8 @@ class UserRepository {
         avatarPublicId: true,
         role: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
   }
 
@@ -40,26 +40,22 @@ class UserRepository {
   }
 
   async getProfileStats(userId) {
-    const [
-      totalOrders,
-      pendingOrders,
-      completedOrders,
-      wishlistData
-    ] = await Promise.all([
-      prisma.order.count({ where: { userId } }),
-      prisma.order.count({ where: { userId, orderStatus: 'PENDING' } }),
-      prisma.order.count({ where: { userId, orderStatus: 'DELIVERED' } }),
-      prisma.wishlist.findUnique({
-        where: { userId },
-        include: { _count: { select: { items: true } } }
-      })
-    ]);
+    const [totalOrders, pendingOrders, completedOrders, wishlistData] =
+      await Promise.all([
+        prisma.order.count({ where: { userId } }),
+        prisma.order.count({ where: { userId, orderStatus: "PENDING" } }),
+        prisma.order.count({ where: { userId, orderStatus: "DELIVERED" } }),
+        prisma.wishlist.findUnique({
+          where: { userId },
+          include: { _count: { select: { items: true } } },
+        }),
+      ]);
 
     return {
       totalOrders,
       pendingOrders,
       completedOrders,
-      wishlistCount: wishlistData?._count?.items || 0
+      wishlistCount: wishlistData?._count?.items || 0,
     };
   }
 }

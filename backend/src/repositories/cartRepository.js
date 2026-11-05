@@ -1,10 +1,10 @@
-import prisma from '../lib/prisma.js';
-import { mapProduct } from '../utils/productMapper.js';
+import prisma from "../lib/prisma.js";
+import { mapProduct } from "../utils/productMapper.js";
 
 const PRODUCT_WITH_IMAGES = {
   include: {
-    images: { orderBy: { displayOrder: 'asc' } }
-  }
+    images: { orderBy: { displayOrder: "asc" } },
+  },
 };
 
 /** Map product inside a cart item */
@@ -30,9 +30,9 @@ class CartRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     return mapCart(cart);
   }
@@ -44,9 +44,9 @@ class CartRepository {
         items: {
           include: {
             product: PRODUCT_WITH_IMAGES,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     return mapCart(cart);
   }
@@ -56,9 +56,9 @@ class CartRepository {
       where: {
         cartId_productId: {
           cartId,
-          productId
-        }
-      }
+          productId,
+        },
+      },
     });
   }
 
@@ -67,27 +67,27 @@ class CartRepository {
       data: {
         cartId,
         productId,
-        quantity
-      }
+        quantity,
+      },
     });
   }
 
   async updateCartItem(cartItemId, quantity) {
     return await prisma.cartItem.update({
       where: { id: cartItemId },
-      data: { quantity }
+      data: { quantity },
     });
   }
 
   async removeCartItem(cartItemId) {
     return await prisma.cartItem.delete({
-      where: { id: cartItemId }
+      where: { id: cartItemId },
     });
   }
 
   async clearCart(cartId) {
     return await prisma.cartItem.deleteMany({
-      where: { cartId }
+      where: { cartId },
     });
   }
 }

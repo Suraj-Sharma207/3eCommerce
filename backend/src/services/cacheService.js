@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient } from "redis";
 
 let redisClient = null;
 let isRedisConnected = false;
@@ -33,7 +33,7 @@ class MemoryCache {
   async set(key, value, ttlSeconds = DEFAULT_TTL) {
     this.store.set(key, {
       value,
-      expiry: Date.now() + (ttlSeconds * 1000)
+      expiry: Date.now() + ttlSeconds * 1000,
     });
   }
 
@@ -43,9 +43,12 @@ class MemoryCache {
 
   async keys(pattern) {
     // Converts glob pattern (e.g. products:*) to Regex
-    const regexStr = '^' + pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\\\*/g, '.*') + '$';
+    const regexStr =
+      "^" +
+      pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&").replace(/\\\*/g, ".*") +
+      "$";
     const regex = new RegExp(regexStr);
-    return Array.from(this.store.keys()).filter(key => regex.test(key));
+    return Array.from(this.store.keys()).filter((key) => regex.test(key));
   }
 
   async clear() {
@@ -57,7 +60,10 @@ class MemoryCache {
       hits: this.hits,
       misses: this.misses,
       size: this.store.size,
-      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
+      hitRate:
+        this.hits + this.misses > 0
+          ? (this.hits / (this.hits + this.misses)).toFixed(2)
+          : "0.00",
     };
   }
 }
@@ -73,7 +79,9 @@ let redisMisses = 0;
 export const initRedis = async () => {
   const redisUrl = process.env.REDIS_URL;
   if (!redisUrl) {
-    console.warn('[Cache] REDIS_URL not defined in environment. Using high-performance memory cache.');
+    console.warn(
+      "[Cache] REDIS_URL not defined in environment. Using high-performance memory cache.",
+    );
     return;
   }
 
@@ -83,32 +91,37 @@ export const initRedis = async () => {
       socket: {
         reconnectStrategy: (retries) => {
           if (retries > 5) {
-            console.error('[Cache] Redis reconnect failed 5 times. Falling back permanently to memory cache.');
+            console.error(
+              "[Cache] Redis reconnect failed 5 times. Falling back permanently to memory cache.",
+            );
             isRedisConnected = false;
             return false; // Stop reconnecting
           }
           return Math.min(retries * 500, 2000); // Backoff
-        }
-      }
+        },
+      },
     });
 
-    redisClient.on('error', (err) => {
-      console.error('[Cache] Redis connection error:', err.message);
+    redisClient.on("error", (err) => {
+      console.error("[Cache] Redis connection error:", err.message);
       isRedisConnected = false;
     });
 
-    redisClient.on('connect', () => {
-      console.log('[Cache] Connecting to Redis...');
+    redisClient.on("connect", () => {
+      console.log("[Cache] Connecting to Redis...");
     });
 
-    redisClient.on('ready', () => {
-      console.log('[Cache] Connected to Redis successfully. Caching enabled.');
+    redisClient.on("ready", () => {
+      console.log("[Cache] Connected to Redis successfully. Caching enabled.");
       isRedisConnected = true;
     });
 
     await redisClient.connect();
   } catch (error) {
-    console.error('[Cache] Redis connection failed during init, using memory cache fallback:', error.message);
+    console.error(
+      "[Cache] Redis connection failed during init, using memory cache fallback:",
+      error.message,
+    );
     isRedisConnected = false;
     redisClient = null;
   }
@@ -128,7 +141,10 @@ export const cacheGet = async (key) => {
       redisMisses++;
       return null;
     } catch (err) {
-      console.error('[Cache] Redis get failed, reading from memory fallback:', err.message);
+      console.error(
+        "[Cache] Redis get failed, reading from memory fallback:",
+        err.message,
+      );
       return memoryCache.get(key);
     }
   }
@@ -143,7 +159,10 @@ export const cacheSet = async (key, value, ttlSeconds = DEFAULT_TTL) => {
     try {
       await redisClient.set(key, JSON.stringify(value), { EX: ttlSeconds });
     } catch (err) {
-      console.error('[Cache] Redis set failed, writing to memory fallback:', err.message);
+      console.error(
+        "[Cache] Redis set failed, writing to memory fallback:",
+        err.message,
+      );
       await memoryCache.set(key, value, ttlSeconds);
     }
   } else {
@@ -159,7 +178,10 @@ export const cacheDel = async (key) => {
     try {
       await redisClient.del(key);
     } catch (err) {
-      console.error('[Cache] Redis del failed, deleting from memory fallback:', err.message);
+      console.error(
+        "[Cache] Redis del failed, deleting from memory fallback:",
+        err.message,
+      );
       await memoryCache.del(key);
     }
   } else {
@@ -173,7 +195,7 @@ export const cacheDel = async (key) => {
  */
 export const cacheInvalidateByPattern = async (pattern) => {
   console.log(`[Cache] Invalidating pattern: ${pattern}`);
-  
+
   // 1. Invalidate Redis keys using SCAN (non-blocking)
   if (isRedisConnected && redisClient) {
     try {
@@ -181,7 +203,10 @@ export const cacheInvalidateByPattern = async (pattern) => {
       let totalDeleted = 0;
       do {
         // SCAN returns { cursor, keys } in the node-redis v4+ client
-        const result = await redisClient.scan(cursor, { MATCH: pattern, COUNT: 100 });
+        const result = await redisClient.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100,
+        });
         cursor = result.cursor;
         const keys = result.keys;
         if (keys && keys.length > 0) {
@@ -189,12 +214,12 @@ export const cacheInvalidateByPattern = async (pattern) => {
           totalDeleted += keys.length;
         }
       } while (cursor !== 0);
-      
+
       if (totalDeleted > 0) {
         console.log(`[Cache] Invalidated ${totalDeleted} keys in Redis`);
       }
     } catch (err) {
-      console.error('[Cache] Redis pattern invalidation failed:', err.message);
+      console.error("[Cache] Redis pattern invalidation failed:", err.message);
     }
   }
 
@@ -205,10 +230,12 @@ export const cacheInvalidateByPattern = async (pattern) => {
       for (const k of memKeys) {
         await memoryCache.del(k);
       }
-      console.log(`[Cache] Invalidated ${memKeys.length} keys in Memory fallback`);
+      console.log(
+        `[Cache] Invalidated ${memKeys.length} keys in Memory fallback`,
+      );
     }
   } catch (err) {
-    console.error('[Cache] Memory pattern invalidation failed:', err.message);
+    console.error("[Cache] Memory pattern invalidation failed:", err.message);
   }
 };
 
@@ -222,9 +249,12 @@ export const cacheStats = () => {
       connected: isRedisConnected,
       hits: redisHits,
       misses: redisMisses,
-      hitRate: redisHits + redisMisses > 0 ? (redisHits / (redisHits + redisMisses)).toFixed(2) : '0.00'
+      hitRate:
+        redisHits + redisMisses > 0
+          ? (redisHits / (redisHits + redisMisses)).toFixed(2)
+          : "0.00",
     },
-    memory: memStats
+    memory: memStats,
   };
 };
 
@@ -236,9 +266,9 @@ export const closeRedis = async () => {
     try {
       await redisClient.quit();
       isRedisConnected = false;
-      console.log('[Cache] Redis connection closed gracefully.');
+      console.log("[Cache] Redis connection closed gracefully.");
     } catch (err) {
-      console.error('[Cache] Error closing Redis client:', err.message);
+      console.error("[Cache] Error closing Redis client:", err.message);
     }
   }
 };

@@ -8,7 +8,7 @@ export const calculateShipping = (subtotal, publicConfig) => {
   // If settings haven't loaded yet, return -1 to signal UI to show loading/calculating state
   if (!publicConfig || !publicConfig.shipping) {
     return {
-      fee: -1, 
+      fee: -1,
       remainingForFree: 0,
       isFree: false,
       threshold: 0,
@@ -16,7 +16,7 @@ export const calculateShipping = (subtotal, publicConfig) => {
   }
 
   const shippingSettings = publicConfig.shipping;
-  
+
   // Safe fallbacks if backend accidentally omits them but the object exists
   const threshold = shippingSettings.freeShippingThreshold ?? Infinity;
   const charge = shippingSettings.standardDeliveryCharge ?? 99;

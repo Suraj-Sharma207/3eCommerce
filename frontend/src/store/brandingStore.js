@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import api from '../services/api'; // Assuming you have an api.js
+import { create } from "zustand";
+import api from "../services/api"; // Assuming you have an api.js
 
 let fetchBrandingPromise = null;
 
 export const useBrandingStore = create((set, get) => ({
   branding: {
-    platformName: 'Store', // Default fallback
-    logoUrl: null
+    platformName: "Store", // Default fallback
+    logoUrl: null,
   },
   loading: false,
   uploading: false,
@@ -17,12 +17,12 @@ export const useBrandingStore = create((set, get) => ({
       try {
         set({ loading: true });
         // Fetch public branding settings
-        const response = await api.get('/branding');
+        const response = await api.get("/branding");
         if (response.data.success && response.data.data) {
           set({ branding: response.data.data });
         }
       } catch (error) {
-        console.error('Failed to fetch branding', error);
+        console.error("Failed to fetch branding", error);
         // Fallback remains if fetch fails
       } finally {
         set({ loading: false });
@@ -35,13 +35,13 @@ export const useBrandingStore = create((set, get) => ({
   updateBranding: async (data) => {
     try {
       set({ uploading: true });
-      const response = await api.put('/admin/branding', data);
+      const response = await api.put("/admin/branding", data);
       if (response.data.success && response.data.data) {
         set({ branding: response.data.data });
         return true;
       }
     } catch (error) {
-      console.error('Failed to update branding', error);
+      console.error("Failed to update branding", error);
       throw error;
     } finally {
       set({ uploading: false });
@@ -53,11 +53,11 @@ export const useBrandingStore = create((set, get) => ({
     try {
       set({ uploading: true });
       const formData = new FormData();
-      formData.append('logo', file);
+      formData.append("logo", file);
 
-      const response = await api.post('/admin/branding/logo', formData, {
+      const response = await api.post("/admin/branding/logo", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -66,7 +66,7 @@ export const useBrandingStore = create((set, get) => ({
         return true;
       }
     } catch (error) {
-      console.error('Failed to upload logo', error);
+      console.error("Failed to upload logo", error);
       throw error;
     } finally {
       set({ uploading: false });
@@ -78,11 +78,11 @@ export const useBrandingStore = create((set, get) => ({
     try {
       set({ uploading: true });
       const formData = new FormData();
-      formData.append('emailLogo', file);
+      formData.append("emailLogo", file);
 
-      const response = await api.post('/admin/branding/email-logo', formData, {
+      const response = await api.post("/admin/branding/email-logo", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -91,11 +91,11 @@ export const useBrandingStore = create((set, get) => ({
         return true;
       }
     } catch (error) {
-      console.error('Failed to upload email logo', error);
+      console.error("Failed to upload email logo", error);
       throw error;
     } finally {
       set({ uploading: false });
     }
     return false;
-  }
+  },
 }));

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import promotionService from '../services/promotionService';
-import axios from 'axios';
+import { create } from "zustand";
+import promotionService from "../services/promotionService";
+import axios from "axios";
 
 let promotionsAbortController = null;
 
@@ -10,7 +10,7 @@ const usePromotionStore = create((set, get) => ({
   // Per-promotion loading: Set of promotion IDs currently being updated/deleted
   updatingPromotionIds: new Set(),
   error: null,
-  searchQuery: '',
+  searchQuery: "",
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -24,11 +24,14 @@ const usePromotionStore = create((set, get) => ({
 
   setItemsPerPage: (limit) => {
     set((state) => ({
-      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 }
+      pagination: { ...state.pagination, itemsPerPage: limit, currentPage: 1 },
     }));
   },
 
-  fetchPromotions: async (page = get().pagination.currentPage, overrideParams = {}) => {
+  fetchPromotions: async (
+    page = get().pagination.currentPage,
+    overrideParams = {},
+  ) => {
     if (promotionsAbortController) {
       promotionsAbortController.abort();
     }
@@ -36,32 +39,39 @@ const usePromotionStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     const { searchQuery, pagination } = get();
-    
-    const effectiveSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+
+    const effectiveSearch =
+      overrideParams.search !== undefined ? overrideParams.search : searchQuery;
     const filters = overrideParams.filters || {};
-    
+
     const limit = overrideParams.limit ?? pagination.itemsPerPage;
 
     try {
-      const { data } = await promotionService.getPromotions({
-        page,
-        limit,
-        search: effectiveSearch,
-        status: filters.status,
-        type: filters.type,
-        applyTo: filters.applyTo,
-        sort: filters.sort
-      }, {
-        signal: promotionsAbortController.signal
-      });
-      set({ 
-        promotions: data.promotions || data, 
+      const { data } = await promotionService.getPromotions(
+        {
+          page,
+          limit,
+          search: effectiveSearch,
+          status: filters.status,
+          type: filters.type,
+          applyTo: filters.applyTo,
+          sort: filters.sort,
+        },
+        {
+          signal: promotionsAbortController.signal,
+        },
+      );
+      set({
+        promotions: data.promotions || data,
         pagination: data.pagination || get().pagination,
-        isLoading: false 
+        isLoading: false,
       });
     } catch (error) {
       if (axios.isCancel(error)) return;
-      set({ error: error.response?.data?.message || 'Failed to fetch promotions', isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to fetch promotions",
+        isLoading: false,
+      });
     }
   },
 
@@ -75,7 +85,10 @@ const usePromotionStore = create((set, get) => ({
       fetchPromotions(pagination.currentPage);
       return true;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to create promotion', isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to create promotion",
+        isLoading: false,
+      });
       return false;
     }
   },
@@ -87,13 +100,16 @@ const usePromotionStore = create((set, get) => ({
     set((state) => ({
       updatingPromotionIds: new Set([...state.updatingPromotionIds, id]),
       promotions: state.promotions.map((p) =>
-        p.id === id ? { ...p, ...promotionData } : p
+        p.id === id ? { ...p, ...promotionData } : p,
       ),
       error: null,
     }));
 
     try {
-      const { data } = await promotionService.updatePromotion(id, promotionData);
+      const { data } = await promotionService.updatePromotion(
+        id,
+        promotionData,
+      );
       const updated = data?.promotion || data?.data || { ...promotionData, id };
       set((state) => {
         const next = new Set(state.updatingPromotionIds);
@@ -101,7 +117,9 @@ const usePromotionStore = create((set, get) => ({
         return {
           updatingPromotionIds: next,
           // Confirm with server response data
-          promotions: state.promotions.map((p) => (p.id === id ? { ...p, ...updated } : p)),
+          promotions: state.promotions.map((p) =>
+            p.id === id ? { ...p, ...updated } : p,
+          ),
         };
       });
       return true;
@@ -113,7 +131,7 @@ const usePromotionStore = create((set, get) => ({
         return {
           updatingPromotionIds: next,
           promotions: prevPromotions,
-          error: error.response?.data?.message || 'Failed to update promotion',
+          error: error.response?.data?.message || "Failed to update promotion",
         };
       });
       return false;
@@ -148,7 +166,7 @@ const usePromotionStore = create((set, get) => ({
         return {
           updatingPromotionIds: next,
           promotions: prevPromotions,
-          error: error.response?.data?.message || 'Failed to delete promotion',
+          error: error.response?.data?.message || "Failed to delete promotion",
         };
       });
       return false;

@@ -1,8 +1,8 @@
-import { renderTemplate } from '../utils/templateCompiler.js';
-import emailQueue from '../queue/emailQueue.js';
-import settingsService from '../../services/settingsService.js';
-import { brandingService } from '../../services/brandingService.js';
-import { getFrontendUrl } from '../../utils/urlUtils.js';
+import { renderTemplate } from "../utils/templateCompiler.js";
+import emailQueue from "../queue/emailQueue.js";
+import settingsService from "../../services/settingsService.js";
+import { brandingService } from "../../services/brandingService.js";
+import { getFrontendUrl } from "../../utils/urlUtils.js";
 
 class EmailService {
   /**
@@ -10,17 +10,17 @@ class EmailService {
    */
   async getCurrencySymbol() {
     try {
-      const settings = await settingsService.getSettingsByKeys(['store']);
-      return settings.store?.currencySymbol || '₹';
+      const settings = await settingsService.getSettingsByKeys(["store"]);
+      return settings.store?.currencySymbol || "₹";
     } catch (error) {
-      return '₹';
+      return "₹";
     }
   }
 
-  formatPrice(amount, symbol = '₹') {
-    return `${symbol}${Number(amount).toLocaleString('en-IN', {
+  formatPrice(amount, symbol = "₹") {
+    return `${symbol}${Number(amount).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     })}`;
   }
 
@@ -33,9 +33,9 @@ class EmailService {
       subject,
       html,
       text,
-      template: 'direct',
+      template: "direct",
       userId: options.userId,
-      idempotencyKey: options.idempotencyKey
+      idempotencyKey: options.idempotencyKey,
     });
   }
 
@@ -51,7 +51,7 @@ class EmailService {
       text,
       template: templateName,
       userId: options.userId,
-      idempotencyKey: options.idempotencyKey
+      idempotencyKey: options.idempotencyKey,
     });
   }
 
@@ -64,15 +64,15 @@ class EmailService {
     return await this.sendTemplate(
       user.email,
       `Welcome to ${branding.platformName}!`,
-      'welcome',
+      "welcome",
       {
         name: user.name,
-        shopUrl: `${websiteUrl}/products`
+        shopUrl: `${websiteUrl}/products`,
       },
       {
         userId: user.id,
-        idempotencyKey: `welcome-${user.id}`
-      }
+        idempotencyKey: `welcome-${user.id}`,
+      },
     );
   }
 
@@ -81,19 +81,19 @@ class EmailService {
    */
   async sendEmailVerification(user, verificationUrl) {
     const branding = await brandingService.getBranding();
-    const token = verificationUrl.split('token=').pop() || '';
+    const token = verificationUrl.split("token=").pop() || "";
     return await this.sendTemplate(
       user.email,
       `Verify Your ${branding.platformName} Email`,
-      'verify-email',
+      "verify-email",
       {
         name: user.name,
-        verificationUrl
+        verificationUrl,
       },
       {
         userId: user.id,
-        idempotencyKey: `verify-${user.id}-${token.substring(0, 30)}`
-      }
+        idempotencyKey: `verify-${user.id}-${token.substring(0, 30)}`,
+      },
     );
   }
 
@@ -102,19 +102,19 @@ class EmailService {
    */
   async sendPasswordReset(user, resetUrl) {
     const branding = await brandingService.getBranding();
-    const token = resetUrl.split('token=').pop() || '';
+    const token = resetUrl.split("token=").pop() || "";
     return await this.sendTemplate(
       user.email,
       `Reset Your ${branding.platformName} Password`,
-      'password-reset',
+      "password-reset",
       {
         name: user.name,
-        resetUrl
+        resetUrl,
       },
       {
         userId: user.id,
-        idempotencyKey: `reset-password-${user.id}-${token.substring(0, 30)}`
-      }
+        idempotencyKey: `reset-password-${user.id}-${token.substring(0, 30)}`,
+      },
     );
   }
 
@@ -126,40 +126,43 @@ class EmailService {
     const branding = await brandingService.getBranding();
     const websiteUrl = branding.websiteUrl || getFrontendUrl();
 
-    const formattedItems = order.items.map(item => ({
+    const formattedItems = order.items.map((item) => ({
       ...item,
       formattedPrice: this.formatPrice(item.price, symbol),
-      formattedTotal: this.formatPrice(item.price * item.quantity, symbol)
+      formattedTotal: this.formatPrice(item.price * item.quantity, symbol),
     }));
 
     return await this.sendTemplate(
       userEmail,
       `${branding.platformName} Order Confirmed - #${order.orderNumber}`,
-      'order-confirmation',
+      "order-confirmation",
       {
-        name: order.user?.name || 'Valued Customer',
+        name: order.user?.name || "Valued Customer",
         orderNumber: order.orderNumber,
-        orderDate: new Date(order.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        orderDate: new Date(order.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         }),
-        paymentMethod: order.paymentMethod || 'Credit Card',
+        paymentMethod: order.paymentMethod || "Credit Card",
         shippingAddress: order.shippingAddress,
         items: formattedItems,
-        formattedSubtotal: this.formatPrice(order.subtotal || order.totalAmount, symbol),
+        formattedSubtotal: this.formatPrice(
+          order.subtotal || order.totalAmount,
+          symbol,
+        ),
         formattedDiscount: this.formatPrice(order.discountAmount || 0, symbol),
         formattedShipping: this.formatPrice(order.shippingCharge || 0, symbol),
         formattedTax: this.formatPrice(order.taxAmount || 0, symbol),
         formattedTotal: this.formatPrice(order.totalAmount, symbol),
         trackUrl: `${websiteUrl}/orders`,
         shopUrl: `${websiteUrl}/products`,
-        invoiceUrl: `${websiteUrl}/orders` // Link to client orders page for downloading invoice
+        invoiceUrl: `${websiteUrl}/orders`, // Link to client orders page for downloading invoice
       },
       {
         userId: order.userId,
-        idempotencyKey: `order-confirm-${order.id}`
-      }
+        idempotencyKey: `order-confirm-${order.id}`,
+      },
     );
   }
 
@@ -169,38 +172,41 @@ class EmailService {
   async sendOrderShipped(userEmail, order, courierInfo = {}) {
     const branding = await brandingService.getBranding();
     const websiteUrl = branding.websiteUrl || getFrontendUrl();
-    
-    const courier = courierInfo.courier || `${branding.platformName} Express (DHL)`;
-    const trackingNumber = courierInfo.trackingNumber || `LH-${Math.floor(100000 + Math.random() * 900000)}-IN`;
-    
+
+    const courier =
+      courierInfo.courier || `${branding.platformName} Express (DHL)`;
+    const trackingNumber =
+      courierInfo.trackingNumber ||
+      `LH-${Math.floor(100000 + Math.random() * 900000)}-IN`;
+
     let estDelivery = courierInfo.estimatedDelivery;
     if (!estDelivery) {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 4);
-      estDelivery = futureDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      estDelivery = futureDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     }
 
     return await this.sendTemplate(
       userEmail,
       `Your ${branding.platformName} Order Shipped! - #${order.orderNumber}`,
-      'order-shipped',
+      "order-shipped",
       {
-        name: order.user?.name || 'Valued Customer',
+        name: order.user?.name || "Valued Customer",
         orderNumber: order.orderNumber,
         courier,
         trackingNumber,
         estimatedDelivery: estDelivery,
-        trackingUrl: `https://track.${branding.platformName.toLowerCase()}.com?num=${trackingNumber}`
+        trackingUrl: `https://track.${branding.platformName.toLowerCase()}.com?num=${trackingNumber}`,
       },
       {
         userId: order.userId,
-        idempotencyKey: `order-shipped-${order.id}`
-      }
+        idempotencyKey: `order-shipped-${order.id}`,
+      },
     );
   }
 
@@ -210,16 +216,18 @@ class EmailService {
   async sendOrderDelivered(userEmail, order, deliveredDateStr = null) {
     const branding = await brandingService.getBranding();
     const websiteUrl = branding.websiteUrl || getFrontendUrl();
-    
+
     let deliveredDate = deliveredDateStr;
     try {
-      const parsedDate = deliveredDateStr ? new Date(deliveredDateStr) : new Date();
+      const parsedDate = deliveredDateStr
+        ? new Date(deliveredDateStr)
+        : new Date();
       if (!isNaN(parsedDate.getTime())) {
-        deliveredDate = parsedDate.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        deliveredDate = parsedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         });
       }
     } catch (e) {
@@ -229,46 +237,51 @@ class EmailService {
     return await this.sendTemplate(
       userEmail,
       `${branding.platformName} Order Delivered! - #${order.orderNumber}`,
-      'order-delivered',
+      "order-delivered",
       {
-        name: order.user?.name || 'Valued Customer',
+        name: order.user?.name || "Valued Customer",
         orderNumber: order.orderNumber,
         deliveredDate,
-        items: order.items?.map(item => ({
-          productName: item.product?.name || 'Product',
-          quantity: item.quantity
-        })) || [],
+        items:
+          order.items?.map((item) => ({
+            productName: item.product?.name || "Product",
+            quantity: item.quantity,
+          })) || [],
         rateProductUrl: `${websiteUrl}/orders`,
-        shopUrl: `${websiteUrl}/products`
+        shopUrl: `${websiteUrl}/products`,
       },
       {
         userId: order.userId,
-        idempotencyKey: `order-delivered-${order.id}`
-      }
+        idempotencyKey: `order-delivered-${order.id}`,
+      },
     );
   }
 
   /**
    * Send Order Cancelled Email to Customer
    */
-  async sendOrderCancelled(userEmail, order, cancellationReason = 'Customer requested cancellation') {
+  async sendOrderCancelled(
+    userEmail,
+    order,
+    cancellationReason = "Customer requested cancellation",
+  ) {
     const branding = await brandingService.getBranding();
     const websiteUrl = branding.websiteUrl || getFrontendUrl();
 
     return await this.sendTemplate(
       userEmail,
       `${branding.platformName} Order Cancelled - #${order.orderNumber}`,
-      'order-cancelled',
+      "order-cancelled",
       {
-        name: order.user?.name || 'Valued Customer',
+        name: order.user?.name || "Valued Customer",
         orderNumber: order.orderNumber,
         cancellationReason,
-        shopUrl: `${websiteUrl}/products`
+        shopUrl: `${websiteUrl}/products`,
       },
       {
         userId: order.userId,
-        idempotencyKey: `order-cancelled-${order.id}`
-      }
+        idempotencyKey: `order-cancelled-${order.id}`,
+      },
     );
   }
 
@@ -279,31 +292,31 @@ class EmailService {
     const symbol = await this.getCurrencySymbol();
     const branding = await brandingService.getBranding();
     const websiteUrl = branding.websiteUrl || getFrontendUrl();
-    
-    const refundAmount = refundAmountRaw 
-      ? this.formatPrice(refundAmountRaw, symbol) 
+
+    const refundAmount = refundAmountRaw
+      ? this.formatPrice(refundAmountRaw, symbol)
       : this.formatPrice(order.totalAmount, symbol);
 
     return await this.sendTemplate(
       userEmail,
       `${branding.platformName} Refund Processed - #${order.orderNumber}`,
-      'refund',
+      "refund",
       {
-        name: order.user?.name || 'Valued Customer',
+        name: order.user?.name || "Valued Customer",
         orderNumber: order.orderNumber,
         refundAmount,
-        paymentMethod: order.paymentMethod || 'Original Payment Method',
-        processedDate: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        paymentMethod: order.paymentMethod || "Original Payment Method",
+        processedDate: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         }),
-        shopUrl: websiteUrl
+        shopUrl: websiteUrl,
       },
       {
         userId: order.userId,
-        idempotencyKey: `order-refund-${order.id}-${refundAmount.replace(/[^0-9.]/g, '')}`
-      }
+        idempotencyKey: `order-refund-${order.id}-${refundAmount.replace(/[^0-9.]/g, "")}`,
+      },
     );
   }
 
@@ -317,17 +330,17 @@ class EmailService {
     return await this.sendTemplate(
       adminEmail,
       `🚨 ${branding.platformName} Low Stock Alert: ${product.name}`,
-      'low-stock',
+      "low-stock",
       {
         productName: product.name,
-        sku: product.sku || 'N/A',
+        sku: product.sku || "N/A",
         currentStock: product.stock,
         threshold,
-        restockUrl: `${websiteUrl}/admin/products`
+        restockUrl: `${websiteUrl}/admin/products`,
       },
       {
-        idempotencyKey: `low-stock-${product.id}-${product.stock}`
-      }
+        idempotencyKey: `low-stock-${product.id}-${product.stock}`,
+      },
     );
   }
 
@@ -341,18 +354,18 @@ class EmailService {
     return await this.sendTemplate(
       adminEmail,
       `🚨 New Order Received - #${order.orderNumber}`,
-      'admin-order',
+      "admin-order",
       {
         orderNumber: order.orderNumber,
-        customerName: order.user?.name || 'Guest',
-        customerEmail: order.user?.email || 'N/A',
+        customerName: order.user?.name || "Guest",
+        customerEmail: order.user?.email || "N/A",
         grandTotal: this.formatPrice(order.totalAmount, symbol),
-        paymentMethod: order.paymentMethod || 'COD',
-        viewOrderUrl: `${websiteUrl}/admin/orders`
+        paymentMethod: order.paymentMethod || "COD",
+        viewOrderUrl: `${websiteUrl}/admin/orders`,
       },
       {
-        idempotencyKey: `admin-order-${order.id}`
-      }
+        idempotencyKey: `admin-order-${order.id}`,
+      },
     );
   }
 }

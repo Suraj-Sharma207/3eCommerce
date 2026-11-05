@@ -91,6 +91,7 @@ class ProductSearchResult(BaseModel):
     category: Optional[str] = None
     min_price: Optional[float] = None
     max_price: Optional[float] = None
+    no_budget_required: bool = False  # True when user explicitly wants all items (e.g. "show me all sofas")
 
 class FAQResult(BaseModel):
     """Structured result from the FAQDetector."""

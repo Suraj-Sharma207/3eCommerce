@@ -1,32 +1,32 @@
-import prisma from '../lib/prisma.js';
-import cloudinary from '../config/cloudinary.js';
-import { cacheGet, cacheSet, cacheDel } from '../services/cacheService.js';
+import prisma from "../lib/prisma.js";
+import cloudinary from "../config/cloudinary.js";
+import { cacheGet, cacheSet, cacheDel } from "../services/cacheService.js";
 
-const SHOP_BANNER_CACHE_KEY = 'shop-banner:active';
+const SHOP_BANNER_CACHE_KEY = "shop-banner:active";
 
 export const getActiveShopBanner = async (req, res, next) => {
   try {
     // Check cache first
     const cached = await cacheGet(SHOP_BANNER_CACHE_KEY);
     if (cached !== null) {
-      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+      res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
       return res.status(200).json({
         success: true,
-        data: cached
+        data: cached,
       });
     }
 
     const banner = await prisma.shopBanner.findFirst({
       where: { isActive: true },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { updatedAt: "desc" },
     });
 
     // Cache the result (even if null — prevents repeated DB lookups)
     await cacheSet(SHOP_BANNER_CACHE_KEY, banner, 600); // 10 minutes TTL
-    res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+    res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
     res.status(200).json({
       success: true,
-      data: banner
+      data: banner,
     });
   } catch (error) {
     next(error);
@@ -36,30 +36,32 @@ export const getActiveShopBanner = async (req, res, next) => {
 export const createShopBanner = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No banner image file provided' });
+      return res
+        .status(400)
+        .json({ success: false, message: "No banner image file provided" });
     }
 
     // Convert buffer to base64 string
-    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
     const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    
+
     const result = await cloudinary.uploader.upload(dataURI, {
-      folder: 'shop-banners',
-      resource_type: 'image',
+      folder: "shop-banners",
+      resource_type: "image",
     });
 
     // Deactivate any previously active banners first
     await prisma.shopBanner.updateMany({
       where: { isActive: true },
-      data: { isActive: false }
+      data: { isActive: false },
     });
 
     const newBanner = await prisma.shopBanner.create({
       data: {
         image: result.secure_url,
         imagePublicId: result.public_id,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     // Invalidate cache after mutation
@@ -67,11 +69,11 @@ export const createShopBanner = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Shop banner uploaded and activated successfully',
-      data: newBanner
+      message: "Shop banner uploaded and activated successfully",
+      data: newBanner,
     });
   } catch (error) {
-    console.error('Shop banner upload error:', error);
+    console.error("Shop banner upload error:", error);
     next(error);
   }
 };
@@ -82,22 +84,24 @@ export const updateShopBanner = async (req, res, next) => {
 
   try {
     const banner = await prisma.shopBanner.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!banner) {
-      return res.status(404).json({ success: false, message: 'Shop banner not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shop banner not found" });
     }
 
     let updatedData = {};
 
     if (req.file) {
-      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
       const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-      
+
       const result = await cloudinary.uploader.upload(dataURI, {
-        folder: 'shop-banners',
-        resource_type: 'image',
+        folder: "shop-banners",
+        resource_type: "image",
       });
 
       updatedData.image = result.secure_url;
@@ -107,29 +111,32 @@ export const updateShopBanner = async (req, res, next) => {
         try {
           await cloudinary.uploader.destroy(banner.imagePublicId);
         } catch (cloudinaryError) {
-          console.error('Failed to delete old Cloudinary image:', cloudinaryError);
+          console.error(
+            "Failed to delete old Cloudinary image:",
+            cloudinaryError,
+          );
         }
       }
     }
 
     if (isActive !== undefined) {
-      const activeBool = isActive === 'true' || isActive === true;
+      const activeBool = isActive === "true" || isActive === true;
       updatedData.isActive = activeBool;
 
       if (activeBool) {
         await prisma.shopBanner.updateMany({
-          where: { 
+          where: {
             id: { not: id },
-            isActive: true 
+            isActive: true,
           },
-          data: { isActive: false }
+          data: { isActive: false },
         });
       }
     }
 
     const updatedBanner = await prisma.shopBanner.update({
       where: { id },
-      data: updatedData
+      data: updatedData,
     });
 
     // Invalidate cache after mutation
@@ -137,8 +144,8 @@ export const updateShopBanner = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Shop banner updated successfully',
-      data: updatedBanner
+      message: "Shop banner updated successfully",
+      data: updatedBanner,
     });
   } catch (error) {
     next(error);
@@ -150,23 +157,28 @@ export const deleteShopBanner = async (req, res, next) => {
 
   try {
     const banner = await prisma.shopBanner.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!banner) {
-      return res.status(404).json({ success: false, message: 'Shop banner not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shop banner not found" });
     }
 
     if (banner.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(banner.imagePublicId);
       } catch (cloudinaryError) {
-        console.error('Failed to delete Cloudinary image during banner deletion:', cloudinaryError);
+        console.error(
+          "Failed to delete Cloudinary image during banner deletion:",
+          cloudinaryError,
+        );
       }
     }
 
     await prisma.shopBanner.delete({
-      where: { id }
+      where: { id },
     });
 
     // Invalidate cache after mutation
@@ -174,7 +186,7 @@ export const deleteShopBanner = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Shop banner deleted successfully'
+      message: "Shop banner deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -184,11 +196,11 @@ export const deleteShopBanner = async (req, res, next) => {
 export const getAllShopBanners = async (req, res, next) => {
   try {
     const banners = await prisma.shopBanner.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
     res.status(200).json({
       success: true,
-      data: banners
+      data: banners,
     });
   } catch (error) {
     next(error);

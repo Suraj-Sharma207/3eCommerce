@@ -1,12 +1,12 @@
-import api from './api';
+import api from "./api";
 
 const getPromotions = async (params, options = {}) => {
-  const response = await api.get('/promotions', { params, ...options });
+  const response = await api.get("/promotions", { params, ...options });
   return response.data;
 };
 
 const createPromotion = async (data) => {
-  const response = await api.post('/promotions', data);
+  const response = await api.post("/promotions", data);
   return response.data;
 };
 

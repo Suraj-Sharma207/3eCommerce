@@ -9,7 +9,11 @@
  * @param {number} maxLimit - maximum allowed page size
  * @returns {{ page: number, limit: number, skip: number, take: number }}
  */
-export function parsePaginationParams(query = {}, defaultLimit = 15, maxLimit = 50000) {
+export function parsePaginationParams(
+  query = {},
+  defaultLimit = 15,
+  maxLimit = 50000,
+) {
   let page = parseInt(query.page, 10);
   let limit = parseInt(query.limit, 10);
 
@@ -39,7 +43,13 @@ export function parsePaginationParams(query = {}, defaultLimit = 15, maxLimit = 
  * @param {object} [opts.extra]     - additional metadata (e.g. inventoryCounts)
  * @returns {object}
  */
-export function buildPaginationMeta({ page, take, totalItems, filteredItems, extra = {} }) {
+export function buildPaginationMeta({
+  page,
+  take,
+  totalItems,
+  filteredItems,
+  extra = {},
+}) {
   const totalPages = Math.max(1, Math.ceil(filteredItems / take));
   const safePage = Math.min(Math.max(page, 1), totalPages);
 

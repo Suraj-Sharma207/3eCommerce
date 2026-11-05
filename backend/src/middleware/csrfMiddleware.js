@@ -1,9 +1,9 @@
 /**
  * CSRF (Cross-Site Request Forgery) Protection Middleware
- * 
+ *
  * Implements an enterprise approach using SameSite=Strict session cookies
  * coupled with strict Origin and Referer validation:
- * 
+ *
  * 1. SameSite=Strict: Browsers automatically prevent auth cookies from being
  *    sent on cross-site requests (e.g. cross-site links, forms, or fetch).
  * 2. Origin/Referer Validation: The server validates that the Origin/Referer header
@@ -12,7 +12,7 @@
  */
 
 // Safe methods (read-only) — no CSRF check needed
-const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /**
  * CSRF validation middleware.
@@ -26,18 +26,18 @@ export const csrfProtection = (req, res, next) => {
 
   // Extract Origin or Referer
   const origin = req.headers.origin || req.headers.referer;
-  
+
   if (!origin) {
     return res.status(403).json({
       success: false,
-      message: 'CSRF Protection: Missing Origin or Referer header.',
+      message: "CSRF Protection: Missing Origin or Referer header.",
     });
   }
 
   // Retrieve allowed frontend origins
-  const allowedOrigins = process.env.FRONTEND_URL 
-    ? process.env.FRONTEND_URL.split(',').map(url => url.trim().toLowerCase())
-    : ['http://localhost:5173'];
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((url) => url.trim().toLowerCase())
+    : ["http://localhost:5173"];
 
   // Parse origin/referer
   let originUrl;
@@ -46,12 +46,12 @@ export const csrfProtection = (req, res, next) => {
   } catch (err) {
     return res.status(403).json({
       success: false,
-      message: 'CSRF Protection: Invalid Origin or Referer header format.',
+      message: "CSRF Protection: Invalid Origin or Referer header format.",
     });
   }
 
   // Match against allowed origins
-  const isMatch = allowedOrigins.some(allowed => {
+  const isMatch = allowedOrigins.some((allowed) => {
     try {
       return new URL(allowed).origin.toLowerCase() === originUrl;
     } catch (_) {
@@ -60,10 +60,12 @@ export const csrfProtection = (req, res, next) => {
   });
 
   if (!isMatch) {
-    console.warn(`[CSRF Warning] Blocked request from unauthorized origin: ${originUrl}`);
+    console.warn(
+      `[CSRF Warning] Blocked request from unauthorized origin: ${originUrl}`,
+    );
     return res.status(403).json({
       success: false,
-      message: 'CSRF Protection: Forbidden origin.',
+      message: "CSRF Protection: Forbidden origin.",
     });
   }
 

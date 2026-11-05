@@ -1,6 +1,6 @@
 /**
  * productMapper.js
- * 
+ *
  * Single source of truth for converting a Prisma Product record (with its
  * `images` relation) into the API response shape.
  *
@@ -11,29 +11,28 @@
  *  - `images`        → full ordered array for admin image manager
  */
 
-const PLACEHOLDER =
-  'https://placehold.co/800x800/f3f4f6/9ca3af?text=No+Image';
+const PLACEHOLDER = "https://placehold.co/800x800/f3f4f6/9ca3af?text=No+Image";
 
 /**
  * Derive Cloudinary transformation URLs from a base Cloudinary URL.
  * Falls back to the original URL for non-Cloudinary assets.
  */
-export const getVariantUrl = (url, variant = 'medium') => {
+export const getVariantUrl = (url, variant = "medium") => {
   if (!url) return PLACEHOLDER;
 
   const transforms = {
-    thumbnail: 'c_fill,w_150,h_150,q_auto,f_auto',
-    small:     'c_fill,w_400,h_400,q_auto,f_auto',
-    medium:    'c_fill,w_800,h_800,q_auto,f_auto',
-    large:     'c_fill,w_1200,h_1200,q_auto,f_auto',
+    thumbnail: "c_fill,w_150,h_150,q_auto,f_auto",
+    small: "c_fill,w_400,h_400,q_auto,f_auto",
+    medium: "c_fill,w_800,h_800,q_auto,f_auto",
+    large: "c_fill,w_1200,h_1200,q_auto,f_auto",
   };
 
   const t = transforms[variant];
   if (!t) return url;
 
   // Cloudinary URL pattern: https://res.cloudinary.com/{cloud}/{resource_type}/upload/{public_id}
-  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
-    return url.replace('/upload/', `/upload/${t}/`);
+  if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+    return url.replace("/upload/", `/upload/${t}/`);
   }
 
   // Non-Cloudinary (e.g. Unsplash) — return as-is
@@ -53,16 +52,16 @@ export const mapProduct = (product) => {
   const sorted = [...images].sort((a, b) => a.displayOrder - b.displayOrder);
 
   const primaryImg = sorted.find((i) => i.isPrimary) ?? sorted[0] ?? null;
-  const gallery    = sorted.filter((i) => i !== primaryImg);
+  const gallery = sorted.filter((i) => i !== primaryImg);
 
   return {
     ...product,
     // ── Backward-compatible fields ──────────────────────────────────────
-    thumbnail:    primaryImg?.url ?? PLACEHOLDER,
+    thumbnail: primaryImg?.url ?? PLACEHOLDER,
     galleryImages: gallery.map((i) => i.url),
     // ── Rich fields for admin / ProductDetail ────────────────────────────
-    primaryImage:  primaryImg ?? null,
-    images:        sorted,
+    primaryImage: primaryImg ?? null,
+    images: sorted,
   };
 };
 

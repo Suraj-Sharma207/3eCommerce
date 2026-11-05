@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma.js';
+import prisma from "../lib/prisma.js";
 
 class AddressRepository {
   async findByUserId(userId) {
@@ -22,7 +22,7 @@ class AddressRepository {
 
   async delete(id) {
     return await prisma.address.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

@@ -3,73 +3,76 @@ export const validateProductInput = (data) => {
 
   // 1. Product Name
   if (!data.name) {
-    errors.name = 'Please enter a valid product name.';
+    errors.name = "Please enter a valid product name.";
   } else {
     const nameStr = String(data.name).trim();
     if (nameStr.length < 2 || nameStr.length > 100) {
-      errors.name = 'Product name must be between 2 and 100 characters.';
+      errors.name = "Product name must be between 2 and 100 characters.";
     } else if (!/^[A-Za-z0-9\s&'.,()-]+$/.test(nameStr)) {
-      errors.name = 'Please enter a valid product name.';
+      errors.name = "Please enter a valid product name.";
     }
   }
 
   // 2. Category
   if (!data.category) {
-    errors.category = 'Category is required.';
+    errors.category = "Category is required.";
   } else {
     const categoryStr = String(data.category).trim();
     if (categoryStr.length === 0) {
-      errors.category = 'Category cannot be empty.';
+      errors.category = "Category cannot be empty.";
     } else if (categoryStr.length > 50) {
-      errors.category = 'Category cannot exceed 50 characters.';
+      errors.category = "Category cannot exceed 50 characters.";
     } else if (!/^[A-Za-z0-9\s&'.,()-]+$/.test(categoryStr)) {
-      errors.category = 'Please enter a valid category name.';
+      errors.category = "Please enter a valid category name.";
     }
   }
 
   // 3. Brand — allow letters, numbers, spaces, and common punctuation
   if (!data.brand) {
-    errors.brand = 'Please enter a valid brand name.';
+    errors.brand = "Please enter a valid brand name.";
   } else {
     const brandStr = String(data.brand).trim();
     if (brandStr.length < 2 || brandStr.length > 50) {
-      errors.brand = 'Brand must be between 2 and 50 characters.';
+      errors.brand = "Brand must be between 2 and 50 characters.";
     } else if (!/^[A-Za-z0-9\s&'.,_-]+$/.test(brandStr)) {
-      errors.brand = 'Please enter a valid brand name.';
+      errors.brand = "Please enter a valid brand name.";
     }
   }
 
   // 4. Price
   const price = parseFloat(data.price);
   if (isNaN(price) || price <= 0 || price > 999999) {
-    errors.price = 'Price must be greater than 0.';
+    errors.price = "Price must be greater than 0.";
   }
 
   // 5. Discount
-  if (data.discountPercentage !== undefined && data.discountPercentage !== '') {
+  if (data.discountPercentage !== undefined && data.discountPercentage !== "") {
     const discount = parseInt(data.discountPercentage, 10);
     if (isNaN(discount) || discount < 0 || discount > 90) {
-      errors.discountPercentage = 'Discount cannot exceed 90%.';
+      errors.discountPercentage = "Discount cannot exceed 90%.";
     }
   }
 
   // 6. Stock Quantity
-  if (data.stock === undefined || data.stock === '') {
-    errors.stock = 'Please enter a valid stock quantity.';
+  if (data.stock === undefined || data.stock === "") {
+    errors.stock = "Please enter a valid stock quantity.";
   } else {
     const stock = Number(data.stock);
     if (!Number.isInteger(stock) || stock < 0 || stock > 999999) {
-      errors.stock = 'Please enter a valid stock quantity.';
+      errors.stock = "Please enter a valid stock quantity.";
     }
   }
 
   // 7. Description
   if (!data.description) {
-    errors.description = 'Description must be between 20 and 1000 characters.';
+    errors.description = "Description must be between 20 and 1000 characters.";
   } else {
-    const descStr = String(data.description).trim().replace(/<[^>]*>?/gm, '');
+    const descStr = String(data.description)
+      .trim()
+      .replace(/<[^>]*>?/gm, "");
     if (descStr.length < 20 || descStr.length > 1000) {
-      errors.description = 'Description must be between 20 and 1000 characters.';
+      errors.description =
+        "Description must be between 20 and 1000 characters.";
     } else {
       data.description = descStr; // Clean description in-place
     }
@@ -77,25 +80,35 @@ export const validateProductInput = (data) => {
 
   // 8. Thumbnail URL — check `thumbnail` field (Prisma schema field name)
   const imageUrl = data.thumbnail;
-  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') {
+  if (imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "") {
     const thumbStr = imageUrl.trim();
     try {
       const parsed = new URL(thumbStr);
       const pathname = parsed.pathname.toLowerCase();
       if (!/\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(pathname)) {
-        const knownImageDomains = ['unsplash.com', 'images.unsplash.com', 'cloudinary.com', 'imgix.net', 'imagekit.io', 'picsum.photos'];
-        const isKnownCDN = knownImageDomains.some(d => parsed.hostname.includes(d));
+        const knownImageDomains = [
+          "unsplash.com",
+          "images.unsplash.com",
+          "cloudinary.com",
+          "imgix.net",
+          "imagekit.io",
+          "picsum.photos",
+        ];
+        const isKnownCDN = knownImageDomains.some((d) =>
+          parsed.hostname.includes(d),
+        );
         if (!isKnownCDN) {
-          errors.thumbnail = 'Please enter a valid image URL (.jpg, .png, .webp, .avif, .gif, .svg).';
+          errors.thumbnail =
+            "Please enter a valid image URL (.jpg, .png, .webp, .avif, .gif, .svg).";
         }
       }
     } catch (_) {
-      errors.thumbnail = 'Please enter a valid image URL.';
+      errors.thumbnail = "Please enter a valid image URL.";
     }
   }
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 };

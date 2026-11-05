@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import ChatMessage from './ChatMessage';
-import TypingIndicator from './TypingIndicator';
-import WelcomeScreen from './WelcomeScreen';
+import React, { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import ChatMessage from "./ChatMessage";
+import TypingIndicator from "./TypingIndicator";
+import WelcomeScreen from "./WelcomeScreen";
 
 export const ChatWindow = ({
   messages,
   isLoading,
   onSelectSuggestion,
   isComposing,
-  onStartComposing
+  onStartComposing,
 }) => {
   const containerRef = useRef(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -19,7 +19,9 @@ export const ChatWindow = ({
     if (!container) return;
 
     // Check if user is scrolled up by more than 30px from bottom
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 30;
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      30;
     setShowScrollBtn(!isNearBottom);
   };
 
@@ -27,7 +29,7 @@ export const ChatWindow = ({
     if (containerRef.current) {
       containerRef.current.scrollTo({
         top: containerRef.current.scrollHeight,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   };
@@ -35,13 +37,13 @@ export const ChatWindow = ({
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener("scroll", handleScroll);
       // Run initial check
       handleScroll();
     }
     return () => {
       if (container) {
-        container.removeEventListener('scroll', handleScroll);
+        container.removeEventListener("scroll", handleScroll);
       }
     };
   }, [messages, isLoading]);
@@ -54,12 +56,15 @@ export const ChatWindow = ({
   return (
     <div className="flex-1 min-h-0 relative flex flex-col">
       {/* Scrollable chat messages container */}
-      <div 
-        ref={containerRef} 
-        className={`flex-1 overflow-y-auto overflow-x-hidden overscroll-contain flex flex-col relative z-0 ${messages.length === 0 && !isComposing ? 'bg-transparent' : 'bg-[#FAFAF8]'}`}
+      <div
+        ref={containerRef}
+        className={`flex-1 overflow-y-auto overflow-x-hidden overscroll-contain flex flex-col relative z-0 ${messages.length === 0 && !isComposing ? "bg-transparent" : "bg-[#FAFAF8]"}`}
       >
         {messages.length === 0 && !isComposing ? (
-          <WelcomeScreen onActionClick={onSelectSuggestion} onStartComposing={onStartComposing} />
+          <WelcomeScreen
+            onActionClick={onSelectSuggestion}
+            onStartComposing={onStartComposing}
+          />
         ) : (
           <div className="flex flex-col gap-5 w-full px-5 pt-6 pb-[110px] bg-[#FAFAF8]">
             {messages.map((msg) => (

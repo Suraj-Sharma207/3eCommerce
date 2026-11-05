@@ -1,6 +1,6 @@
 /**
  * Enterprise API Page Cache & Request Deduplication
- * 
+ *
  * Provides:
  * 1. Request Deduplication: Merges multiple concurrent identical requests into one Promise.
  * 2. Frontend Cache: Caches GET requests with configurable TTL.
@@ -22,7 +22,8 @@ const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
 const REVALIDATE_AFTER = 60 * 1000; // Only revalidate if >60s since last validation
 
 // ── Performance Diagnostics (dev-only) ───────────────────────────────────────
-const IS_DEV = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production';
+const IS_DEV =
+  typeof process !== "undefined" && process.env?.NODE_ENV !== "production";
 
 const diagnostics = {
   cacheHits: 0,
@@ -40,8 +41,14 @@ export const getCacheDiagnostics = () => {
   const total = diagnostics.cacheHits + diagnostics.cacheMisses;
   return {
     ...diagnostics,
-    hitRate: total > 0 ? (diagnostics.cacheHits / total * 100).toFixed(1) + '%' : '0%',
-    missRate: total > 0 ? (diagnostics.cacheMisses / total * 100).toFixed(1) + '%' : '0%',
+    hitRate:
+      total > 0
+        ? ((diagnostics.cacheHits / total) * 100).toFixed(1) + "%"
+        : "0%",
+    missRate:
+      total > 0
+        ? ((diagnostics.cacheMisses / total) * 100).toFixed(1) + "%"
+        : "0%",
     cacheSize: cacheStore.size,
     inFlightCount: inFlightRequests.size,
     recentTimings: diagnostics.requestTimings.slice(-20),
@@ -62,7 +69,12 @@ export const resetDiagnostics = () => {
 
 const trackTiming = (url, duration, source) => {
   if (!IS_DEV) return;
-  diagnostics.requestTimings.push({ url, duration: Math.round(duration), source, timestamp: Date.now() });
+  diagnostics.requestTimings.push({
+    url,
+    duration: Math.round(duration),
+    source,
+    timestamp: Date.now(),
+  });
   // Keep only last 50 entries
   if (diagnostics.requestTimings.length > 50) {
     diagnostics.requestTimings = diagnostics.requestTimings.slice(-50);
@@ -72,7 +84,7 @@ const trackTiming = (url, duration, source) => {
 /**
  * Register a Zustand store updater for a specific URL pattern.
  * Avoids circular dependencies.
- * 
+ *
  * @param {RegExp} pattern - Regex to match request URL (e.g. /^\/cart/)
  * @param {Function} updaterFn - Callback function receiving response data
  */
@@ -84,10 +96,10 @@ export const registerStoreUpdater = (pattern, updaterFn) => {
  * Generate a unique cache/deduplication key for a request.
  */
 const getRequestKey = (config) => {
-  const url = config.url || '';
-  const method = (config.method || 'get').toLowerCase();
-  const params = config.params ? JSON.stringify(config.params) : '';
-  const data = config.data ? JSON.stringify(config.data) : '';
+  const url = config.url || "";
+  const method = (config.method || "get").toLowerCase();
+  const params = config.params ? JSON.stringify(config.params) : "";
+  const data = config.data ? JSON.stringify(config.data) : "";
   return `${method}:${url}:${params}:${data}`;
 };
 
@@ -96,19 +108,19 @@ const getRequestKey = (config) => {
  * We only cache GET requests that are not auth or checkout paths.
  */
 const isCacheable = (config) => {
-  if ((config.method || 'get').toLowerCase() !== 'get') return false;
+  if ((config.method || "get").toLowerCase() !== "get") return false;
 
-  const url = config.url || '';
+  const url = config.url || "";
   const bypassPaths = [
-    '/auth/me',
-    '/auth/login',
-    '/auth/refresh',
-    '/auth/logout',
-    '/orders/checkout',
-    '/payment',
+    "/auth/me",
+    "/auth/login",
+    "/auth/refresh",
+    "/auth/logout",
+    "/orders/checkout",
+    "/payment",
   ];
 
-  return !bypassPaths.some(path => url.includes(path));
+  return !bypassPaths.some((path) => url.includes(path));
 };
 
 /**
@@ -117,96 +129,145 @@ const isCacheable = (config) => {
  */
 const updateStoreState = async (url, data) => {
   try {
-    if (url.includes('/cart')) {
-      const { default: useCartStore } = await import('../store/cartStore');
+    if (url.includes("/cart")) {
+      const { default: useCartStore } = await import("../store/cartStore");
       if (useCartStore) useCartStore.setState({ cart: data.data || data });
-    } else if (url.includes('/wishlist')) {
-      const { default: useWishlistStore } = await import('../store/wishlistStore');
-      if (useWishlistStore) useWishlistStore.setState({ wishlist: data.data || data });
-    } else if (url.includes('/branding')) {
-      const { useBrandingStore } = await import('../store/brandingStore');
-      if (useBrandingStore) useBrandingStore.setState({ branding: data.data || data });
-    } else if (url.includes('/settings/public')) {
-      const { default: useSettingsStore } = await import('../store/settingsStore');
-      if (useSettingsStore) useSettingsStore.setState({ publicConfig: data.data || data || {} });
-    } else if (url.includes('/settings/')) {
-      const { default: useSettingsStore } = await import('../store/settingsStore');
+    } else if (url.includes("/wishlist")) {
+      const { default: useWishlistStore } =
+        await import("../store/wishlistStore");
+      if (useWishlistStore)
+        useWishlistStore.setState({ wishlist: data.data || data });
+    } else if (url.includes("/branding")) {
+      const { useBrandingStore } = await import("../store/brandingStore");
+      if (useBrandingStore)
+        useBrandingStore.setState({ branding: data.data || data });
+    } else if (url.includes("/settings/public")) {
+      const { default: useSettingsStore } =
+        await import("../store/settingsStore");
+      if (useSettingsStore)
+        useSettingsStore.setState({ publicConfig: data.data || data || {} });
+    } else if (url.includes("/settings/")) {
+      const { default: useSettingsStore } =
+        await import("../store/settingsStore");
       if (useSettingsStore) {
-        const domain = url.split('/').pop().split('?')[0];
-        useSettingsStore.setState(state => ({
+        const domain = url.split("/").pop().split("?")[0];
+        useSettingsStore.setState((state) => ({
           domains: {
             ...state.domains,
-            [domain]: { data: data.data || data || {}, isLoading: false, isSaving: false }
-          }
+            [domain]: {
+              data: data.data || data || {},
+              isLoading: false,
+              isSaving: false,
+            },
+          },
         }));
       }
-    } else if (url.includes('/admin/products') || url.includes('/products')) {
-      if (url.includes('/products/categories')) {
-        const { default: useCategoryStore } = await import('../store/categoryStore');
-        if (useCategoryStore) useCategoryStore.setState({ categories: data.data || data || [] });
-      } else if (url.includes('/products/recommended')) {
-        const { default: useProductStore } = await import('../store/productStore');
-        if (useProductStore) useProductStore.setState({ recommendedProducts: data.data?.products || data.products || [] });
+    } else if (url.includes("/admin/products") || url.includes("/products")) {
+      if (url.includes("/products/categories")) {
+        const { default: useCategoryStore } =
+          await import("../store/categoryStore");
+        if (useCategoryStore)
+          useCategoryStore.setState({ categories: data.data || data || [] });
+      } else if (url.includes("/products/recommended")) {
+        const { default: useProductStore } =
+          await import("../store/productStore");
+        if (useProductStore)
+          useProductStore.setState({
+            recommendedProducts: data.data?.products || data.products || [],
+          });
       } else {
         const payload = data.data || data;
         if (payload && Array.isArray(payload.products)) {
-          const { default: useProductStore } = await import('../store/productStore');
+          const { default: useProductStore } =
+            await import("../store/productStore");
           if (useProductStore) {
             const currentPagination = useProductStore.getState().pagination;
-            if (!currentPagination || (payload.pagination && payload.pagination.currentPage === currentPagination.currentPage && payload.pagination.itemsPerPage === currentPagination.itemsPerPage)) {
+            if (
+              !currentPagination ||
+              (payload.pagination &&
+                payload.pagination.currentPage ===
+                  currentPagination.currentPage &&
+                payload.pagination.itemsPerPage ===
+                  currentPagination.itemsPerPage)
+            ) {
               useProductStore.setState({
                 products: payload.products,
                 pagination: payload.pagination || currentPagination,
-                inventoryCounts: payload.pagination?.inventoryCounts || useProductStore.getState().inventoryCounts
+                inventoryCounts:
+                  payload.pagination?.inventoryCounts ||
+                  useProductStore.getState().inventoryCounts,
               });
             }
           }
         }
       }
-    } else if (url.includes('/admin/dashboard')) {
-      const { default: useAdminStore } = await import('../store/adminStore');
+    } else if (url.includes("/admin/dashboard")) {
+      const { default: useAdminStore } = await import("../store/adminStore");
       if (useAdminStore) {
-        if (url.includes('/inventory-alerts')) {
+        if (url.includes("/inventory-alerts")) {
           useAdminStore.setState({ inventoryAlerts: data.data || data });
-        } else if (url.includes('/revenue') || url.includes('/orders') || url.includes('/customers') || url.includes('/products') || url.includes('/deliveries') || url.includes('/cancellations')) {
-          const type = url.split('/').pop().split('?')[0];
-          useAdminStore.setState(state => ({
-            detailedAnalytics: { ...state.detailedAnalytics, [type]: data.data || data },
-            detailedLoading: { ...state.detailedLoading, [type]: false }
+        } else if (
+          url.includes("/revenue") ||
+          url.includes("/orders") ||
+          url.includes("/customers") ||
+          url.includes("/products") ||
+          url.includes("/deliveries") ||
+          url.includes("/cancellations")
+        ) {
+          const type = url.split("/").pop().split("?")[0];
+          useAdminStore.setState((state) => ({
+            detailedAnalytics: {
+              ...state.detailedAnalytics,
+              [type]: data.data || data,
+            },
+            detailedLoading: { ...state.detailedLoading, [type]: false },
           }));
         } else {
           useAdminStore.setState({ analytics: data.data || data });
         }
       }
-    } else if (url.includes('/admin/orders')) {
-      const { default: useAdminStore } = await import('../store/adminStore');
+    } else if (url.includes("/admin/orders")) {
+      const { default: useAdminStore } = await import("../store/adminStore");
       const payload = data.data || data;
       if (useAdminStore && payload) {
         const currentPagination = useAdminStore.getState().ordersPagination;
-        if (!currentPagination || (payload.pagination && payload.pagination.currentPage === currentPagination.currentPage && payload.pagination.itemsPerPage === currentPagination.itemsPerPage)) {
+        if (
+          !currentPagination ||
+          (payload.pagination &&
+            payload.pagination.currentPage === currentPagination.currentPage &&
+            payload.pagination.itemsPerPage === currentPagination.itemsPerPage)
+        ) {
           useAdminStore.setState({
             orders: payload.orders || [],
-            ordersPagination: payload.pagination || currentPagination
+            ordersPagination: payload.pagination || currentPagination,
           });
         }
       }
-    } else if (url.includes('/orders')) {
-      const { default: useOrderStore } = await import('../store/orderStore');
-      if (useOrderStore) useOrderStore.setState({ orders: data.data || data || [] });
-    } else if (url.includes('/admin/customers')) {
-      const { default: useCustomerStore } = await import('../store/customerStore');
+    } else if (url.includes("/orders")) {
+      const { default: useOrderStore } = await import("../store/orderStore");
+      if (useOrderStore)
+        useOrderStore.setState({ orders: data.data || data || [] });
+    } else if (url.includes("/admin/customers")) {
+      const { default: useCustomerStore } =
+        await import("../store/customerStore");
       const payload = data.data || data;
       if (useCustomerStore && payload) {
         const currentPagination = useCustomerStore.getState().pagination;
-        if (!currentPagination || (payload.pagination && payload.pagination.currentPage === currentPagination.currentPage && payload.pagination.itemsPerPage === currentPagination.itemsPerPage)) {
+        if (
+          !currentPagination ||
+          (payload.pagination &&
+            payload.pagination.currentPage === currentPagination.currentPage &&
+            payload.pagination.itemsPerPage === currentPagination.itemsPerPage)
+        ) {
           useCustomerStore.setState({
             customers: payload.customers || [],
-            pagination: payload.pagination || currentPagination
+            pagination: payload.pagination || currentPagination,
           });
         }
       }
-    } else if (url.includes('/home/all')) {
-      const { default: useProductStore } = await import('../store/productStore');
+    } else if (url.includes("/home/all")) {
+      const { default: useProductStore } =
+        await import("../store/productStore");
       const homeData = data.data || data || {};
       if (useProductStore) {
         useProductStore.setState({
@@ -215,13 +276,16 @@ const updateStoreState = async (url, data) => {
             trending: homeData.trending || [],
             newArrivals: homeData.newArrivals || [],
             bestSellers: homeData.bestSellers || [],
-            sale: homeData.specialOffers || homeData.sale || []
-          }
+            sale: homeData.specialOffers || homeData.sale || [],
+          },
         });
       }
     }
   } catch (err) {
-    console.error('[APICache] Failed to dynamically update Zustand store:', err);
+    console.error(
+      "[APICache] Failed to dynamically update Zustand store:",
+      err,
+    );
   }
 };
 
@@ -234,7 +298,10 @@ const notifyStoreUpdaters = (url, data) => {
       try {
         updaterFn(data);
       } catch (err) {
-        console.error(`[APICache] Failed to update store for pattern ${pattern}:`, err);
+        console.error(
+          `[APICache] Failed to update store for pattern ${pattern}:`,
+          err,
+        );
       }
     }
   }
@@ -255,7 +322,8 @@ const isDataChanged = (obj1, obj2) => {
     const p1 = obj1?.data?.pagination || obj1?.pagination;
     const p2 = obj2?.data?.pagination || obj2?.pagination;
     if (p1 && p2) {
-      if (p1.totalItems !== p2.totalItems || p1.currentPage !== p2.currentPage) return true;
+      if (p1.totalItems !== p2.totalItems || p1.currentPage !== p2.currentPage)
+        return true;
     }
 
     // For arrays (e.g. product lists), compare length + first/last item IDs
@@ -264,10 +332,18 @@ const isDataChanged = (obj1, obj2) => {
     if (Array.isArray(a1) && Array.isArray(a2)) {
       if (a1.length !== a2.length) return true;
       if (a1.length > 0 && a2.length > 0) {
-        if (a1[0]?.id !== a2[0]?.id || a1[a1.length - 1]?.id !== a2[a2.length - 1]?.id) return true;
+        if (
+          a1[0]?.id !== a2[0]?.id ||
+          a1[a1.length - 1]?.id !== a2[a2.length - 1]?.id
+        )
+          return true;
         // Sample a middle element for extra confidence
         const mid = Math.floor(a1.length / 2);
-        if (a1[mid]?.id !== a2[mid]?.id || a1[mid]?.updatedAt !== a2[mid]?.updatedAt) return true;
+        if (
+          a1[mid]?.id !== a2[mid]?.id ||
+          a1[mid]?.updatedAt !== a2[mid]?.updatedAt
+        )
+          return true;
       }
       return false; // Length, first, last, mid all match — consider unchanged
     }
@@ -298,8 +374,8 @@ export const deduplicateRequest = (config, requestHandler) => {
 
   const startTime = performance.now();
   const promise = requestHandler(config)
-    .then(response => {
-      trackTiming(config.url, performance.now() - startTime, 'network');
+    .then((response) => {
+      trackTiming(config.url, performance.now() - startTime, "network");
       return response;
     })
     .finally(() => {
@@ -312,14 +388,14 @@ export const deduplicateRequest = (config, requestHandler) => {
 
 /**
  * Handles Frontend Page Caching & Stale-While-Revalidate (SWR)
- * 
+ *
  * Cache entries now include:
  *   - createdAt: when the entry was first cached
  *   - lastValidatedAt: when the entry was last revalidated
  *   - expiresAt: when the entry expires (createdAt + TTL)
  *   - value: the cached response data
  *   - response: the response metadata (status, headers, etc.)
- * 
+ *
  * Background revalidation only fires when:
  *   (now - lastValidatedAt) > REVALIDATE_AFTER
  */
@@ -336,14 +412,16 @@ export const handleCachedRequest = async (config, requestHandler) => {
   // If we have valid cache data, use Stale-While-Revalidate (SWR)
   if (cachedEntry && now < cachedEntry.expiresAt) {
     diagnostics.cacheHits++;
-    trackTiming(config.url, 0, 'cache');
+    trackTiming(config.url, 0, "cache");
 
     // Only trigger background revalidation if entry is stale enough
     const timeSinceLastValidation = now - cachedEntry.lastValidatedAt;
     if (timeSinceLastValidation > REVALIDATE_AFTER) {
       diagnostics.revalidationsTriggered++;
       if (IS_DEV) {
-        console.log(`[APICache] Cache Hit + SWR Revalidate (stale ${Math.round(timeSinceLastValidation / 1000)}s): ${config.url}`);
+        console.log(
+          `[APICache] Cache Hit + SWR Revalidate (stale ${Math.round(timeSinceLastValidation / 1000)}s): ${config.url}`,
+        );
       }
 
       // Mark as recently validated to prevent duplicate background fetches
@@ -354,15 +432,17 @@ export const handleCachedRequest = async (config, requestHandler) => {
         try {
           const freshResponse = await requestHandler({
             ...config,
-            headers: { ...config.headers, 'X-Bypass-Cache': 'true' }
+            headers: { ...config.headers, "X-Bypass-Cache": "true" },
           });
-          
+
           const freshData = freshResponse.data;
 
           // If the server data has changed compared to cache, update UI silently
           if (isDataChanged(cachedEntry.value, freshData)) {
             if (IS_DEV) {
-              console.log(`[APICache] Background refresh detected data change for: ${config.url}. Updating UI silently.`);
+              console.log(
+                `[APICache] Background refresh detected data change for: ${config.url}. Updating UI silently.`,
+              );
             }
             cacheStore.set(key, {
               value: freshData,
@@ -373,22 +453,27 @@ export const handleCachedRequest = async (config, requestHandler) => {
                 status: freshResponse.status,
                 statusText: freshResponse.statusText,
                 headers: freshResponse.headers,
-                config: freshResponse.config
-              }
+                config: freshResponse.config,
+              },
             });
             notifyStoreUpdaters(config.url, freshData);
             await updateStoreState(config.url, freshData);
           }
         } catch (err) {
           if (IS_DEV) {
-            console.warn(`[APICache] Background revalidation failed for: ${config.url}`, err.message);
+            console.warn(
+              `[APICache] Background revalidation failed for: ${config.url}`,
+              err.message,
+            );
           }
         }
       })();
     } else {
       diagnostics.revalidationsSkipped++;
       if (IS_DEV) {
-        console.log(`[APICache] Cache Hit (fresh, skip revalidate): ${config.url}`);
+        console.log(
+          `[APICache] Cache Hit (fresh, skip revalidate): ${config.url}`,
+        );
       }
     }
 
@@ -396,7 +481,7 @@ export const handleCachedRequest = async (config, requestHandler) => {
     return {
       ...cachedEntry.response,
       data: cachedEntry.value,
-      headers: { ...cachedEntry.response.headers, 'x-cache-hit': 'true' }
+      headers: { ...cachedEntry.response.headers, "x-cache-hit": "true" },
     };
   }
 
@@ -406,7 +491,7 @@ export const handleCachedRequest = async (config, requestHandler) => {
     console.log(`[APICache] Cache Miss: ${config.url}`);
   }
   const response = await deduplicateRequest(config, requestHandler);
-  
+
   const entryNow = Date.now();
   cacheStore.set(key, {
     value: response.data,
@@ -417,8 +502,8 @@ export const handleCachedRequest = async (config, requestHandler) => {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
-      config: response.config
-    }
+      config: response.config,
+    },
   });
 
   return response;
@@ -445,12 +530,12 @@ export const invalidateFrontendCachePattern = (pattern) => {
 export const clearFrontendCache = () => {
   cacheStore.clear();
   if (IS_DEV) {
-    console.log('[APICache] Frontend cache cleared.');
+    console.log("[APICache] Frontend cache cleared.");
   }
 };
 
 // Automatic cleanup of expired entries every 30 seconds
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of cacheStore.entries()) {

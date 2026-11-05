@@ -1,4 +1,4 @@
-import addressRepository from '../repositories/addressRepository.js';
+import addressRepository from "../repositories/addressRepository.js";
 
 class AddressService {
   async getUserAddresses(userId) {
@@ -9,14 +9,15 @@ class AddressService {
     const existing = await addressRepository.findByUserId(userId);
 
     // Check for exact duplicate
-    const isDuplicate = existing.some(addr =>
-      addr.street.toLowerCase() === data.street.toLowerCase() &&
-      addr.city.toLowerCase() === data.city.toLowerCase() &&
-      addr.zipCode === data.zipCode &&
-      addr.recipientName.toLowerCase() === data.recipientName.toLowerCase()
+    const isDuplicate = existing.some(
+      (addr) =>
+        addr.street.toLowerCase() === data.street.toLowerCase() &&
+        addr.city.toLowerCase() === data.city.toLowerCase() &&
+        addr.zipCode === data.zipCode &&
+        addr.recipientName.toLowerCase() === data.recipientName.toLowerCase(),
     );
     if (isDuplicate) {
-      throw new Error('Duplicate address found.');
+      throw new Error("Duplicate address found.");
     }
 
     // Auto-set default if it's the first address
@@ -30,14 +31,14 @@ class AddressService {
 
     return await addressRepository.create({
       ...data,
-      userId
+      userId,
     });
   }
 
   async updateAddress(userId, addressId, data) {
     const address = await addressRepository.findById(addressId);
     if (!address || address.userId !== userId) {
-      throw new Error('Address not found or unauthorized');
+      throw new Error("Address not found or unauthorized");
     }
 
     await this.handleDefaults(userId, data, addressId);
@@ -48,7 +49,7 @@ class AddressService {
   async deleteAddress(userId, addressId) {
     const address = await addressRepository.findById(addressId);
     if (!address || address.userId !== userId) {
-      throw new Error('Address not found or unauthorized');
+      throw new Error("Address not found or unauthorized");
     }
 
     await addressRepository.delete(addressId);
@@ -58,10 +59,16 @@ class AddressService {
       const remaining = await addressRepository.findByUserId(userId);
       if (remaining.length > 0) {
         let updateData = {};
-        if (address.isDefaultShipping && !remaining.some(a => a.isDefaultShipping)) {
+        if (
+          address.isDefaultShipping &&
+          !remaining.some((a) => a.isDefaultShipping)
+        ) {
           updateData.isDefaultShipping = true;
         }
-        if (address.isDefaultBilling && !remaining.some(a => a.isDefaultBilling)) {
+        if (
+          address.isDefaultBilling &&
+          !remaining.some((a) => a.isDefaultBilling)
+        ) {
           updateData.isDefaultBilling = true;
         }
         if (Object.keys(updateData).length > 0) {

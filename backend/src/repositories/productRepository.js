@@ -1,88 +1,120 @@
-import prisma from '../lib/prisma.js';
-import { mapProduct, mapProducts } from '../utils/productMapper.js';
+import prisma from "../lib/prisma.js";
+import { mapProduct, mapProducts } from "../utils/productMapper.js";
 
 /** Images include clause — re-used everywhere */
 const IMAGE_INCLUDE = {
   images: {
-    orderBy: { displayOrder: 'asc' },
+    orderBy: { displayOrder: "asc" },
   },
 };
 
 class ProductRepository {
-  _buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
+  _buildWhereClause({
+    search,
+    category,
+    brand,
+    minRating,
+    minPrice,
+    maxPrice,
+    inStock,
+    stockStatus,
+    featured,
+    trending,
+    newArrival,
+    bestSeller,
+    recommended,
+    sale,
+    isAdmin,
+  }) {
     const andClauses = [];
 
     if (search) {
       andClauses.push({
         OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { brand: { contains: search, mode: 'insensitive' } },
-          { category: { contains: search, mode: 'insensitive' } },
-        ]
+          { name: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { brand: { contains: search, mode: "insensitive" } },
+          { category: { contains: search, mode: "insensitive" } },
+        ],
       });
     }
 
-    if (category && category !== 'All') {
-      const categoriesList = category.split(',').map(c => c.trim()).filter(Boolean);
+    if (category && category !== "All") {
+      const categoriesList = category
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
       if (categoriesList.length > 0) {
         andClauses.push({
-          category: { in: categoriesList }
+          category: { in: categoriesList },
         });
       }
     }
 
-    if (brand && brand !== 'All') {
-      const brandList = brand.split(',').map(b => b.trim()).filter(Boolean);
+    if (brand && brand !== "All") {
+      const brandList = brand
+        .split(",")
+        .map((b) => b.trim())
+        .filter(Boolean);
       if (brandList.length > 0) {
         andClauses.push({
-          brand: { in: brandList }
+          brand: { in: brandList },
         });
       }
     }
 
-    if (minRating !== undefined && minRating !== '' && minRating !== null) {
+    if (minRating !== undefined && minRating !== "" && minRating !== null) {
       andClauses.push({
-        rating: { gte: parseFloat(minRating) }
+        rating: { gte: parseFloat(minRating) },
       });
     }
 
-    if (minPrice !== undefined && minPrice !== '' && minPrice !== null || maxPrice !== undefined && maxPrice !== '' && maxPrice !== null) {
+    if (
+      (minPrice !== undefined && minPrice !== "" && minPrice !== null) ||
+      (maxPrice !== undefined && maxPrice !== "" && maxPrice !== null)
+    ) {
       const priceClause = {};
-      if (minPrice !== undefined && minPrice !== '' && minPrice !== null) priceClause.gte = parseFloat(minPrice);
-      if (maxPrice !== undefined && maxPrice !== '' && maxPrice !== null) priceClause.lte = parseFloat(maxPrice);
+      if (minPrice !== undefined && minPrice !== "" && minPrice !== null)
+        priceClause.gte = parseFloat(minPrice);
+      if (maxPrice !== undefined && maxPrice !== "" && maxPrice !== null)
+        priceClause.lte = parseFloat(maxPrice);
       andClauses.push({
-        finalPrice: priceClause
+        finalPrice: priceClause,
       });
     }
 
     const availabilityConditions = [];
     // Legacy inStock boolean support
-    if (inStock === 'true' || inStock === true) {
+    if (inStock === "true" || inStock === true) {
       availabilityConditions.push({ stock: { gt: 0 } });
     }
 
     // New stockStatus explicit handling
-    if (stockStatus === 'active') {
+    if (stockStatus === "active") {
       andClauses.push({ stock: { gt: 0 } });
-    } else if (stockStatus === 'outOfStock') {
+    } else if (stockStatus === "outOfStock") {
       andClauses.push({ stock: { equals: 0 } });
     }
 
-    if (sale === 'true' || sale === true) {
+    if (sale === "true" || sale === true) {
       availabilityConditions.push({ discountPercentage: { gt: 0 } });
     }
     if (availabilityConditions.length > 0) {
       andClauses.push({
-        OR: availabilityConditions
+        OR: availabilityConditions,
       });
     }
 
-    if (featured === 'true' || featured === true) andClauses.push({ featured: true });
-    if (trending === 'true' || trending === true) andClauses.push({ trending: true });
-    if (newArrival === 'true' || newArrival === true) andClauses.push({ newArrival: true });
-    if (bestSeller === 'true' || bestSeller === true) andClauses.push({ bestSeller: true });
-    if (recommended === 'true' || recommended === true) andClauses.push({ recommended: true });
+    if (featured === "true" || featured === true)
+      andClauses.push({ featured: true });
+    if (trending === "true" || trending === true)
+      andClauses.push({ trending: true });
+    if (newArrival === "true" || newArrival === true)
+      andClauses.push({ newArrival: true });
+    if (bestSeller === "true" || bestSeller === true)
+      andClauses.push({ bestSeller: true });
+    if (recommended === "true" || recommended === true)
+      andClauses.push({ recommended: true });
 
     if (!isAdmin) {
       andClauses.push({ active: true });
@@ -91,21 +123,56 @@ class ProductRepository {
     return { AND: andClauses };
   }
 
-  async findAll({ skip, take, search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, sort, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
-    const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
+  async findAll({
+    skip,
+    take,
+    search,
+    category,
+    brand,
+    minRating,
+    minPrice,
+    maxPrice,
+    inStock,
+    stockStatus,
+    sort,
+    featured,
+    trending,
+    newArrival,
+    bestSeller,
+    recommended,
+    sale,
+    isAdmin,
+  }) {
+    const where = this._buildWhereClause({
+      search,
+      category,
+      brand,
+      minRating,
+      minPrice,
+      maxPrice,
+      inStock,
+      stockStatus,
+      featured,
+      trending,
+      newArrival,
+      bestSeller,
+      recommended,
+      sale,
+      isAdmin,
+    });
 
-    let orderBy = { createdAt: 'desc' };
-    if (sort === 'newest') orderBy = { createdAt: 'desc' };
-    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
-    if (sort === 'price_asc') orderBy = { finalPrice: 'asc' };
-    if (sort === 'price_desc') orderBy = { finalPrice: 'desc' };
-    if (sort === 'name_asc') orderBy = { name: 'asc' };
-    if (sort === 'name_desc') orderBy = { name: 'desc' };
-    if (sort === 'stock_desc') orderBy = { stock: 'desc' };
-    if (sort === 'stock_asc') orderBy = { stock: 'asc' };
-    if (sort === 'popular') orderBy = { reviewCount: 'desc' };
-    if (sort === 'highest_rated') orderBy = { rating: 'desc' };
-    if (sort === 'discount') orderBy = { discountPercentage: 'desc' };
+    let orderBy = { createdAt: "desc" };
+    if (sort === "newest") orderBy = { createdAt: "desc" };
+    if (sort === "oldest") orderBy = { createdAt: "asc" };
+    if (sort === "price_asc") orderBy = { finalPrice: "asc" };
+    if (sort === "price_desc") orderBy = { finalPrice: "desc" };
+    if (sort === "name_asc") orderBy = { name: "asc" };
+    if (sort === "name_desc") orderBy = { name: "desc" };
+    if (sort === "stock_desc") orderBy = { stock: "desc" };
+    if (sort === "stock_asc") orderBy = { stock: "asc" };
+    if (sort === "popular") orderBy = { reviewCount: "desc" };
+    if (sort === "highest_rated") orderBy = { rating: "desc" };
+    if (sort === "discount") orderBy = { discountPercentage: "desc" };
 
     const products = await prisma.product.findMany({
       where,
@@ -135,19 +202,28 @@ class ProductRepository {
     const [all, active, outOfStock] = await prisma.$transaction([
       prisma.product.count({ where: baseWhere }),
       prisma.product.count({ where: { ...baseWhere, stock: { gt: 0 } } }),
-      prisma.product.count({ where: { ...baseWhere, stock: { equals: 0 } } })
+      prisma.product.count({ where: { ...baseWhere, stock: { equals: 0 } } }),
     ]);
 
     return { all, active, outOfStock };
   }
 
   async findById(identifier) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        identifier,
+      );
     let product;
     if (isUuid) {
-      product = await prisma.product.findUnique({ where: { id: identifier }, include: IMAGE_INCLUDE });
+      product = await prisma.product.findUnique({
+        where: { id: identifier },
+        include: IMAGE_INCLUDE,
+      });
     } else {
-      product = await prisma.product.findUnique({ where: { slug: identifier }, include: IMAGE_INCLUDE });
+      product = await prisma.product.findUnique({
+        where: { slug: identifier },
+        include: IMAGE_INCLUDE,
+      });
     }
     return mapProduct(product);
   }
@@ -160,10 +236,10 @@ class ProductRepository {
       where: {
         category: product.category,
         id: { not: id },
-        active: true
+        active: true,
       },
       take: parseInt(limit, 10),
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: IMAGE_INCLUDE,
     });
 
@@ -171,15 +247,19 @@ class ProductRepository {
   }
 
   async create(data) {
-    return await prisma.product.create({ data, include: IMAGE_INCLUDE }).then(mapProduct);
+    return await prisma.product
+      .create({ data, include: IMAGE_INCLUDE })
+      .then(mapProduct);
   }
 
   async update(id, data) {
-    return await prisma.product.update({
-      where: { id },
-      data,
-      include: IMAGE_INCLUDE,
-    }).then(mapProduct);
+    return await prisma.product
+      .update({
+        where: { id },
+        data,
+        include: IMAGE_INCLUDE,
+      })
+      .then(mapProduct);
   }
 
   async delete(id) {
@@ -190,46 +270,78 @@ class ProductRepository {
    * Returns all matching product IDs for the current filters — used for
    * enterprise "Select All" that spans the entire dataset, not just one page.
    */
-  async findAllIds({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin }) {
-    const where = this._buildWhereClause({ search, category, brand, minRating, minPrice, maxPrice, inStock, stockStatus, featured, trending, newArrival, bestSeller, recommended, sale, isAdmin });
+  async findAllIds({
+    search,
+    category,
+    brand,
+    minRating,
+    minPrice,
+    maxPrice,
+    inStock,
+    stockStatus,
+    featured,
+    trending,
+    newArrival,
+    bestSeller,
+    recommended,
+    sale,
+    isAdmin,
+  }) {
+    const where = this._buildWhereClause({
+      search,
+      category,
+      brand,
+      minRating,
+      minPrice,
+      maxPrice,
+      inStock,
+      stockStatus,
+      featured,
+      trending,
+      newArrival,
+      bestSeller,
+      recommended,
+      sale,
+      isAdmin,
+    });
     const rows = await prisma.product.findMany({
       where,
       select: { id: true },
     });
-    return rows.map(r => r.id);
+    return rows.map((r) => r.id);
   }
 
   async getCategories() {
     const categories = await prisma.product.groupBy({
-      by: ['category'],
+      by: ["category"],
       where: {
-        active: true
+        active: true,
       },
       _count: {
         category: true,
       },
       orderBy: {
-        category: 'asc'
-      }
+        category: "asc",
+      },
     });
 
     const getCategoryIcon = (categoryName) => {
       const iconMap = {
-        'Living Room': 'Sofa',
-        'Bedroom': 'Bed',
-        'Dining': 'Utensils',
-        'Office': 'Monitor',
-        'Lighting': 'Lightbulb',
-        'Decor': 'Star',
-        'Outdoor': 'Sun'
+        "Living Room": "Sofa",
+        Bedroom: "Bed",
+        Dining: "Utensils",
+        Office: "Monitor",
+        Lighting: "Lightbulb",
+        Decor: "Star",
+        Outdoor: "Sun",
       };
-      return iconMap[categoryName] || 'Package';
+      return iconMap[categoryName] || "Package";
     };
 
-    return categories.map(cat => ({
-      id: cat.category.toLowerCase().replace(/\s+/g, '-'),
+    return categories.map((cat) => ({
+      id: cat.category.toLowerCase().replace(/\s+/g, "-"),
       name: cat.category,
-      slug: cat.category.toLowerCase().replace(/\s+/g, '-'),
+      slug: cat.category.toLowerCase().replace(/\s+/g, "-"),
       icon: getCategoryIcon(cat.category),
       productCount: cat._count.category,
       count: cat._count.category,
@@ -242,14 +354,14 @@ class ProductRepository {
         productId,
         email,
         phone,
-        userId
-      }
+        userId,
+      },
     });
   }
 
   async getStockNotificationStatus(productId, email) {
     return await prisma.stockNotification.findUnique({
-      where: { productId_email: { productId, email } }
+      where: { productId_email: { productId, email } },
     });
   }
 
@@ -258,7 +370,7 @@ class ProductRepository {
   async getImagesByProductId(productId) {
     return await prisma.productImage.findMany({
       where: { productId },
-      orderBy: { displayOrder: 'asc' },
+      orderBy: { displayOrder: "asc" },
     });
   }
 
@@ -270,7 +382,7 @@ class ProductRepository {
     // Determine next displayOrder
     const maxOrderRow = await prisma.productImage.findFirst({
       where: { productId },
-      orderBy: { displayOrder: 'desc' },
+      orderBy: { displayOrder: "desc" },
     });
     const nextOrder = maxOrderRow ? maxOrderRow.displayOrder + 1 : 0;
 
@@ -317,7 +429,7 @@ class ProductRepository {
       prisma.productImage.update({
         where: { id, productId },
         data: { displayOrder: index },
-      })
+      }),
     );
     return await prisma.$transaction(updates);
   }
