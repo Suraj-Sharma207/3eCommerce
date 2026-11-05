@@ -1,7 +1,10 @@
 import os
 from loguru import logger
 from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
 
 from app.config import get_settings
 from app.services.interfaces import BaseDetector
@@ -27,12 +30,16 @@ class SemanticIntentDetector(BaseDetector):
         self.faq_detector = faq_detector or FAQDetector()
         
         # Load embedding model once as a singleton for this instance
-        logger.info("Loading SentenceTransformer model 'all-MiniLM-L6-v2'...")
-        try:
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-            logger.info("SentenceTransformer model loaded successfully.")
-        except Exception as e:
-            logger.error(f"Failed to load SentenceTransformer model: {e}")
+        if SentenceTransformer is not None:
+            logger.info("Loading SentenceTransformer model 'all-MiniLM-L6-v2'...")
+            try:
+                self.model = SentenceTransformer('all-MiniLM-L6-v2')
+                logger.info("SentenceTransformer model loaded successfully.")
+            except Exception as e:
+                logger.error(f"Failed to load SentenceTransformer model: {e}")
+                self.model = None
+        else:
+            logger.warning("sentence_transformers package not installed. Skipping local embedding model.")
             self.model = None
 
         # Initialize Qdrant Client
@@ -40,7 +47,7 @@ class SemanticIntentDetector(BaseDetector):
             self.qdrant = QdrantClient(
                 url=self.settings.qdrant_url, 
                 api_key=self.settings.qdrant_api_key or None,
-                timeout=60
+                timeout=3
             )
         except Exception as e:
             logger.error(f"Failed to initialize QdrantClient: {e}")
