@@ -4,6 +4,12 @@ from rapidfuzz import fuzz
 from app.services.interfaces import BaseDetector
 from app.models.schema import RequestContext, ProductSearchResult
 
+FURNITURE_NOUNS = [
+    "sofa", "sofas", "couch", "couches", "table", "tables", "chair", "chairs", "bed", "beds", "lamp", "lamps", "desk", "desks", 
+    "dresser", "dressers", "cabinet", "cabinets", "wardrobe", "wardrobes", "recliner", "recliners", "stool", "stools", "bench", "benches",
+    "bookcase", "bookcases", "shelf", "shelves", "furniture", "appliance", "appliances", "mirror", "mirrors", "vase", "vases"
+]
+
 class ProductSearchDetector(BaseDetector):
     """Detects product search intent, extracts search terms, categories, and price constraints."""
 
@@ -24,15 +30,12 @@ class ProductSearchDetector(BaseDetector):
         ]
         
         # Furniture-related nouns to ensure context
-        self.furniture_nouns = [
-            "sofa", "sofas", "couch", "couches", "table", "tables", "chair", "chairs", "bed", "beds", "lamp", "lamps", "desk", "desks", 
-            "dresser", "dressers", "cabinet", "cabinets", "wardrobe", "wardrobes", "recliner", "recliners", "stool", "stools", "bench", "benches",
-            "bookcase", "bookcases", "shelf", "shelves", "furniture", "appliance", "appliances", "mirror", "mirrors", "vase", "vases"
-        ]
+        self.furniture_nouns = FURNITURE_NOUNS
         
-        # Price constraint patterns (capturing digits directly following price keywords)
+        # Price constraint patterns (capturing digits + optional k/K suffix following price keywords)
+        # e.g. "under 50k" → 50000, "below 500" → 500, "under ₹20000" → 20000
         self.price_pattern = re.compile(
-            r"\b(?:under|below|less\s+than|within|budget\s+of|around|max)\s*₹?\s*(\d+)\b",
+            r"\b(?:under|below|less\s+than|within|budget\s+of|around|max)\s*₹?\s*(\d+(?:\.\d+)?)(k|K)?\b",
             re.IGNORECASE
         )
 
@@ -65,6 +68,12 @@ class ProductSearchDetector(BaseDetector):
                     break
                     
         is_search = has_trigger or has_noun or (matched_category is not None)
+        
+        # Detect "all / every / which you have" — user wants to browse without a budget constraint
+        no_budget_required = bool(re.search(
+            r"\b(all|every|each|any|which\s+you\s+have|you\s+have|available)\b",
+            norm_msg, re.IGNORECASE
+        ))
         
         if not is_search:
             return ProductSearchResult(is_product_search=False)
@@ -134,7 +143,12 @@ class ProductSearchDetector(BaseDetector):
         max_price = None
         if price_match:
             try:
-                max_price = float(price_match.group(1))
+                val = float(price_match.group(1))
+                # Handle k/K suffix (e.g. 50k → 50000)
+                if price_match.group(2):
+                    max_price = val * 1000
+                else:
+                    max_price = val
             except ValueError:
                 pass
                 
@@ -143,5 +157,6 @@ class ProductSearchDetector(BaseDetector):
             search_term=search_term,
             category=matched_category,
             min_price=None,
-            max_price=max_price
+            max_price=max_price,
+            no_budget_required=no_budget_required
         )

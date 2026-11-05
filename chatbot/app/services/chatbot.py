@@ -144,9 +144,31 @@ class ChatbotService:
             
             logger.info(f"Budget parsed: {max_price}. Routing straight to ProductSearchHandler.")
             res = self.product_search_handler.handle(context)
-            if res.type != "product_search_clarify":
+            if res.type != "product_search_clarify" and not res.pending_state:
                 res.pending_state = None  # Clear pending state once handled successfully
             return res
+
+        # Intercept new search confirmation state (e.g. user answered "yes" to "Would you like to try a different search?")
+        if context.pending_state and context.pending_state.awaiting == "new_search_confirmation":
+            logger.info("Handling new_search_confirmation state.")
+            norm_text = context.normalized_message.strip().lower()
+            affirmative = {"yes", "yeah", "yep", "sure", "ok", "okay", "yup", "definitely", "please", "yes please", "of course", "right"}
+            negative = {"no", "nope", "nah", "not now", "no thanks", "no thank you", "cancel"}
+
+            if any(norm_text == a or norm_text.startswith(f"{a} ") for a in affirmative):
+                return ChatResponse(
+                    reply="Sure! What product, style, or furniture item are you looking for? (You can also specify a category like Living Room or Dining Room).",
+                    type="product_search",
+                    pending_state=None
+                )
+            elif any(norm_text == n or norm_text.startswith(f"{n} ") for n in negative):
+                return ChatResponse(
+                    reply="No problem! Let me know if you need help with anything else, or feel free to explore our collection above.",
+                    type="general",
+                    pending_state=None
+                )
+            else:
+                context.pending_state = None
         
         # Step 2: Greeting Detection
         greeting_result = self.greeting_detector.detect(context)

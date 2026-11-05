@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import api from '../services/api';
-import toast from 'react-hot-toast';
+import { create } from "zustand";
+import api from "../services/api";
+import toast from "react-hot-toast";
 
 const abortControllers = {};
 const updateTimeouts = {};
@@ -10,20 +10,23 @@ let fetchCartPromise = null;
 const useCartStore = create((set, get) => ({
   cart: null,
   isLoading: false,
-  loadingProducts: {},     // For addToCart: keyed by productId
+  loadingProducts: {}, // For addToCart: keyed by productId
   updatingItemIds: new Set(), // For updateQuantity / removeFromCart: per-item loading
   error: null,
 
   fetchCart: async () => {
     if (fetchCartPromise) return fetchCartPromise;
     set({ isLoading: true, error: null });
-    
+
     fetchCartPromise = (async () => {
       try {
-        const response = await api.get('/cart');
+        const response = await api.get("/cart");
         set({ cart: response.data.data, isLoading: false });
       } catch (error) {
-        set({ error: error.response?.data?.message || 'Failed to fetch cart', isLoading: false });
+        set({
+          error: error.response?.data?.message || "Failed to fetch cart",
+          isLoading: false,
+        });
       } finally {
         fetchCartPromise = null;
       }
@@ -31,34 +34,114 @@ const useCartStore = create((set, get) => ({
     return fetchCartPromise;
   },
 
-  addToCart: async (productId, quantity = 1, productName = null) => {
-    set((state) => ({
-      loadingProducts: { ...state.loadingProducts, [productId]: true },
-      error: null
-    }));
+  addToCart: async (productId, quantity = 1, productOrName = null) => {
+    const currentState = get();
+    const prevCart = currentState.cart;
+
+    // Determine product details
+    let productObj = null;
+    let productName = "Item";
+
+    if (productOrName && typeof productOrName === "object") {
+      productObj = productOrName;
+      productName = productOrName.name || "Item";
+    } else if (typeof productOrName === "string") {
+      productName = productOrName;
+    }
+
+    // Check if item is already in cart
+    const existingItem = prevCart?.items?.find(
+      (item) => item.product?.id === productId || item.productId === productId
+    );
+
+    // Client-side stock check if available
+    const availableStock = productObj?.stock ?? existingItem?.product?.stock;
+    if (availableStock !== undefined && availableStock !== null) {
+      const currentQty = existingItem ? existingItem.quantity : 0;
+      if (currentQty + quantity > availableStock) {
+        toast.error(`Cannot add more than available stock (${availableStock}).`, {
+          id: `cart-stock-${productId}`,
+          duration: 3000,
+        });
+        return false;
+      }
+    }
+
+    // Build optimistic cart items
+    let newItems;
+    if (existingItem) {
+      newItems = prevCart.items.map((item) =>
+        item.product?.id === productId || item.productId === productId
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+    } else {
+      const fallbackProduct = productObj || {
+        id: productId,
+        name: productName,
+        price: 0,
+        finalPrice: 0,
+        images: [],
+      };
+      const optimisticItem = {
+        id: `temp-${Date.now()}-${productId}`,
+        productId,
+        quantity,
+        price: fallbackProduct.finalPrice || fallbackProduct.price || 0,
+        product: fallbackProduct,
+      };
+      newItems = [...(prevCart?.items || []), optimisticItem];
+    }
+
+    const newSubtotal = newItems.reduce((sum, item) => {
+      const price = item.product?.finalPrice || item.product?.price || item.price || 0;
+      return sum + price * item.quantity;
+    }, 0);
+
+    const optimisticCart = prevCart
+      ? {
+          ...prevCart,
+          items: newItems,
+          subtotal: newSubtotal,
+          totalAmount: newSubtotal,
+        }
+      : {
+          id: "temp-cart",
+          items: newItems,
+          subtotal: newSubtotal,
+          totalAmount: newSubtotal,
+        };
+
+    // 1. Instant UI update (0ms latency)
+    set({
+      cart: optimisticCart,
+      error: null,
+    });
+
+    toast.success(`🛒  Added to Cart — ${productName}.`, {
+      id: `cart-add-${productId}`,
+      duration: 2500,
+    });
+
+    // 2. Background API call
     try {
-      const response = await api.post('/cart/items', { productId, quantity });
-      set((state) => {
-        const nextLoading = { ...state.loadingProducts };
-        delete nextLoading[productId];
-        return { cart: response.data.data, loadingProducts: nextLoading };
-      });
-      const name = productName || 'Item';
-      toast.success(`🛒  Added to Cart — ${name}.`, {
-        id: `cart-add-${productId}`,
-        duration: 2500
-      });
+      const response = await api.post("/cart/items", { productId, quantity });
+      // Reconcile with server state
+      set({ cart: response.data.data });
       return true;
     } catch (error) {
-      set((state) => {
-        const nextLoading = { ...state.loadingProducts };
-        delete nextLoading[productId];
-        return { error: error.response?.data?.message || 'Failed to add item', loadingProducts: nextLoading };
+      // 3. Rollback on failure
+      set({
+        cart: prevCart,
+        error: error.response?.data?.message || "Failed to add item",
       });
-      toast.error('Unable to add item to cart. Please try again.', {
-        id: `cart-error-${productId}`,
-        duration: 3000
-      });
+      toast.error(
+        error.response?.data?.message || "Unable to add item to cart. Reverted.",
+        {
+          id: `cart-error-${productId}`,
+          duration: 3500,
+        }
+      );
       return false;
     }
   },
@@ -68,7 +151,7 @@ const useCartStore = create((set, get) => ({
     if (!currentState.cart) return;
 
     const itemToUpdate = currentState.cart.items.find(
-      (item) => item.product?.id === productId || item.productId === productId
+      (item) => item.product?.id === productId || item.productId === productId,
     );
     if (!itemToUpdate) return;
 
@@ -84,7 +167,7 @@ const useCartStore = create((set, get) => ({
         items: state.cart.items.map((item) =>
           item.product?.id === productId || item.productId === productId
             ? { ...item, quantity }
-            : item
+            : item,
         ),
       },
       error: null,
@@ -105,16 +188,20 @@ const useCartStore = create((set, get) => ({
       abortControllers[productId] = controller;
 
       try {
-        const response = await api.put(`/cart/items/${productId}`, { quantity }, {
-          signal: controller.signal
-        });
-        
+        const response = await api.put(
+          `/cart/items/${productId}`,
+          { quantity },
+          {
+            signal: controller.signal,
+          },
+        );
+
         // Sync with server state
         set({ cart: response.data.data });
         delete previousQuantities[productId];
       } catch (error) {
         // Ignore aborted requests
-        if (error.name === 'CanceledError' || error.message === 'canceled') {
+        if (error.name === "CanceledError" || error.message === "canceled") {
           return;
         }
 
@@ -125,16 +212,16 @@ const useCartStore = create((set, get) => ({
             ? {
                 ...state.cart,
                 items: state.cart.items.map((item) =>
-                  (item.product?.id === productId || item.productId === productId)
+                  item.product?.id === productId || item.productId === productId
                     ? { ...item, quantity: revertQuantity }
-                    : item
+                    : item,
                 ),
               }
             : state.cart,
-          error: error.response?.data?.message || 'Failed to update quantity',
+          error: error.response?.data?.message || "Failed to update quantity",
         }));
         delete previousQuantities[productId];
-        toast.error('Failed to update quantity. Reverted to previous value.');
+        toast.error("Failed to update quantity. Reverted to previous value.");
       } finally {
         if (abortControllers[productId] === controller) {
           delete abortControllers[productId];
@@ -154,7 +241,8 @@ const useCartStore = create((set, get) => ({
         ? {
             ...state.cart,
             items: state.cart.items.filter(
-              (item) => item.product?.id !== productId && item.productId !== productId
+              (item) =>
+                item.product?.id !== productId && item.productId !== productId,
             ),
           }
         : state.cart,
@@ -176,26 +264,29 @@ const useCartStore = create((set, get) => ({
         return {
           updatingItemIds: next,
           cart: prevCart,
-          error: error.response?.data?.message || 'Failed to remove item',
+          error: error.response?.data?.message || "Failed to remove item",
         };
       });
-      toast.error('Failed to remove item from cart.');
+      toast.error("Failed to remove item from cart.");
     }
   },
 
   clearCart: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.delete('/cart');
+      const response = await api.delete("/cart");
       set({ cart: response.data.data, isLoading: false });
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to clear cart', isLoading: false });
+      set({
+        error: error.response?.data?.message || "Failed to clear cart",
+        isLoading: false,
+      });
     }
   },
 
   resetCart: () => {
     set({ cart: null, error: null });
-  }
+  },
 }));
 
 export default useCartStore;

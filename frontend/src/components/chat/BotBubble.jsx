@@ -1,25 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Copy, Check, AlertCircle, Mail, Lock, 
-  Eye, EyeOff, Calendar, ChevronRight, Loader2 
-} from 'lucide-react';
-import useAuthStore from '../../store/authStore';
-import useChatStore from '../../store/chatStore';
-import ProductCardList from './ProductCardList';
-import ReactMarkdown from 'react-markdown';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import {
+  Copy,
+  Check,
+  AlertCircle,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Calendar,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import useAuthStore from "../../store/authStore";
+import useChatStore from "../../store/chatStore";
+import ProductCardList from "./ProductCardList";
+import ReactMarkdown from "react-markdown";
+import axios from "axios";
+import { Link } from "react-router-dom";
 
 export const BotBubble = ({ message }) => {
-  const isError = message.type === 'error';
+  const isError = message.type === "error";
   const [copied, setCopied] = useState(false);
-  
+
   // Login Form States
   const [showLoginForm, setShowLoginForm] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const authStore = useAuthStore();
@@ -29,11 +37,17 @@ export const BotBubble = ({ message }) => {
   const [loadingOrders, setLoadingOrders] = useState(false);
 
   useEffect(() => {
-    if (message.action === 'open_login' && authStore.isAuthenticated && !message.orders && !fetchedOrders && !loadingOrders) {
+    if (
+      message.action === "open_login" &&
+      authStore.isAuthenticated &&
+      !message.orders &&
+      !fetchedOrders &&
+      !loadingOrders
+    ) {
       const fetchOrdersDirectly = async () => {
         setLoadingOrders(true);
         try {
-          const res = await axios.get('/api/orders');
+          const res = await axios.get("/api/orders");
           if (res.data && res.data.success) {
             setFetchedOrders(res.data.data || []);
           }
@@ -53,13 +67,13 @@ export const BotBubble = ({ message }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text', err);
+      console.error("Failed to copy text", err);
     }
   };
 
   const renderFormattedText = (text) => {
-    return text.split('\n\n').map((paragraph, idx) => (
-      <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
+    return text.split("\n\n").map((paragraph, idx) => (
+      <p key={idx} className={idx > 0 ? "mt-2" : ""}>
         {paragraph}
       </p>
     ));
@@ -68,29 +82,34 @@ export const BotBubble = ({ message }) => {
   const formatTime = (isoString) => {
     try {
       const date = new Date(isoString);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
-      return '';
+      return "";
     }
   };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setLoginError('Please enter both email and password.');
+      setLoginError("Please enter both email and password.");
       return;
     }
-    setLoginError('');
+    setLoginError("");
     setIsLoggingIn(true);
     try {
       const success = await authStore.login(email, password);
       if (success) {
         setShowLoginForm(false);
       } else {
-        setLoginError('Invalid email or password.');
+        setLoginError("Invalid email or password.");
       }
     } catch (err) {
-      setLoginError(err.response?.data?.message || 'Login failed. Please try again.');
+      setLoginError(
+        err.response?.data?.message || "Login failed. Please try again.",
+      );
     } finally {
       setIsLoggingIn(false);
     }
@@ -100,32 +119,37 @@ export const BotBubble = ({ message }) => {
     <div className="flex items-start gap-3 w-full animate-slide-up group">
       {/* Bot Avatar */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-[#ECECEC] flex items-center justify-center shadow-sm mt-0.5 overflow-hidden p-1">
-        <img src="/logo.jpg" alt="Priyal" className="w-full h-full object-contain" />
+        <img
+          src="/logo.jpg"
+          alt="Priyal"
+          className="w-full h-full object-contain"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5 max-w-[85%] relative">
         <div
           className={`relative px-4 py-3 rounded-[16px] rounded-tl-[4px] text-[14px] leading-relaxed break-words whitespace-pre-wrap transition-all duration-300 ${
             isError
-              ? 'bg-red-50 border border-red-200 text-red-700'
-              : 'bg-[#FDF5EF] border border-[#F0DFD0] text-[#1F2937]'
+              ? "bg-red-50 border border-red-200 text-red-700"
+              : "bg-[#FDF5EF] border border-[#F0DFD0] text-[#1F2937]"
           }`}
           style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            ...(!isError && { boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' })
+            ...(!isError && {
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+            }),
           }}
         >
-          {isError && (
-            <div className="flex items-center gap-2 mb-1 text-rose-400 font-medium">
-              <AlertCircle size={14} />
-              <span>Connection Error</span>
-            </div>
-          )}
-          <div className="tracking-wide font-normal">
+          <div className="tracking-wide font-medium text-[#111827]">
             <ReactMarkdown
               components={{
                 a: ({ href, children }) => (
-                  <a href={href} className="text-[#C97C4D] hover:text-[#B5673D] underline font-medium" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={href}
+                    className="text-brand-600 hover:text-brand-700 underline font-semibold"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {children}
                   </a>
                 ),
@@ -134,49 +158,68 @@ export const BotBubble = ({ message }) => {
                     {children}
                   </strong>
                 ),
-                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                li: ({ children }) => <li className="mb-0.5">{children}</li>
+                p: ({ children }) => (
+                  <p className="mb-2 last:mb-0 font-medium leading-relaxed">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc pl-4 mb-2 font-medium">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal pl-4 mb-2 font-medium">{children}</ol>
+                ),
+                li: ({ children }) => <li className="mb-0.5 font-medium">{children}</li>,
               }}
             >
-              {typeof message.text === 'string' ? message.text : String(message.text || '')}
+              {typeof message.text === "string"
+                ? message.text
+                : String(message.text || "")}
             </ReactMarkdown>
           </div>
 
           {/* Guest Action: Open Login Button */}
-          {message.action === 'open_login' && !showLoginForm && !authStore.isAuthenticated && (
-            <button
-              onClick={() => setShowLoginForm(true)}
-              className="mt-3 w-full py-2 px-4 rounded-xl bg-[#C97C4D] hover:bg-[#B5673D] text-white font-medium text-xs shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-            >
-              Sign In to Account
-            </button>
-          )}
+          {message.action === "open_login" &&
+            !showLoginForm &&
+            !authStore.isAuthenticated && (
+              <button
+                onClick={() => setShowLoginForm(true)}
+                className="mt-3 w-full py-2.5 px-4 rounded-xl bg-[#0F2343] hover:bg-[#1a345c] text-white font-medium text-xs shadow-sm transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              >
+                Sign In to Account
+              </button>
+            )}
 
           {/* Guest Action: Inline Login Form */}
           {showLoginForm && !authStore.isAuthenticated && (
-            <form onSubmit={handleLoginSubmit} className="mt-3 p-3 rounded-xl bg-[#F3F4F6] border border-[#ECECEC] flex flex-col gap-2.5 w-full animate-fade-in">
+            <form
+              onSubmit={handleLoginSubmit}
+              className="mt-3 p-3 rounded-xl bg-[#F3F4F6] border border-[#ECECEC] flex flex-col gap-2.5 w-full animate-fade-in"
+            >
               <div className="relative">
-                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+                <Mail
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                />
                 <input
                   type="email"
                   placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-[#ECECEC] rounded-lg py-1.5 pl-9 pr-3 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#C97C4D] focus:ring-1 focus:ring-[#C97C4D]/30"
+                  className="w-full bg-white border border-[#ECECEC] rounded-lg py-1.5 pl-9 pr-3 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600/30"
                   disabled={isLoggingIn}
                   required
                 />
               </div>
               <div className="relative">
-                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+                <Lock
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-[#ECECEC] rounded-lg py-1.5 pl-9 pr-9 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#C97C4D] focus:ring-1 focus:ring-[#C97C4D]/30"
+                  className="w-full bg-white border border-[#ECECEC] rounded-lg py-1.5 pl-9 pr-9 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600/30"
                   disabled={isLoggingIn}
                   required
                 />
@@ -198,7 +241,7 @@ export const BotBubble = ({ message }) => {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full py-1.5 rounded-lg bg-[#C97C4D] hover:bg-[#B5673D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="w-full py-2 rounded-lg bg-[#0F2343] hover:bg-[#1a345c] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 {isLoggingIn ? (
                   <>
@@ -215,44 +258,69 @@ export const BotBubble = ({ message }) => {
           {/* Loading orders state */}
           {loadingOrders && (
             <div className="mt-3 flex items-center justify-center gap-2 text-xs text-[#9CA3AF] py-2">
-              <Loader2 size={12} className="animate-spin text-[#C97C4D]" />
+              <Loader2 size={12} className="animate-spin text-brand-600" />
               <span>Syncing your order history...</span>
             </div>
           )}
 
           {/* Authenticated Action: Order Cards */}
-          {((message.orders && message.orders.length > 0) || (message.action === 'open_login' && authStore.isAuthenticated && fetchedOrders && fetchedOrders.length > 0)) && (
+          {((message.orders && message.orders.length > 0) ||
+            (message.action === "open_login" &&
+              authStore.isAuthenticated &&
+              fetchedOrders &&
+              fetchedOrders.length > 0)) && (
             <div className="mt-3 flex overflow-x-auto gap-4 pb-3 scrollbar-thin scrollbar-thumb-[#D1D5DB] scrollbar-track-transparent snap-x snap-mandatory w-full max-w-full select-none animate-fade-in">
               {(message.orders || fetchedOrders).map((order) => {
-                const dateStr = new Date(order.createdAt).toLocaleDateString([], {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                });
-                
-                let statusColor = 'text-[#3F79B5] bg-[#3F79B5]/10 border-[#3F79B5]/20';
-                if (order.orderStatus === 'DELIVERED') {
-                  statusColor = 'text-[#22C55E] bg-[#22C55E]/10 border-[#22C55E]/20';
-                } else if (['SHIPPED', 'PROCESSING', 'PACKED', 'CONFIRMED'].includes(order.orderStatus)) {
-                  statusColor = 'text-[#F59E0B] bg-[#F59E0B]/10 border-[#F59E0B]/20';
-                } else if (['CANCELLED', 'RETURNED', 'REFUNDED'].includes(order.orderStatus)) {
-                  statusColor = 'text-[#EF4444] bg-[#EF4444]/10 border-[#EF4444]/20';
+                const dateStr = new Date(order.createdAt).toLocaleDateString(
+                  [],
+                  {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  },
+                );
+
+                let statusColor =
+                  "text-[#3F79B5] bg-[#3F79B5]/10 border-[#3F79B5]/20";
+                if (order.orderStatus === "DELIVERED") {
+                  statusColor =
+                    "text-[#22C55E] bg-[#22C55E]/10 border-[#22C55E]/20";
+                } else if (
+                  ["SHIPPED", "PROCESSING", "PACKED", "CONFIRMED"].includes(
+                    order.orderStatus,
+                  )
+                ) {
+                  statusColor =
+                    "text-[#F59E0B] bg-[#F59E0B]/10 border-[#F59E0B]/20";
+                } else if (
+                  ["CANCELLED", "RETURNED", "REFUNDED"].includes(
+                    order.orderStatus,
+                  )
+                ) {
+                  statusColor =
+                    "text-[#EF4444] bg-[#EF4444]/10 border-[#EF4444]/20";
                 }
 
                 return (
-                  <div key={order.id} className="flex-shrink-0 w-64 snap-start p-3.5 rounded-2xl bg-white border border-[#ECECEC] flex flex-col justify-between gap-2.5 shadow-sm hover:shadow-md transition-shadow">
+                  <div
+                    key={order.id}
+                    className="flex-shrink-0 w-64 snap-start p-3.5 rounded-2xl bg-white border border-[#ECECEC] flex flex-col justify-between gap-2.5 shadow-sm hover:shadow-md transition-shadow"
+                  >
                     {/* Header */}
                     <div className="flex items-center justify-between gap-2 border-b border-[#E5E7EB] pb-2">
                       <div className="flex flex-col">
                         <span className="text-[11px] font-bold text-[#0F172A]">
-                          Order #{order.orderNumber.substring(0, 8).toUpperCase()}
+                          Order #
+                          {order.orderNumber.substring(0, 8).toUpperCase()}
                         </span>
                         <span className="text-[9px] text-[#6B7280] flex items-center gap-1 font-medium">
                           <Calendar size={10} />
                           {dateStr}
                         </span>
                       </div>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full border font-semibold ${statusColor}`}>
+                      <span
+                        className={`text-[9px] px-2 py-0.5 rounded-full border font-semibold ${statusColor}`}
+                      >
                         {order.orderStatus}
                       </span>
                     </div>
@@ -262,13 +330,16 @@ export const BotBubble = ({ message }) => {
                       {order.items?.map((item) => {
                         const prod = item.product || {};
                         const primaryImage = prod.images?.[0]?.url || null;
-                        
+
                         return (
-                          <div key={item.id} className="flex items-center gap-2.5">
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-2.5"
+                          >
                             {primaryImage ? (
-                              <img 
-                                src={primaryImage} 
-                                alt={prod.name} 
+                              <img
+                                src={primaryImage}
+                                alt={prod.name}
                                 className="w-10 h-10 object-cover rounded-lg bg-white border border-[#ECECEC]"
                               />
                             ) : (
@@ -277,9 +348,12 @@ export const BotBubble = ({ message }) => {
                               </div>
                             )}
                             <div className="flex-grow min-w-0">
-                              <h5 className="text-[11px] font-bold text-[#0F172A] truncate">{prod.name}</h5>
+                              <h5 className="text-[11px] font-bold text-[#0F172A] truncate">
+                                {prod.name}
+                              </h5>
                               <span className="text-[9px] text-[#6B7280] font-medium">
-                                Qty: {item.quantity} × ₹{item.price.toLocaleString()}
+                                Qty: {item.quantity} × ₹
+                                {item.price.toLocaleString()}
                               </span>
                             </div>
                           </div>
@@ -290,7 +364,9 @@ export const BotBubble = ({ message }) => {
                     {/* Footer */}
                     <div className="flex items-center justify-between gap-2 border-t border-[#E5E7EB] pt-2 mt-0.5">
                       <div className="flex items-center gap-0.5">
-                        <span className="text-[10px] text-[#6B7280] font-medium">Total:</span>
+                        <span className="text-[10px] text-[#6B7280] font-medium">
+                          Total:
+                        </span>
                         <span className="text-[11px] font-bold text-[#0F172A]">
                           ₹{order.totalAmount.toLocaleString()}
                         </span>
@@ -310,7 +386,7 @@ export const BotBubble = ({ message }) => {
           )}
 
           {/* Structured Product Results: Horizontally Scrollable Cards */}
-          {message.type === 'product_results' && message.products && (
+          {message.type === "product_results" && message.products && (
             <div className="flex flex-col gap-2">
               <ProductCardList products={message.products} />
               {message.category && (
@@ -328,7 +404,7 @@ export const BotBubble = ({ message }) => {
           )}
 
           {/* Redirect button when no products are found but category was specified */}
-          {message.type === 'product_search' && message.category && (
+          {message.type === "product_search" && message.category && (
             <div className="mt-3 flex justify-start">
               <Link
                 to={`/products?category=${encodeURIComponent(message.category.toLowerCase())}`}
@@ -340,7 +416,7 @@ export const BotBubble = ({ message }) => {
             </div>
           )}
         </div>
-        
+
         {/* Copy Button */}
         {!isError && (
           <button
@@ -348,10 +424,14 @@ export const BotBubble = ({ message }) => {
             className="absolute -right-9 top-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-[#F3F4F6] text-[#9CA3AF] hover:text-[#0F172A] cursor-pointer"
             title="Copy response"
           >
-            {copied ? <Check size={14} className="text-[#22C55E]" /> : <Copy size={14} />}
+            {copied ? (
+              <Check size={14} className="text-[#22C55E]" />
+            ) : (
+              <Copy size={14} />
+            )}
           </button>
         )}
-          
+
         <span className="text-[10px] text-[#6B7280] font-medium px-1 select-none">
           {formatTime(message.timestamp)}
         </span>
