@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { Play, Loader2, Info } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -18,7 +18,7 @@ const AdminAIPlayground = () => {
     setResult(null);
 
     try {
-      const response = await axios.post("/api/chatbot/admin/playground", {
+      const response = await api.post("/chatbot/admin/playground", {
         message: input,
       });
       setResult(response.data);

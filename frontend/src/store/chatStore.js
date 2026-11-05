@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import api from "../services/api";
 import useAuthStore from "./authStore";
 
 const now = Date.now();
@@ -118,7 +118,7 @@ export const useChatStore = create((set, get) => ({
 
     try {
       // 2. Call Node.js Express backend proxy /api/chatbot/chat
-      const response = await axios.post("/api/chatbot/chat", {
+      const response = await api.post("/chatbot/chat", {
         message: text,
         conversation_id: currentState.conversationId,
         history,

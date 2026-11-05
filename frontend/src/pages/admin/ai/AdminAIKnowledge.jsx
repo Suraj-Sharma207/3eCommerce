@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { Plus, Trash2, Edit2, Search } from "lucide-react";
 import useConfirmStore from "../../../store/confirmStore";
 
@@ -19,7 +19,7 @@ const AdminAIKnowledge = () => {
 
   const fetchKnowledge = async () => {
     try {
-      const response = await axios.get("/api/chatbot/admin/knowledge");
+      const response = await api.get("/chatbot/admin/knowledge");
       setEntries(response.data);
     } catch (error) {
       console.error("Failed to fetch knowledge:", error);
@@ -43,7 +43,7 @@ const AdminAIKnowledge = () => {
 
     if (isConfirmed) {
       try {
-        await axios.delete(`/api/chatbot/admin/knowledge/${category}/${id}`);
+        await api.delete(`/chatbot/admin/knowledge/${category}/${id}`);
         fetchKnowledge();
       } catch (error) {
         console.error("Delete failed:", error);
@@ -55,12 +55,12 @@ const AdminAIKnowledge = () => {
     e.preventDefault();
     try {
       if (editingEntry) {
-        await axios.put(
-          `/api/chatbot/admin/knowledge/${editingEntry.entry_id}`,
+        await api.put(
+          `/chatbot/admin/knowledge/${editingEntry.entry_id}`,
           formData,
         );
       } else {
-        await axios.post("/api/chatbot/admin/knowledge", formData);
+        await api.post("/chatbot/admin/knowledge", formData);
       }
       setIsModalOpen(false);
       fetchKnowledge();

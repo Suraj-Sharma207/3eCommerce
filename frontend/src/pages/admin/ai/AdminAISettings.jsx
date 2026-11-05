@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { Save, RefreshCw, Database } from "lucide-react";
 import useConfirmStore from "../../../store/confirmStore";
 import toast from "react-hot-toast";
@@ -11,7 +11,7 @@ const AdminAISettings = () => {
 
   const fetchCollections = async () => {
     try {
-      const response = await axios.get("/api/chatbot/admin/collections");
+      const response = await api.get("/chatbot/admin/collections");
       setCollections(response.data);
     } catch (error) {
       console.error("Failed to fetch collections:", error);
@@ -36,7 +36,7 @@ const AdminAISettings = () => {
     if (isConfirmed) {
       setSyncing(true);
       try {
-        const response = await axios.post("/api/chatbot/sync/bulk");
+        const response = await api.post("/chatbot/sync/bulk");
         toast.success(
           `Sync Complete: ${response.data.total_synced} products synced. ${response.data.total_failed} failed.`,
         );

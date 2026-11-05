@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { MessageSquare, Zap, Clock, BrainCircuit } from "lucide-react";
 
 const StatCard = ({ title, value, icon: Icon, subtitle }) => (
@@ -22,7 +22,7 @@ const AdminAIDashboard = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await axios.get("/api/chatbot/admin/analytics");
+        const response = await api.get("/chatbot/admin/analytics");
         setAnalytics(response.data);
       } catch (error) {
         if (error.response?.status !== 401) {

@@ -15,7 +15,7 @@ import useAuthStore from "../../store/authStore";
 import useChatStore from "../../store/chatStore";
 import ProductCardList from "./ProductCardList";
 import ReactMarkdown from "react-markdown";
-import axios from "axios";
+import api from "../../services/api";
 import { Link } from "react-router-dom";
 
 export const BotBubble = ({ message }) => {
@@ -47,7 +47,7 @@ export const BotBubble = ({ message }) => {
       const fetchOrdersDirectly = async () => {
         setLoadingOrders(true);
         try {
-          const res = await axios.get("/api/orders");
+          const res = await api.get("/orders");
           if (res.data && res.data.success) {
             setFetchedOrders(res.data.data || []);
           }

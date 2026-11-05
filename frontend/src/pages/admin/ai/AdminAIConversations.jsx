@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import {
   MessageSquare,
   User,
@@ -19,8 +19,8 @@ const AdminAIConversations = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const response = await axios.get(
-          "/api/chatbot/admin/conversations?limit=100",
+        const response = await api.get(
+          "/chatbot/admin/conversations?limit=100",
         );
         setConversations(response.data);
       } catch (error) {
