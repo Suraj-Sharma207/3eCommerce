@@ -53,9 +53,13 @@ export const csrfProtection = (req, res, next) => {
   // Match against allowed origins
   const isMatch = allowedOrigins.some((allowed) => {
     try {
-      return new URL(allowed).origin.toLowerCase() === originUrl;
+      const allowedOrigin = new URL(allowed).origin.toLowerCase();
+      if (allowedOrigin === originUrl) return true;
+      if (originUrl.endsWith(".vercel.app") && allowedOrigin.includes("vercel.app")) return true;
+      return false;
     } catch (_) {
-      return allowed.toLowerCase() === originUrl;
+      const cleanAllowed = allowed.toLowerCase().replace(/\/+$/, "");
+      return cleanAllowed === originUrl;
     }
   });
 

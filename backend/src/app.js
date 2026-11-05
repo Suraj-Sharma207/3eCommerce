@@ -62,20 +62,35 @@ app.use((req, res, next) => {
   res.setHeader("X-Request-ID", req.id);
   next();
 });
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
-  : ["http://localhost:5173"];
+const getAllowedOrigins = () => {
+  const envUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  return envUrl
+    .split(",")
+    .map((url) => url.trim().replace(/\/+$/, "").toLowerCase())
+    .filter(Boolean);
+};
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.trim().replace(/\/+$/, "").toLowerCase();
+      const origins = getAllowedOrigins();
+
+      const isAllowed =
+        origins.includes(normalizedOrigin) ||
+        origins.includes("*") ||
+        (normalizedOrigin.endsWith(".vercel.app") && origins.some((o) => o.includes("vercel.app")));
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true,
+    optionsSuccessStatus: 200,
   }),
 );
 

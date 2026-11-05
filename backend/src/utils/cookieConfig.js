@@ -39,10 +39,11 @@ export const getAuthCookieNames = (req) => {
  */
 export const getAuthCookieOptions = (req, maxAge) => {
   const secure = isSecureRequest(req);
+  const sameSite = process.env.COOKIE_SAME_SITE || (secure ? "None" : "Lax");
   return {
     httpOnly: true,
-    secure,
-    sameSite: secure ? "Strict" : "Lax",
+    secure: sameSite === "None" ? true : secure,
+    sameSite,
     path: "/",
     maxAge,
   };
@@ -50,16 +51,17 @@ export const getAuthCookieOptions = (req, maxAge) => {
 
 /**
  * Returns cookie options for the CSRF token cookie.
- * SECURITY: Now HttpOnly = true to prevent client-side script access. SameSite=Strict in production.
+ * SECURITY: Now HttpOnly = true to prevent client-side script access.
  * @param {import('express').Request} req
  * @returns {object} Cookie options
  */
 export const getCsrfCookieOptions = (req) => {
   const secure = isSecureRequest(req);
+  const sameSite = process.env.COOKIE_SAME_SITE || (secure ? "None" : "Lax");
   return {
     httpOnly: true,
-    secure,
-    sameSite: secure ? "Strict" : "Lax",
+    secure: sameSite === "None" ? true : secure,
+    sameSite,
     path: "/",
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   };
@@ -73,10 +75,11 @@ export const getCsrfCookieOptions = (req) => {
  */
 export const getClearCookieOptions = (req) => {
   const secure = isSecureRequest(req);
+  const sameSite = process.env.COOKIE_SAME_SITE || (secure ? "None" : "Lax");
   return {
     httpOnly: true,
-    secure,
-    sameSite: secure ? "Strict" : "Lax",
+    secure: sameSite === "None" ? true : secure,
+    sameSite,
     path: "/",
   };
 };
